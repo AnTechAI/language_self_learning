@@ -14,6 +14,7 @@
 | [WEB-REACT.md](WEB-REACT.md) | App React mới: làm gì, cấu trúc, cách port màn hình | `apps/web/src/` |
 | [API-SYNC.md](API-SYNC.md) | Backend FastAPI: đồng bộ đa người dùng, auth, sync protocol | `apps/api/` |
 | [DATA-PIPELINES.md](DATA-PIPELINES.md) | 4 tool sinh dữ liệu từ jsonl: lệnh, định dạng, cache | `tools/` |
+| [TOOLING.md](TOOLING.md) | ESLint/Prettier/TS/CI: làm gì, phạm vi, format config | `eslint.config.mjs`, `.prettierrc`, CI |
 | [requirements.md](../requirements.md) | Yêu cầu chức năng gốc (cũ, giữ tham khảo) | — |
 
 ## Chạy nhanh
@@ -22,7 +23,8 @@
 npm install                          # cài workspace (web + shared)
 npm run dev                          # Vite dev server → http://localhost:5173
 npm run build && npm run preview     # build production
-node _e2e.js                         # 142 test của app legacy
+npm test                             # 142 test của app legacy
+npm run lint && npm run typecheck    # GĐ 1: kiểm tra chất lượng code
 
 # API (GĐ 5 — hiện chỉ /health)
 pip install -r apps/api/requirements.txt

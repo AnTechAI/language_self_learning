@@ -37,7 +37,7 @@ data/scripts ────────────────── 4 tool sinh 
 | GĐ | Nội dung | Trạng thái |
 |---|---|---|
 | **0** | Bọc Vite + monorepo + React khung + FastAPI skeleton + docs | ✅ XONG |
-| **1** | TypeScript hóa data model; ESLint/Prettier; dùng `packages/shared` | ⏳ |
+| **1** | TypeScript hóa data model (packages/shared — đã đối chiếu toEntry thật); ESLint/Prettier; CI GitHub Actions | ✅ XONG |
 | **2** | localStorage → IndexedDB (migration tự động) | ⏳ |
 | **3** | Port từng màn hình sang React (Picker → Home/Lessons → Games → Vocab → Stats) | ⏳ |
 | **4** | PWA offline + di dời tools → `data/scripts` (CLI chung) | ⏳ |

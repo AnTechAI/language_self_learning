@@ -1,0 +1,9 @@
+# Không format: app legacy (giữ diff sạch, đã có 142 test bảo vệ)
+apps/web/public/
+tools/
+_e2e.js
+data/
+docs/
+dist/
+node_modules/
+package-lock.json

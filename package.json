@@ -11,6 +11,18 @@
     "build": "npm run build -w @english/web",
     "preview": "npm run preview -w @english/web",
     "test": "node _e2e.js",
+    "typecheck": "npm run typecheck -w @english/shared && npm run typecheck -w @english/web",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "api": "uvicorn apps.api.main:app --reload --port 8000"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.4",
+    "prettier": "^3.9.6",
+    "typescript-eslint": "^8.67.0"
   }
 }

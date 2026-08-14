@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  web:
+    name: Web — lint + typecheck + test + build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Cài dependencies
+        run: npm ci
+      - name: Lint (ESLint)
+        run: npm run lint
+      - name: Typecheck (TS — web + shared)
+        run: npm run typecheck
+      - name: Test app legacy (e2e, 142 tests)
+        run: npm test
+      - name: Build production (Vite)
+        run: npm run build
+
+  api:
+    name: API — FastAPI import + health
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Cài FastAPI
+        run: pip install -r apps/api/requirements.txt
+      - name: Kiểm tra app import + health
+        run: |
+          python -c "import sys; sys.path.insert(0,'apps'); from api.main import app; assert app.title; print('FastAPI OK:', app.title)"
