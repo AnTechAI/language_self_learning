@@ -13,10 +13,11 @@
 | [DATA-MODEL.md](DATA-MODEL.md) | Mọi format dữ liệu (entry, sense, lesson, chunk, localStorage) | js/*, packages/shared |
 | [WEB-REACT.md](WEB-REACT.md) | App React mới: làm gì, cấu trúc, cách port màn hình | `apps/web/src/` |
 | [API-SYNC.md](API-SYNC.md) | Backend FastAPI: đồng bộ đa người dùng, auth, sync protocol | `apps/api/` |
-| [DATA-PIPELINES.md](DATA-PIPELINES.md) | 4 tool sinh dữ liệu từ jsonl: lệnh, định dạng, cache | `tools/` |
+| [DATA-PIPELINES.md](DATA-PIPELINES.md) | 5 tool sinh dữ liệu từ jsonl: lệnh, định dạng, cache | `tools/` |
 | [TOOLING.md](TOOLING.md) | ESLint/Prettier/TS/CI: làm gì, phạm vi, format config | `eslint.config.mjs`, `.prettierrc`, CI |
 | [INDEXEDDB.md](INDEXEDDB.md) | Lớp dữ liệu mới (GĐ 2): schema, repo API, migration | `apps/web/src/db/` |
 | [DESIGN.md](DESIGN.md) | Design system React (GĐ 3): tokens, màn hình, hành vi port | `apps/web/src/styles/`, `components/`, `features/` |
+| [VOCABULARY-STRATEGY.md](VOCABULARY-STRATEGY.md) | Chiến thuật lưu & học TOÀN BỘ 207k từ | `tools/enrich-vi-ipa.py`, bank 8 cột |
 | [requirements.md](../requirements.md) | Yêu cầu chức năng gốc (cũ, giữ tham khảo) | — |
 
 ## Chạy nhanh

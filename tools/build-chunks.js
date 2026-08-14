@@ -6,11 +6,14 @@
  *   Lượt 1: đếm số entry hợp lệ → N = ceil(total / size)
  *   Lượt 2: bucket = hashWord(word) % N → mỗi bucket là 1 file chunk-NNN.js
  *   - Mỗi entry nén thành mảng: [word, pos, definition, example, syn[], ant[]]
+ *   - Nếu file nguồn là bản LÀM GIÀU (tools/enrich-vi-ipa.py — có trường vi/ipa)
+ *     thì thêm 2 cột: [.., vi, ipa] → từ điển hiển thị nghĩa Việt + phiên âm
  *   - App (js/bank-loader.js) tra từ → chunkName = hash%N → chỉ tải 1 file đó
  *
  * Cách dùng:
  *   node tools/build-chunks.js                # sinh lại toàn bộ js/bank/
  *   node tools/build-chunks.js --size 3000    # số entry mỗi chunk (mặc định 2000)
+ *   node tools/build-chunks.js --src data/raw/english-dictionary.enriched.jsonl  # nguồn khác
  */
 const fs = require('fs');
 const path = require('path');
@@ -18,6 +21,7 @@ const readline = require('readline');
 
 const ROOT = path.resolve(__dirname, '..');
 const JSONL_FILE = path.join(ROOT, 'data', 'raw', 'english-dictionary.jsonl');
+const ENRICHED_FILE = path.join(ROOT, 'data', 'raw', 'english-dictionary.enriched.jsonl');
 const OUT_DIR = path.join(ROOT, 'apps', 'web', 'public', 'legacy', 'js', 'bank');
 
 const DEFAULT_SIZE = 2000;
@@ -34,14 +38,16 @@ function hashWord(w) {
 
 function compactRow(e) {
   const ex = Array.isArray(e.examples) ? (e.examples[0] || '') : (e.examples || '');
-  return [String(e.word || '').toLowerCase(), String(e.partOfSpeech || ''), String(e.definition || ''), String(ex),
+  const row = [String(e.word || '').toLowerCase(), String(e.partOfSpeech || ''), String(e.definition || ''), String(ex),
     Array.isArray(e.synonyms) ? e.synonyms.slice(0, 4) : [],
     Array.isArray(e.antonyms) ? e.antonyms.slice(0, 4) : []];
+  if (e.vi || e.ipa) row.push(e.vi ? String(e.vi) : '', e.ipa ? String(e.ipa) : '');
+  return row;
 }
 
-async function countEntries() {
+async function countEntries(file) {
   let total = 0;
-  const rl = readline.createInterface({ input: fs.createReadStream(JSONL_FILE), crlfDelay: Infinity });
+  const rl = readline.createInterface({ input: fs.createReadStream(file), crlfDelay: Infinity });
   for await (const line of rl) {
     if (!line.trim()) continue;
     try { const e = JSON.parse(line); if (e.word) total++; } catch (err) { /* bỏ dòng lỗi */ }
@@ -51,15 +57,22 @@ async function countEntries() {
 }
 
 (async () => {
-  const size = parseInt(process.argv[2] === '--size' ? (process.argv[3] || DEFAULT_SIZE) : DEFAULT_SIZE, 10) || DEFAULT_SIZE;
+  const argv = process.argv.slice(2);
+  const sizeArg = argv.indexOf('--size');
+  const size = parseInt(sizeArg >= 0 ? (argv[sizeArg + 1] || DEFAULT_SIZE) : DEFAULT_SIZE, 10) || DEFAULT_SIZE;
+  const srcArg = argv.indexOf('--src');
+  const srcFile = srcArg >= 0 ? path.resolve(ROOT, argv[srcArg + 1]) : '';
+  // Ưu tiên file làm giàu (vi/ipa) nếu tồn tại; nếu không dùng file gốc
+  let JSONL_FILE = srcFile || (fs.existsSync(ENRICHED_FILE) ? ENRICHED_FILE : path.join(ROOT, 'data', 'raw', 'english-dictionary.jsonl'));
   if (!fs.existsSync(JSONL_FILE)) { console.error('✗ Không tìm thấy ' + JSONL_FILE); process.exit(1); }
   fs.mkdirSync(OUT_DIR, { recursive: true });
   for (const f of fs.readdirSync(OUT_DIR)) fs.unlinkSync(path.join(OUT_DIR, f));
 
   console.log('📖 Lượt 1: đếm entry…');
-  const total = await countEntries();
+  const total = await countEntries(JSONL_FILE);
   const N = Math.max(1, Math.ceil(total / size));
   console.log(`   ${total} entry → N = ${N} chunk (mỗi chunk ~${size}).`);
+  const hasViIpa = !!(await firstLineHasViIpa(JSONL_FILE));
 
   console.log('📖 Lượt 2: phân bổ theo hash % ' + N + '…');
   const buckets = new Map();
@@ -94,4 +107,18 @@ async function countEntries() {
   const maxChunk = Math.max(...names.map((n) => fs.statSync(path.join(OUT_DIR, n)).size));
   console.log(`✅ ${rows} entry → ${names.length} chunk (~${(totalBytes / 1048576).toFixed(1)}MB) tại js/bank/.`);
   console.log(`   Mỗi lần tra từ app chỉ tải ~${(maxChunk / 1024) | 0}KB (1 chunk).`);
+  if (hasViIpa) console.log('   Nguồn: bản LÀM GIÀU (vi/ipa) — từ điển hiển thị nghĩa Việt + phiên âm.');
 })();
+
+/** Kiểm tra dòng đầu có chứa vi/ipa không (để báo cột mở rộng) */
+async function firstLineHasViIpa(file) {
+  const rl = readline.createInterface({ input: fs.createReadStream(file), crlfDelay: Infinity });
+  for await (const line of rl) {
+    try {
+      const e = JSON.parse(line);
+      if (e.vi || e.ipa) return true;
+      if (e.word) return false;
+    } catch (err) { /* dòng lỗi */ }
+  }
+  return false;
+}

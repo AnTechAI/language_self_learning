@@ -1,4 +1,4 @@
-# Data Pipelines — `tools/` (4 tool sinh dữ liệu)
+# Data Pipelines — `tools/` (5 tool sinh dữ liệu)
 
 > Nguồn duy nhất: `data/raw/english-dictionary.jsonl` (207.272 entry — git-ignored).
 > Mỗi tool đọc jsonl (hoặc API) → sinh ra dữ liệu cho app. Sẽ di dời thành
@@ -10,6 +10,7 @@
 | [build-lessons.js](#2-build-lessonsjs) | Chia jsonl thành **bài học 20 từ** | Học theo bài, games theo bài | `js/lessons/` (manifest + lesson-*) |
 | [build-chunks.js](#3-build-chunksjs) | Chia toàn bộ jsonl thành **chunk nhỏ** | Từ điển offline 207k từ, tải đúng 1 chunk | `js/bank/` (104 chunk + manifest) |
 | [fetch-vocab.js](#4-fetch-vocabjs) | Fetch từ API Free Dictionary + Google Translate | Bổ sung từ mới + sửa POS | dòng nén seed |
+| [enrich-vi-ipa.py](#5-enrich-vi-ipapy) | Làm giàu **toàn bộ** jsonl: nghĩa Việt + IPA (+ freq) | Nền tảng học 207k từ (xem VOCABULARY-STRATEGY.md) | `english-dictionary.enriched.jsonl` |
 
 API dùng: `dictionaryapi.dev` (IPA + senses) và `translate.googleapis.com/...?client=gtx`
 (dịch Việt, miễn phí). Có **retry/backoff** khi 429.
@@ -45,10 +46,13 @@ node tools/build-lessons.js --size 10 --words "a b c"       # tùy chỉnh
 ```bash
 node tools/build-chunks.js            # toàn bộ jsonl → 104 chunk
 node tools/build-chunks.js --size 3000
+node tools/build-chunks.js --src data/raw/english-dictionary.enriched.jsonl
 ```
 
 - 2 lượt đọc: đếm tổng → `N = ceil(total/size)` → bucket `hashFNV(word) % N`.
 - **Băm phải khớp** `js/bank-loader.js` (`VA.bankHash`) — đừng đổi thuật toán một phía.
+- Tự ưu tiên **file enriched** nếu tồn tại → row 8 cột `[word,pos,def,ex,syn,ant,vi,ipa]`;
+  thiếu vi/ipa → vẫn 6 cột (tương thích ngược).
 - Đầu ra: `js/bank/chunk-NNN.js` + manifest.js (format: docs/DATA-MODEL.md §4).
 
 ## 4. fetch-vocab.js
@@ -62,6 +66,27 @@ node tools/fetch-vocab.js --fixpos                  # chỉ vá loại từ (POS
 - Nguồn: `tools/new-words.txt` (hỗ trợ `@tag`) hoặc `--words`.
 - `--enrich`: CHỈ THÊM sense, không ghi đè dữ liệu người dùng; idempotent.
 - POS chuẩn hóa + bảng `POS_OVERRIDE` (~30 từ) vì API hay trả noun trước.
+
+## 5. enrich-vi-ipa.py
+
+> Tool Python làm giàu TOÀN BỘ jsonl (207k từ) — nền tảng cho chiến thuật
+> học toàn bộ từ vựng (docs/VOCABULARY-STRATEGY.md). Chạy: `python tools/enrich-vi-ipa.py`
+
+```bash
+python tools/enrich-vi-ipa.py --limit 10000         # chạy từng bước
+python tools/enrich-vi-ipa.py --words "brave gratitude"
+python tools/enrich-vi-ipa.py --file list.txt       # 1 từ mỗi dòng
+python tools/enrich-vi-ipa.py --workers 4 --delay 0.2   # tăng tốc (coi chừng chặn)
+python tools/enrich-vi-ipa.py --skip-ipa            # chỉ dịch nghĩa
+python tools/enrich-vi-ipa.py --freq                # thêm cột freq (pip install wordfreq)
+python tools/enrich-vi-ipa.py --dry-run --inplace --out <file>
+```
+
+- Thêm `vi` (Google Translate) + `ipa` (dictionaryapi.dev, chỉ từ đơn) + `freq` (wordfreq).
+- Từ đơn nghĩa → dịch TỪ; từ đa nghĩa (nhiều dòng cùng word) → dịch ĐỊNH NGHĨA
+  (đúng ngữ cảnh từng nghĩa). Cache theo văn bản gốc, **resume** không gọi lại API.
+- Mặc định ghi `english-dictionary.enriched.jsonl` (không đụng file gốc); `--inplace` để ghi đè.
+- `build-chunks.js` tự ưu tiên file enriched (8 cột: `[.., vi, ipa]`) — tương thích ngược.
 
 ## Lưu ý chung
 

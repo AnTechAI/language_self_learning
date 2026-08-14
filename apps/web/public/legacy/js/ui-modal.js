@@ -155,7 +155,7 @@
       d.senses = r.senses.map((s, i) => ({
         pronunciation: s.pronunciation,
         partOfSpeech: s.partOfSpeech,
-        meaning: { en: s.meaning.en || '', ...(oldTarget[i] ? { [course.target.code]: oldTarget[i] } : {}) },
+        meaning: { en: s.meaning.en || '', ...(s.meaning.vi ? { vi: s.meaning.vi } : {}), ...(oldTarget[i] ? { [course.target.code]: oldTarget[i] } : {}) },
         examples: s.examples || [],
       }));
       d.synonyms = Array.from(new Set([...(d.synonyms || []), ...(r.synonyms || [])]));

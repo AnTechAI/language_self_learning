@@ -15,6 +15,8 @@ export type BankRow = [
   example: string,
   syn: string[],
   ant: string[],
+  vi?: string,
+  ipa?: string,
 ];
 
 export interface LessonMeta {

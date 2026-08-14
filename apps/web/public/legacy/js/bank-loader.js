@@ -98,9 +98,9 @@
     const rows = await VA.bankLookup(word);
     if (!rows.length) return null;
     const senses = rows.map((r) => ({
-      pronunciation: '',
+      pronunciation: r[7] || '',
       partOfSpeech: r[1] || '',
-      meaning: { en: r[2] || '' },
+      meaning: { en: r[2] || '', ...(r[6] ? { vi: r[6] } : {}) },
       examples: r[3] ? [r[3]] : [],
     }));
     const syn = new Set(), ant = new Set();

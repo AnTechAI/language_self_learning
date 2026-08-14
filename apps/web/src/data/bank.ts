@@ -48,16 +48,16 @@ export async function bankLookup(word: string): Promise<BankRow[]> {
 
 /** Giao diện tra từ — trả {senses, synonyms, antonyms} giống API online */
 export async function bankLookupWord(word: string): Promise<{
-  senses: { pronunciation: string; partOfSpeech: string; meaning: { en: string }; examples: string[] }[];
+  senses: { pronunciation: string; partOfSpeech: string; meaning: { en: string; vi?: string }; examples: string[] }[];
   synonyms: string[];
   antonyms: string[];
 } | null> {
   const rows = await bankLookup(word);
   if (!rows.length) return null;
   const senses = rows.map((r) => ({
-    pronunciation: '',
+    pronunciation: r[7] || '',
     partOfSpeech: r[1] || '',
-    meaning: { en: r[2] || '' },
+    meaning: { en: r[2] || '', ...(r[6] ? { vi: r[6] } : {}) },
     examples: r[3] ? [r[3]] : [],
   }));
   const syn = new Set<string>();
