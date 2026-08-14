@@ -39,7 +39,7 @@ data/scripts ────────────────── 4 tool sinh 
 | **0** | Bọc Vite + monorepo + React khung + FastAPI skeleton + docs | ✅ XONG |
 | **1** | TypeScript hóa data model (packages/shared — đã đối chiếu toEntry thật); ESLint/Prettier; CI GitHub Actions | ✅ XONG |
 | **2** | localStorage → IndexedDB (migration tự động, repo pattern — `apps/web/src/db/`, 12 test) | ✅ XONG |
-| **3** | Port từng màn hình sang React (Picker → Home/Lessons → Games → Vocab → Stats) | ⏳ |
+| **3** | Port từng màn hình sang React (Picker → Home/Lessons → Games → Vocab → Stats) — zustand + design system mới + smoke test | ✅ XONG (xem docs/DESIGN.md) |
 | **4** | PWA offline + di dời tools → `data/scripts` (CLI chung) | ⏳ |
 | **5** | Backend FastAPI: tài khoản + sync đa người dùng + proxy từ điển | ⏳ |
 
@@ -50,8 +50,8 @@ data/scripts ────────────────── 4 tool sinh 
 | Build | Vite | chuẩn, nhanh, HMR, code-split |
 | Ngôn ngữ | TypeScript (strict) | data model đã rõ, tránh bug |
 | UI | React 18 | đã duyệt; hệ sinh thái lớn |
-| State (GĐ 3) | Zustand hoặc Redux Toolkit | nhẹ, phổ biến |
-| Router (GĐ 3) | react-router | chuẩn React |
+| State (GĐ 3) | **Zustand** (đã dùng) | nhẹ, phổ biến |
+| Router (GĐ 3) | **Tab state trong store** (chưa cần react-router — thêm khi có deep-link/URL) | app nhỏ, 4 tab; router thêm chi phí không cần thiết |
 | Lưu trữ | IndexedDB (idb) | đủ lớn cho 25MB từ điển, migration từ localStorage |
 | Backend | FastAPI + SQLite (better-sqlite3 tương đương bên Python: sqlite3 chuẩn) | thân thiện tác giả, deploy đơn giản |
 | Auth (GĐ 5) | JWT (hoặc token đơn giản cho bạn bè) | đơn giản, đủ dùng |

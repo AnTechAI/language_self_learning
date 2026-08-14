@@ -28,6 +28,9 @@ export interface Sense {
 export type LearningStatus = 'new' | 'learning' | 'mastered';
 
 /** Một TỪ trong kho từ vựng của khóa học */
+/** Nghĩa gốc từ (root) — 1 số từ có gốc là object (ExtraSense-like) thay vì string */
+export type RootSense = Partial<ExtraSense>;
+
 export interface WordEntry {
   id: string;
   word: string;
@@ -37,7 +40,7 @@ export interface WordEntry {
   correctStreak: number;
   synonyms: string[];
   antonyms: string[];
-  wordRoot: string;
+  wordRoot?: string | RootSense;
   senses: Sense[];
   /** Bài học sở hữu từ này (nếu có — hệ thống Lesson) */
   lessonId?: string;

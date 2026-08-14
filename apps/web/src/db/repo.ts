@@ -87,19 +87,16 @@ export function createRepo(factory: IDBFactory = indexedDB): Repo {
       },
       async replaceAll(courseId, entries) {
         const d = await db();
-        // TX 1: xóa toàn bộ entry cũ của khóa (cursor chạy hết mới qua TX 2 —
-        // tránh cursor "đuổi" theo bản ghi vừa chèn rồi xóa nhầm)
-        await runTx(d, 'entries', 'readwrite', (s) => {
-          const del = s.index('byCourse').openKeyCursor(courseId);
-          del.onsuccess = () => {
-            const c = del.result;
-            if (c) {
-              c.delete();
-              c.continue();
-            }
-          };
-          return [];
-        });
+        // TX 1: xóa toàn bộ entry cũ của khóa. KHÔNG dùng cursor (bước qua
+        // nhiều tick → transaction bị inactive khi xóa, lỗi InvalidStateError
+        // ở fake-indexeddb khi có tx khác xen vào). Dùng getAllKeys rồi xóa
+        // đồng loạt trong 1 pass — đơn giản, an toàn ở mọi môi trường.
+        const [keys] = (await runTx(d, 'entries', 'readonly', (s) =>
+          s.index('byCourse').getAllKeys(courseId),
+        )) as [IDBValidKey[]];
+        if (keys.length) {
+          await runTx(d, 'entries', 'readwrite', (s) => keys.map((k) => s.delete(k)));
+        }
         // TX 2: ghi lại toàn bộ (ngữ nghĩa replaceAll giống legacy)
         if (entries.length) {
           const updatedAt = new Date().toISOString();
@@ -135,18 +132,17 @@ export function createRepo(factory: IDBFactory = indexedDB): Repo {
           day,
           entryIds,
         }));
-        // TX 1: xóa bản ghi cũ của khóa
-        await runTx(d, 'daily', 'readwrite', (s) => {
-          const del = s.openCursor();
-          del.onsuccess = () => {
-            const c = del.result;
-            if (c) {
-              if ((c.value as DailyRecord).courseId === courseId) c.delete();
-              c.continue();
-            }
-          };
-          return [];
+        // TX 1: xóa bản ghi cũ của khóa (getAllKeys thay cursor — an toàn)
+        const [keys] = (await runTx(d, 'daily', 'readonly', (s) => s.getAllKeys())) as [
+          IDBValidKey[],
+        ];
+        const stale = keys.filter((k) => {
+          const kv = k as unknown as [string, string];
+          return Array.isArray(kv) && kv[0] === courseId;
         });
+        if (stale.length) {
+          await runTx(d, 'daily', 'readwrite', (s) => stale.map((k) => s.delete(k)));
+        }
         // TX 2: ghi bản ghi mới
         if (recs.length) {
           await runTx(d, 'daily', 'readwrite', (s) =>
@@ -178,18 +174,13 @@ export function createRepo(factory: IDBFactory = indexedDB): Repo {
       },
       async replaceAll(courseId, records: Omit<HistoryRecord, 'courseId'>[]) {
         const d = await db();
-        // TX 1: xóa bản ghi cũ của khóa
-        await runTx(d, 'history', 'readwrite', (s) => {
-          const del = s.openCursor();
-          del.onsuccess = () => {
-            const c = del.result;
-            if (c) {
-              if ((c.value as HistoryRecord).courseId === courseId) c.delete();
-              c.continue();
-            }
-          };
-          return [];
-        });
+        // TX 1: xóa bản ghi cũ của khóa (getAllKeys thay cursor — an toàn)
+        const [keys] = (await runTx(d, 'history', 'readonly', (s) =>
+          s.index('byCourse').getAllKeys(courseId),
+        )) as [IDBValidKey[]];
+        if (keys.length) {
+          await runTx(d, 'history', 'readwrite', (s) => keys.map((k) => s.delete(k)));
+        }
         // TX 2: ghi bản ghi mới
         if (records.length) {
           await runTx(d, 'history', 'readwrite', (s) =>

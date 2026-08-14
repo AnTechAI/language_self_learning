@@ -79,8 +79,13 @@ repo.close()          // đóng connection (test)
 ```
 
 Ngữ nghĩa `replaceAll` giống legacy: xóa hết bản ghi của khóa rồi ghi lại —
-port màn hình không phải đổi logic. Thực thi bằng **2 transaction** (xóa rồi ghi)
-để tránh cursor "đuổi" theo bản ghi vừa chèn.
+port màn hình không phải đổi logic. Thực thi bằng **2 transaction** (xóa rồi ghi).
+
+> ⚠️ Cách xóa: **getAllKeys → delete từng key đồng loạt**, KHÔNG dùng cursor.
+> `cursor.delete()` chạy trong callback onsuccess — mỗi bước cursor là 1 tick,
+> transaction rơi về inactive giữa các bước → `InvalidStateError` khi có
+> transaction khác xen vào (fake-indexeddb: lỗi thật; trình duyệt: rủi ro tương
+> tự). Delete đồng loạt chạy trong 1 pass — an toàn mọi môi trường.
 
 ## 6. Test
 

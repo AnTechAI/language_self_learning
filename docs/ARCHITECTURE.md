@@ -6,7 +6,7 @@
 english-learning/
 ├── apps/
 │   ├── web/
-│   │   ├── index.html            → App React (GĐ 0: khung trống)
+│   │   ├── index.html            → App React (GĐ 3: đầy đủ 5 màn hình — docs/DESIGN.md)
 │   │   ├── src/                  → React + TS (docs/WEB-REACT.md)
 │   │   └── public/legacy/        → APP LEGACY (dùng hằng ngày)
 │   │       ├── index.html        → entry file:// hoặc /legacy/
