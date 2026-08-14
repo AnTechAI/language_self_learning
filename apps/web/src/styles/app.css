@@ -329,6 +329,10 @@ body[data-course='zh'] {
 .status-dot.mastered {
   background: #0ea5e9;
 }
+.status-dot.todo {
+  background: var(--ink-3);
+  opacity: 0.6;
+}
 
 /* ============ Learn card (flashcard-like) ============ */
 .learn-card {
@@ -534,6 +538,12 @@ select.input {
 }
 
 /* ============ Lesson grid ============ */
+.lesson-scroll {
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+}
 .lesson-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -546,6 +556,11 @@ select.input {
   box-shadow: var(--shadow-1);
   padding: 14px;
   cursor: pointer;
+}
+.lesson-card.selected {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  box-shadow: 0 0 0 1px var(--brand) inset;
 }
 .lesson-card .lt {
   font-weight: 700;

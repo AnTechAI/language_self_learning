@@ -52,7 +52,12 @@ Hai thẻ lớn (Tiếng Anh 🇬🇧 / Tiếng Trung 🇨🇳) → `enterCourse
 
 ### Hôm nay (Home)
 - **Hero**: lời chào theo giờ, thống kê nhanh, progress "x/quota từ".
-- **Học theo bài** (en): chọn bài → tự gộp 20 từ vào kho.
+- **Bài học từ vựng** (en): lưới card chọn bài (cuộn nếu nhiều) → chọn bài nào
+  hiện ngay **danh sách từ của bài** (đọc thẳng file bài — xem trước trước khi gộp):
+  word + IPA + loại từ + nghĩa Việt, chấm trạng thái (chưa học / mới / đang học /
+  đã thuộc); bấm từ đã có → mở WordDetail ở tab Từ vựng.
+  Nút **"Học bài này →"** gộp 20 từ vào kho (pickLesson, idempotent);
+  nút **"🎮 Ôn bài này"** → tab Ôn tập với phạm vi = bài đã chọn.
 - **Thẻ từ mới**: từ + IPA + nghĩa + ví dụ; 2 nút "Ôn lại sau" / "Tôi đã hiểu".
 - **Ôn tập nhanh**: từ đến hạn hôm nay (`lastReviewDay !== hôm nay`), bấm → flashcard.
 

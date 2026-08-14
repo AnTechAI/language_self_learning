@@ -1,11 +1,12 @@
 /**
- * HomeScreen — "Hôm nay": tiến độ từ mới, học theo bài, thẻ từ mới, ôn tập nhanh.
+ * HomeScreen — "Hôm nay": tiến độ từ mới, chọn bài học, thẻ từ mới, ôn tập nhanh.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { WordEntry } from '@english/shared';
 import { Button, Card, EmptyState, PosChips, ProgressBar, Speak, Stat } from '../../components/ui';
 import { DAILY_QUOTA } from '../../data/courses';
-import { type LessonMeta } from '../../data/lessons';
+import { lessonLearnedCount, loadLesson, type LessonMeta } from '../../data/lessons';
+import type { ExtraSeedRow } from '../../data/registry';
 import { useLessons } from './useLessons';
 import { pickSense, todayStr } from '../../lib/format';
 import { computeStreak, learnedToday } from '../../lib/learning';
@@ -175,41 +176,216 @@ export function HomeScreen() {
   );
 }
 
-/** Panel chọn bài học (en) */
+/** Panel chọn bài học (en) — lưới bài + từ của bài khi chọn */
 function LessonPanel({ lessons }: { lessons: LessonMeta[] }) {
   const store = useCourseStore();
-  const [selected, setSelected] = useState(lessons[0]?.id || '');
+  // Tự chọn bài đầu tiên để nội dung hiện ngay, không cần thêm 1 cú click
+  const [selected, setSelected] = useState<string | null>(lessons[0]?.id || null);
 
   return (
     <Card>
-      <h3>📚 Học từ mới theo bài học</h3>
-      <div className="row">
-        <select
-          className="input grow"
-          value={selected}
-          onChange={(e) => setSelected(e.target.value)}
-        >
-          {lessons.map((l) => (
-            <option key={l.id} value={l.id}>
-              {l.title} ({l.count} từ)
-            </option>
-          ))}
-        </select>
-        <Button
-          onClick={async () => {
-            if (!selected) return;
-            store.setLessonFocus(selected);
-            await store.pickLesson(selected);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-        >
-          Học bài này →
-        </Button>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 10,
+        }}
+      >
+        <h3 style={{ margin: 0 }}>📚 Bài học từ vựng</h3>
+        {lessons.length > 6 ? (
+          <small className="help" style={{ whiteSpace: 'nowrap' }}>
+            cuộn để xem thêm ↓
+          </small>
+        ) : null}
       </div>
-      <small className="help" style={{ marginTop: 6, display: 'block' }}>
-        Chọn bài → các từ của bài được tự thêm vào kho và hiện ngay bên dưới để học.
-      </small>
+      <div className="lesson-scroll">
+        <div className="lesson-grid">
+          {lessons.map((l) => {
+            const inCourse = l.id ? store.entries.filter((e) => e.lessonId === l.id).length : 0;
+            return (
+              <div
+                key={l.id}
+                className={'lesson-card' + (selected === l.id ? ' selected' : '')}
+                onClick={() => setSelected(l.id)}
+              >
+                <div className="lt">{l.title}</div>
+                <div className="lm">
+                  🏷️ {l.tag} · {l.count} từ
+                  {inCourse > 0 ? ` · đã thêm ${inCourse}` : ''}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      {selected ? (
+        <LessonWords key={selected} lessonId={selected} />
+      ) : (
+        <small className="help" style={{ marginTop: 10, display: 'block' }}>
+          Chọn 1 bài để xem từ vựng và bắt đầu học.
+        </small>
+      )}
     </Card>
+  );
+}
+
+/** Từ vựng của bài đã chọn — đọc thẳng file bài (xem trước, chưa cần gộp vào kho) */
+function LessonWords({ lessonId }: { lessonId: string }) {
+  const store = useCourseStore();
+  const course = store.course;
+  const [lesson, setLesson] = useState<(LessonMeta & { words: ExtraSeedRow[] }) | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    loadLesson(lessonId)
+      .then((l) => {
+        if (alive) setLesson(l);
+      })
+      .catch(() => {
+        if (alive) setLesson(null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [lessonId]);
+
+  // Bản đồ từ đã có trong kho (theo word) để chấm trạng thái từng từ
+  const byWord = useMemo(() => {
+    const m = new Map<string, WordEntry>();
+    store.entries.forEach((e) => m.set(e.word.toLowerCase(), e));
+    return m;
+  }, [store.entries]);
+
+  const inCourse = lesson
+    ? lesson.words.filter((r) => byWord.has(String(r[0] || '').toLowerCase())).length
+    : 0;
+  const learned = lesson ? lessonLearnedCount(lessonId, store.entries) : 0;
+  const total = lesson ? lesson.words.length : 0;
+  const target = course?.target.code || 'vi';
+
+  if (!lesson)
+    return (
+      <div style={{ marginTop: 12 }}>
+        <EmptyState big="📘" title="Đang tải bài học…">
+          <p style={{ margin: 0 }}>
+            Nếu mãi không tải, hãy chạy <code>node tools/build-lessons.js</code>.
+          </p>
+        </EmptyState>
+      </div>
+    );
+
+  const allMerged = inCourse >= total;
+  return (
+    <div style={{ marginTop: 12 }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 8,
+          marginBottom: 8,
+        }}
+      >
+        <div>
+          <h4 style={{ margin: 0, fontSize: 15 }}>{lesson.title}</h4>
+          <small className="help">
+            🏷️ {lesson.tag} · {total} từ · Đã học <b>{learned}</b> · Trong kho{' '}
+            <b>
+              {inCourse}/{total}
+            </b>
+          </small>
+        </div>
+        <div className="row" style={{ gap: 8 }}>
+          {inCourse > 0 ? (
+            <Button
+              variant="soft"
+              size="sm"
+              onClick={() => {
+                store.setGameLesson(lessonId);
+                store.setTab('games');
+              }}
+            >
+              🎮 Ôn bài này
+            </Button>
+          ) : null}
+          {!allMerged ? (
+            <Button
+              size="sm"
+              onClick={async () => {
+                await store.pickLesson(lessonId);
+              }}
+            >
+              Học bài này →
+            </Button>
+          ) : null}
+        </div>
+      </div>
+      <ul className="word-list">
+        {lesson.words.map((row, i) => {
+          const w = String(row[0] || '').toLowerCase();
+          const e = byWord.get(w);
+          const status = e ? e.learningStatus : 'todo';
+          const label = !e
+            ? 'chưa học'
+            : e.learningStatus === 'new'
+              ? 'mới'
+              : e.learningStatus === 'mastered'
+                ? 'đã thuộc'
+                : 'đang học';
+          return (
+            <li
+              key={w + i}
+              className="word-item"
+              style={e ? {} : { cursor: 'default' }}
+              onClick={
+                e
+                  ? () => {
+                      store.openDetail(e.id);
+                      store.setTab('vocab');
+                    }
+                  : undefined
+              }
+            >
+              <span className={`status-dot ${status}`} />
+              <div style={{ flex: 1 }}>
+                <div className="w">
+                  {row[0]}
+                  {row[1] ? <span className="ipa"> {row[1]}</span> : null}
+                </div>
+                <div className="meta">
+                  {row[2] ? <span>{row[2]}</span> : null}
+                  {row[4] ? <span> · {row[4]}</span> : null}
+                </div>
+              </div>
+              <span
+                style={{
+                  fontSize: 11,
+                  color:
+                    status === 'mastered'
+                      ? '#0ea5e9'
+                      : status === 'learning'
+                        ? 'var(--brand-strong)'
+                        : status === 'new'
+                          ? 'var(--amber)'
+                          : 'var(--ink-3)',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {label}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+      {!inCourse ? (
+        <small className="help" style={{ marginTop: 8, display: 'block' }}>
+          💡 Bấm "Học bài này" để thêm {target === 'vi' ? 'nghĩa Việt + phiên âm' : 'toàn bộ từ'}{' '}
+          của bài vào kho và bắt đầu học.
+        </small>
+      ) : null}
+    </div>
   );
 }
 
