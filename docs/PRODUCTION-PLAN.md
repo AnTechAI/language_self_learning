@@ -40,7 +40,7 @@ data/scripts ────────────────── 4 tool sinh 
 | **1** | TypeScript hóa data model (packages/shared — đã đối chiếu toEntry thật); ESLint/Prettier; CI GitHub Actions | ✅ XONG |
 | **2** | localStorage → IndexedDB (migration tự động, repo pattern — `apps/web/src/db/`, 12 test) | ✅ XONG |
 | **3** | Port từng màn hình sang React (Picker → Home/Lessons → Games → Vocab → Stats) — zustand + design system mới + smoke test | ✅ XONG (xem docs/DESIGN.md) |
-| **4** | PWA offline + di dời tools → `data/scripts` (CLI chung) | ⏳ |
+| **4** | PWA offline (vite-plugin-pwa: manifest + icon + SW precache asset build + legacy, runtime cache bank/lessons — dùng được khi mất mạng, cài đặt như app) | ✅ XONG (phần di dời tools → `data/scripts` còn lại ⏳) |
 | **5** | Backend FastAPI: tài khoản + sync đa người dùng + proxy từ điển | ⏳ |
 
 ## 4. Quyết định kỹ thuật
@@ -53,6 +53,7 @@ data/scripts ────────────────── 4 tool sinh 
 | State (GĐ 3) | **Zustand** (đã dùng) | nhẹ, phổ biến |
 | Router (GĐ 3) | **Tab state trong store** (chưa cần react-router — thêm khi có deep-link/URL) | app nhỏ, 4 tab; router thêm chi phí không cần thiết |
 | Lưu trữ | IndexedDB (idb) | đủ lớn cho 25MB từ điển, migration từ localStorage |
+| PWA (GĐ 4) | vite-plugin-pwa (autoUpdate) + manifest.webmanifest tĩnh + icon tự sinh (`tools/make-icons.js`) | precache asset build + legacy trừ bank/lessons (tải nhu cầu, runtime cache) — offline thật, không phình bundle |
 | Backend | FastAPI + SQLite (better-sqlite3 tương đương bên Python: sqlite3 chuẩn) | thân thiện tác giả, deploy đơn giản |
 | Auth (GĐ 5) | JWT (hoặc token đơn giản cho bạn bè) | đơn giản, đủ dùng |
 | Deploy | static (Vercel/Netlify/Pages) + API trên VPS/Workers | chi phí 0 |

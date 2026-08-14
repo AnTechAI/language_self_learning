@@ -152,7 +152,7 @@ enriched.jsonl (có vi+ipa+freq)
 | GĐ 4 | `enrich-vi-ipa.py` + `build-chunks` 8 cột + modal điền sẵn vi/ipa | ✅ xong |
 | GĐ 4 | Chia lesson từ file giàu theo TẦN SUẤT (`build-lessons --keep-existing`) | ✅ xong (15 bài thật) |
 | GĐ 4 | Nút **"＋ Học từ này"** trong modal từ điển | chưa làm |
-| GĐ 4 | PWA offline (manifest + SW) cho `dist/` | chưa làm |
+| GĐ 4 | PWA offline (manifest + SW cho `dist/`, runtime cache bank/lessons, icon tự sinh) | ✅ xong |
 | GĐ 5 | FastAPI sync (JWT, SQLite, proxy dictionary) | chưa làm |
 | GĐ 6 | SRS (`nextReviewDay`) + tìm kiếm VI | chưa làm |
 

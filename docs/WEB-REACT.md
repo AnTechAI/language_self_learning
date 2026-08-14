@@ -62,6 +62,24 @@ apps/web/
 
 ## 5. Lưu ý triển khai
 
+### PWA offline (GĐ 4)
+
+- **vite-plugin-pwa** (`apps/web/vite.config.ts`) + `registerType: 'autoUpdate'` —
+  SW tự cập nhật khi có bản build mới (không làm phiền người dùng).
+- **Precache** (Workbox, ~28 entry / 867KB): asset build + `legacy/js` + css —
+  TRỪ `legacy/js/bank/**` (25MB) và `legacy/js/lessons/**` (tải nhu cầu).
+  Không precache hết → giữ offline mà không phình bộ nhớ.
+- **Runtime cache-first**: bank chunk (max 110 file — đủ 104 chunk), lessons
+  (max 200 file), các file legacy còn lại — tra từ lần đầu tải 1 chunk, sau đó offline.
+- **Manifest tĩnh** `public/manifest.webmanifest` (`manifest: false`) + icon PNG
+  tự sinh bằng `node tools/make-icons.js` (Node zlib, không cần thư viện).
+- `navigateFallback: '/index.html'` + denylist `/^\/legacy\//` — SPA về index,
+  legacy giữ nguyên trang riêng.
+- **Dev**: plugin tắt SW (mặc định) — `npm run dev` không bị ảnh hưởng; chỉ
+  bản build/preview có SW. Sau khi build mới, trình duyệt autoUpdate tự nạp lại.
+
+### Lưu ý khác (dữ liệu & smoke test)
+
 - **`runTx` trả mảng kết quả** → 1 request phải destructure: `const [x] = await runTx(...)`.
 - **`replaceAll` = 2 transaction** (xóa getAllKeys + ghi). KHÔNG dùng cursor để
   xóa: `c.delete()` chạy sau nhiều tick → transaction inactive → InvalidStateError

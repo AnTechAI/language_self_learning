@@ -1,0 +1,16 @@
+{
+  "name": "Học Từ Vựng — Tiếng Anh & Tiếng Trung",
+  "short_name": "Học Từ Vựng",
+  "description": "Học từ vựng ngoại tuyến: bài học 20 từ, trò chơi ôn tập, từ điển 207k từ. Dữ liệu lưu trên máy.",
+  "lang": "vi",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f6fb",
+  "theme_color": "#10b981",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
