@@ -32,7 +32,7 @@ node tools/build-from-jsonl.js ... --allow-no-ipa --phrases --max-senses 6
 ## 2. build-lessons.js
 
 ```bash
-node tools/build-lessons.js --file tools/lesson-words.txt   # 20 từ/bài
+node tools/build-lessons.js --file tools/lesson-words.txt   # 20 từ/bài (nguồn jsonl + API)
 node tools/build-lessons.js --size 10 --words "a b c"       # tùy chỉnh
 ```
 
@@ -40,6 +40,29 @@ node tools/build-lessons.js --size 10 --words "a b c"       # tùy chỉnh
 - **Cache API**: `tools/out/lesson-cache.json` — chạy lại nhanh, không tốn request.
 - Đầu ra: `js/lessons/manifest.js` + `lesson-001.js…` (format: docs/DATA-MODEL.md §3).
 - App chỉ tải đúng bài người chọn (lesson-loader.js).
+
+### Chế độ ENRICHED (GĐ 4) — chia bài từ TOÀN BỘ từ đã làm giàu, KHÔNG gọi API
+
+Có `data/raw/english-dictionary.enriched.jsonl` (từ enrich-vi-ipa.py) thì tool
+MẶC ĐỊNH dùng nguồn đó: đọc thẳng vi/ipa/freq → **xếp theo tần suất** (từ thông
+dụng trước) → chia bài 20 từ. Một từ nhiều nghĩa → nghĩa chính (POS ưu tiên +
+definition ngắn nhất) + tối đa 4 nghĩa bổ sung `{p,i,e,v,x,s,a}`.
+
+```bash
+node tools/build-lessons.js                              # enriched, theo tần suất
+node tools/build-lessons.js --source raw                 # ép dùng jsonl gốc + API
+node tools/build-lessons.js --src <file>                 # file enriched khác
+node tools/build-lessons.js --limit 1000                 # chỉ 1000 từ thông dụng nhất
+node tools/build-lessons.js --from 1000 --limit 1000     # lô tiếp theo (bài 51+)
+node tools/build-lessons.js --order alpha                # xếp a→z thay vì tần suất
+node tools/build-lessons.js --include-seed               # giữ cả từ đã có trong seed
+node tools/build-lessons.js --keep-existing              # THÊM bài mới, giữ bài cũ
+node tools/build-lessons.js --out-dir /tmp/lessons       # ghi ra thư mục khác (test)
+```
+
+- Chỉ giữ từ HỌC ĐƯỢC (có nghĩa Việt), bỏ từ đã có trong seed (trừ `--include-seed`).
+- `--keep-existing` đọc manifest cũ (hỗ trợ key có/không nháy) → tiếp số bài, không xóa.
+- Luồng chuẩn: enrich → chia bài → `--limit` theo lô (mỗi lô ~50 bài) → `--keep-existing` để cộng dồn.
 
 ## 3. build-chunks.js
 

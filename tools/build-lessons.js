@@ -18,6 +18,21 @@
  *   node tools/build-lessons.js --size 10        # mỗi bài 10 từ thay vì 20
  *   node tools/build-lessons.js --no-cache       # không dùng lại cache API cũ
  *
+ * CHẾ ĐỘ ENRICHED (GĐ 4 — chia bài từ TOÀN BỘ từ đã làm giàu, KHÔNG gọi API):
+ *   Nếu có data/raw/english-dictionary.enriched.jsonl (tools/enrich-vi-ipa.py)
+ *   thì MẶC ĐỊNH dùng nguồn đó: đọc thẳng vi/ipa/freq → xếp theo TẦN SUẤT
+ *   (từ thông dụng trước) → chia bài 20 từ. Không dịch, không lấy IPA nữa.
+ *
+ *   node tools/build-lessons.js                              # enriched, tần suất
+ *   node tools/build-lessons.js --source raw                 # ép dùng jsonl gốc
+ *   node tools/build-lessons.js --src <file>                 # file enriched khác
+ *   node tools/build-lessons.js --limit 1000                 # chỉ 1000 từ thông dụng nhất
+ *   node tools/build-lessons.js --from 1000 --limit 1000     # lô tiếp theo (bài 51+)
+ *   node tools/build-lessons.js --order alpha                # xếp theo a→z thay vì tần suất
+ *   node tools/build-lessons.js --include-seed               # giữ cả từ đã có trong seed
+ *   node tools/build-lessons.js --keep-existing              # THÊM bài mới, không xóa bài cũ
+ *   node tools/build-lessons.js --out-dir /tmp/lessons       # ghi ra thư mục khác (test)
+ *
  * Cache kết quả API ở tools/out/lesson-cache.json để chạy lại không tốn request.
  */
 const fs = require('fs');
@@ -27,6 +42,7 @@ const readline = require('readline');
 const ROOT = path.resolve(__dirname, '..');
 const SEED_FILE = path.join(ROOT, 'apps', 'web', 'public', 'legacy', 'js', 'seed-data.js');
 const JSONL_FILE = path.join(ROOT, 'data', 'raw', 'english-dictionary.jsonl');
+const ENRICHED_FILE = path.join(ROOT, 'data', 'raw', 'english-dictionary.enriched.jsonl');
 const OUT_DIR = path.join(ROOT, 'apps', 'web', 'public', 'legacy', 'js', 'lessons');
 const TOOL_OUT = path.join(__dirname, 'out');
 const CACHE_FILE = path.join(TOOL_OUT, 'lesson-cache.json');
@@ -213,20 +229,170 @@ function existingSeedWords() {
 /* ================= chính ================= */
 function parseArgs() {
   const a = process.argv.slice(2);
-  const opt = { words: [], file: '', limit: 0, tag: '', size: LESSON_SIZE, noCache: false };
+  const opt = { words: [], file: '', limit: 0, from: 0, tag: '', size: LESSON_SIZE, noCache: false, source: '', src: '', order: 'freq', includeSeed: false, keepExisting: false, outDir: '' };
   for (let i = 0; i < a.length; i++) {
     if (a[i] === '--no-cache') opt.noCache = true;
     else if (a[i] === '--size') { opt.size = parseInt(a[i + 1], 10) || LESSON_SIZE; i++; }
     else if (a[i] === '--tag') { opt.tag = a[i + 1] || ''; i++; }
     else if (a[i] === '--limit') { opt.limit = parseInt(a[i + 1], 10) || 0; i++; }
+    else if (a[i] === '--from') { opt.from = parseInt(a[i + 1], 10) || 0; i++; }
     else if (a[i] === '--words') { opt.words = (a[i + 1] || '').split(/\s+/).filter(Boolean); i++; }
     else if (a[i] === '--file') { opt.file = a[i + 1] || ''; i++; }
+    else if (a[i] === '--source') { opt.source = (a[i + 1] || '').toLowerCase(); i++; }
+    else if (a[i] === '--src') { opt.src = a[i + 1] || ''; i++; }
+    else if (a[i] === '--order') { opt.order = (a[i + 1] || 'freq').toLowerCase(); i++; }
+    else if (a[i] === '--include-seed') opt.includeSeed = true;
+    else if (a[i] === '--keep-existing') opt.keepExisting = true;
+    else if (a[i] === '--out-dir') { opt.outDir = a[i + 1] || ''; i++; }
   }
   return opt;
 }
 
+/* ===== CHẾ ĐỘ ENRICHED: đọc file làm giàu (vi+ipa+freq), KHÔNG gọi API ===== */
+async function buildLessonsFromEnriched(opt) {
+  const srcFile = opt.src || (fs.existsSync(ENRICHED_FILE) ? ENRICHED_FILE : '');
+  if (!srcFile || !fs.existsSync(srcFile)) {
+    console.error('✗ Chế độ enriched cần ' + ENRICHED_FILE + ' — hãy chạy: python tools/enrich-vi-ipa.py');
+    process.exit(1);
+  }
+  const outDir = opt.outDir ? path.resolve(ROOT, opt.outDir) : OUT_DIR;
+
+  // --- Gom mọi dòng theo từ; mỗi dòng là 1 nghĩa (đã có vi sẵn) ---
+  console.log('📖 Đang đọc ' + path.basename(srcFile) + '…');
+  const byWord = new Map();
+  const rl = readline.createInterface({ input: fs.createReadStream(srcFile), crlfDelay: Infinity });
+  let lines = 0;
+  for await (const line of rl) {
+    if (!line.trim()) continue;
+    let e;
+    try { e = JSON.parse(line); } catch (err) { continue; }
+    const w = String(e.word || '').toLowerCase();
+    if (!w) continue;
+    lines++;
+    const def = cleanEN(e.definition, 170);
+    if (!def) continue;
+    if (!byWord.has(w)) byWord.set(w, []);
+    byWord.get(w).push({
+      p: normPOS(e.partOfSpeech),
+      e: def,
+      v: cleanVI(e.vi),
+      x: cleanEN(Array.isArray(e.examples) ? (e.examples[0] || '') : (e.examples || ''), 120),
+      s: cleanList(e.synonyms, w),
+      a: cleanList(e.antonyms, w),
+      i: String(e.ipa || ''),
+      freq: typeof e.freq === 'number' ? e.freq : 0,
+    });
+  }
+  rl.close();
+  console.log(`   ${lines} dòng → ${byWord.size} từ.`);
+
+  // --- Chỉ giữ từ HỌC ĐƯỢC (có nghĩa Việt); loại trùng nghĩa ---
+  const existing = opt.includeSeed ? new Set() : existingSeedWords();
+  const wordList = [];
+  for (const [w, senses] of byWord) {
+    const seen = new Set();
+    const uniq = senses.filter((s) => { if (!s.v || seen.has(s.e.toLowerCase())) return false; seen.add(s.e.toLowerCase()); return true; });
+    if (!uniq.length) continue;                    // không dịch được → không học được
+    if (existing.has(w)) continue;                 // đã có trong kho cơ bản
+    wordList.push({ w, freq: Math.max(...uniq.map((s) => s.freq)), senses: uniq });
+  }
+  console.log(`   Học được: ${wordList.length} từ (${byWord.size - wordList.length} bỏ: thiếu nghĩa Việt / trùng seed).`);
+
+  // --- Xếp thứ tự: tần suất giảm dần (mặc định) hoặc a→z ---
+  if (opt.order === 'freq') {
+    wordList.sort((a, b) => (b.freq - a.freq) || a.w.localeCompare(b.w));
+  } else {
+    wordList.sort((a, b) => a.w.localeCompare(b.w));
+  }
+  const total = wordList.length;
+  const from = Math.min(opt.from, total);
+  const sliced = wordList.slice(from, opt.limit > 0 ? from + opt.limit : total);
+  console.log(`   Xếp theo ${opt.order === 'freq' ? 'TẦN SUẤT (thông dụng trước)' : 'bảng chữ cái'}: ${from + 1}–${from + sliced.length}/${total}.`);
+
+  // --- Dựng từng dòng nén (định dạng SEED_WORDS, giống chế độ cũ) ---
+  const rowsByWord = new Map();
+  for (const it of sliced) {
+    const { w, senses } = it;
+    const byPos = {};
+    senses.forEach((s) => { byPos[s.p] = (byPos[s.p] || 0) + 1; });
+    let primaryPos = 'other', best = -1;
+    for (const p of Object.keys(byPos)) {
+      if (byPos[p] > best || (byPos[p] === best && POS_PRIORITY.indexOf(p) < POS_PRIORITY.indexOf(primaryPos))) {
+        primaryPos = p; best = byPos[p];
+      }
+    }
+    const samePos = senses.filter((s) => s.p === primaryPos).sort((a, b) => a.e.length - b.e.length);
+    const primary = samePos[0];
+    const extras = senses.filter((s) => s !== primary).slice(0, 4).map((x) => ({
+      p: x.p, i: x.i || primary.i || '', e: x.e, v: x.v, x: x.x, s: x.s, a: x.a,
+    }));
+    rowsByWord.set(w, [w, primary.i || '', primary.p, primary.e, primary.v, primary.x || '', '', primary.s, primary.a, '', ...extras]);
+  }
+
+  // --- Gom thành BÀI HỌC (mỗi bài opt.size từ, theo thứ tự đã xếp) ---
+  const built = sliced.map((it) => it.w);
+  const tag = opt.tag || 'Từ phổ biến';
+  const lessons = [];
+  for (let i = 0; i < built.length; i += opt.size) {
+    const group = built.slice(i, i + opt.size);
+    lessons.push({
+      id: 'lesson-' + String(lessons.length + 1).padStart(3, '0'),
+      title: 'Bài ' + (lessons.length + 1) + ' · ' + tag,
+      tag,
+      words: group.map((w) => rowsByWord.get(w)),
+    });
+  }
+
+  // --- Ghi js/lessons/ (xóa bài cũ trừ khi --keep-existing) ---
+  fs.mkdirSync(outDir, { recursive: true });
+  let existingLessons = [];
+  if (opt.keepExisting && fs.existsSync(path.join(outDir, 'manifest.js'))) {
+    try {
+      const src = fs.readFileSync(path.join(outDir, 'manifest.js'), 'utf-8');
+      // chấp nhận cả key có nháy (JSON.stringify) lẫn key trần: {"id":…} / {id:…}
+      const m = src.match(/\[\s*\{.*\}\]\s*\)/s);
+      if (m) {
+        let txt = m[0].replace(/\)$/, '').trim();
+        try { existingLessons = JSON.parse(txt); }
+        catch (e) { existingLessons = JSON.parse(txt.replace(/([{,])\s*([A-Za-z_$][\w$]*)\s*:/g, '$1"$2":')); }
+      }
+    } catch (err) { existingLessons = []; }
+    console.log(`   Giữ ${existingLessons.length} bài cũ, thêm ${lessons.length} bài mới.`);
+  } else {
+    for (const f of fs.readdirSync(outDir)) fs.unlinkSync(path.join(outDir, f));
+  }
+  const startNum = existingLessons.reduce((mx, l) => {
+    const n = parseInt(String(l.id || '').replace(/\D/g, ''), 10);
+    return Number.isFinite(n) ? Math.max(mx, n) : mx;
+  }, 0);
+  lessons.forEach((l, i) => {
+    l.id = 'lesson-' + String(startNum + i + 1).padStart(3, '0');
+    l.title = 'Bài ' + (startNum + i + 1) + ' · ' + tag;
+    const body = '(function(){window.VocabApp.lessonsRegister(' + JSON.stringify(l.id + '.js') +
+      ',{tag:' + JSON.stringify(l.tag) + ',words:[\n' +
+      l.words.map((row) => toRow({ row })).join('\n') + '\n]});})();\n';
+    fs.writeFileSync(path.join(outDir, l.id + '.js'), body, 'utf-8');
+  });
+  const stamp = new Date().toISOString().slice(0, 10);
+  const allMeta = [...existingLessons, ...lessons.map((l) => ({ id: l.id, title: l.title, file: l.id + '.js', tag: l.tag, count: l.words.length }))];
+  fs.writeFileSync(path.join(outDir, 'manifest.js'),
+    '/* Bài học — sinh bởi tools/build-lessons.js (' + stamp + ') · nguồn: ' + path.basename(srcFile) + ' */\n' +
+    'window.VocabApp.lessonsInit(' + JSON.stringify(allMeta) + ');\n', 'utf-8');
+
+  console.log(`\n📚 Xong: ${lessons.length} bài học (mỗi bài ${opt.size} từ) tại ${outDir}.`);
+  lessons.slice(0, 8).forEach((l) => console.log(`   ${l.id} — ${l.title} (${l.words.length} từ)`));
+  if (lessons.length > 8) console.log(`   … tổng ${lessons.length} bài (${built.length} từ).`);
+}
+
 (async () => {
   const opt = parseArgs();
+  // Chế độ nguồn: --source rõ ràng, --src chỉ định file enriched,
+  // mặc định ưu tiên file enriched (nếu có)
+  const useEnriched = opt.source === 'enriched' || !!opt.src || (!opt.source && fs.existsSync(ENRICHED_FILE));
+  if (useEnriched) {
+    await buildLessonsFromEnriched(opt);
+    return;
+  }
   if (!fs.existsSync(JSONL_FILE)) { console.error('✗ Không tìm thấy ' + JSONL_FILE); process.exit(1); }
   fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.mkdirSync(TOOL_OUT, { recursive: true });

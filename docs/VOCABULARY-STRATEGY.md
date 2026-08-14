@@ -42,8 +42,9 @@ python tools/enrich-vi-ipa.py --inplace         # ghi đè gốc (mặc định:
   (nhiều dòng cùng word) dịch **ĐỊNH NGHĨA** theo ngữ cảnh từng nghĩa.
 - `ipa` = Free Dictionary API, chỉ từ **đơn** (cụm từ để trống).
 - `freq` = `wordfreq` (tần suất / triệu, ngoại tuyến) → dùng để xếp bài học.
-- **Resume an toàn**: chạy lại bỏ qua từ đã có trong file đầu ra; cache theo
-  văn bản gốc (từ/định nghĩa) không gọi trùng; backoff khi bị 429/lỗi mạng.
+- **Resume an toàn**: chạy lại bỏ qua DÒNG đã có (đánh dấu theo word+định nghĩa,
+  không theo từ — tránh mất nghĩa của từ đa nghĩa); cache theo văn bản gốc
+  (từ/định nghĩa) không gọi trùng; backoff khi bị 429/lỗi mạng.
 
 ### 3.2 Bank chunk mở rộng — `tools/build-chunks.js` ✅ (đã có)
 
@@ -76,17 +77,23 @@ python tools/enrich-vi-ipa.py --inplace         # ghi đè gốc (mặc định:
 - Dùng cột `freq` (wordfreq) → sinh lesson theo `freq` giảm dần: 20 từ thông
   dụng nhất trước, càng về sau từ càng hiếm.
 
-### 4.2 Pipeline bài học mở rộng (kế hoạch)
+### 4.2 Pipeline bài học mở rộng ✅ (GĐ 4 — đã có)
 
 ```
 enriched.jsonl (có vi+ipa+freq)
-  → tools/build-lessons.js --source enriched --order freq  (chọn 20 từ/lần, --n N bài)
-  → js/lessons/manifest.js (LESSON_META)
+  → tools/build-lessons.js (chế độ enriched: xếp theo freq, 20 từ/bài, không gọi API)
+  → js/lessons/manifest.js + lesson-NNN.js
   → app: pickLesson → ensureLessonInCourse → auto-merge 20 từ vào entries
 ```
 
 - Cơ chế hiện tại đã đủ: bài = 20 từ, chơi scoped theo `lessonId`, merge idempotent.
 - Khác biệt duy nhất: nguồn từ = enriched (không phải danh sách tay `lesson-words.txt`).
+- `--keep-existing` để CỘNG DỒN bài mới vào bài cũ (không xóa).
+- Đã chạy thật: **300 từ thông dụng nhất → 15 bài "Từ phổ biến"** (Bài 8–22),
+  giữ nguyên 7 bài chủ đề (đời sống/ẩm thực/sức khỏe/công nghệ/cảm xúc).
+  Bài 8 mở đầu: week, case, nothing, person, today… (20 từ/bài, vi + ipa đầy đủ).
+- Mở rộng toàn bộ 207k từ: `--limit 1000 --keep-existing` chạy nhiều lô (mỗi lô
+  ~50 bài), hoặc `--from N --limit 1000` cho lô tiếp theo.
 
 ### 4.3 "Thêm vào kho học" từ từ điển — cơ chế học từ KHÔNG có trong bài
 
@@ -143,10 +150,11 @@ enriched.jsonl (có vi+ipa+freq)
 | GĐ | Việc | Trạng thái |
 |---|---|---|
 | GĐ 4 | `enrich-vi-ipa.py` + `build-chunks` 8 cột + modal điền sẵn vi/ipa | ✅ xong |
+| GĐ 4 | Chia lesson từ file giàu theo TẦN SUẤT (`build-lessons --keep-existing`) | ✅ xong (15 bài thật) |
 | GĐ 4 | Nút **"＋ Học từ này"** trong modal từ điển | chưa làm |
 | GĐ 4 | PWA offline (manifest + SW) cho `dist/` | chưa làm |
 | GĐ 5 | FastAPI sync (JWT, SQLite, proxy dictionary) | chưa làm |
-| GĐ 6 | SRS (`nextReviewDay`) + lesson theo `freq` + tìm kiếm VI | chưa làm |
+| GĐ 6 | SRS (`nextReviewDay`) + tìm kiếm VI | chưa làm |
 
 ### 5.3 Những gì KHÔNG làm
 

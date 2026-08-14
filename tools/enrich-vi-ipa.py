@@ -25,13 +25,15 @@ Cách dùng:
   python tools/enrich-vi-ipa.py --workers 4 --delay 0.2     # tăng tốc (coi chừng chặn)
   python tools/enrich-vi-ipa.py --skip-ipa         # chỉ thêm nghĩa Việt
   python tools/enrich-vi-ipa.py --freq             # thêm cột freq (cần: pip install wordfreq)
+  python tools/enrich-vi-ipa.py --add-freq          # CHỈ thêm freq cho file đã giàu (không gọi API)
   python tools/enrich-vi-ipa.py --dry-run          # chạy thử không gọi API
   python tools/enrich-vi-ipa.py --inplace          # ghi đè file gốc (mặc định ghi file mới)
   python tools/enrich-vi-ipa.py --out <file>       # chỉ định file đầu ra
 
 An toàn:
   - Không sửa file gốc (mặc định). Ghi ra file .enriched.jsonl.
-  - RESUME: chạy lại bỏ qua từ đã có đủ dữ liệu trong file đầu ra.
+  - RESUME theo TỪNG DÒNG (word+định nghĩa) chứ không theo từ — từ nhiều nghĩa
+    phải làm giàu ĐỦ mọi dòng mới tính là xong (đừng đánh dấu theo từ — sẽ mất nghĩa).
   - Backoff khi bị 429 / lỗi mạng; retry theo --retries.
   - Cache theo văn bản gốc (từ/định nghĩa) để không dịch trùng.
 """
@@ -156,13 +158,40 @@ def build_arg_parser():
     p.add_argument("--skip-ipa", action="store_true", help="không lấy IPA (chỉ dịch nghĩa)")
     p.add_argument("--skip-vi", action="store_true", help="không dịch nghĩa (chỉ lấy IPA)")
     p.add_argument("--freq", action="store_true", help="thêm cột freq qua wordfreq (pip install wordfreq)")
+    p.add_argument("--add-freq", action="store_true", help="CHỈ thêm cột freq cho file đã giàu (không gọi API)")
     p.add_argument("--dry-run", action="store_true", help="chỉ đếm, không gọi API")
     return p
 
 
+def add_freq_pass(outfile):
+    """Thêm cột freq (wordfreq) cho mọi dòng còn thiếu — offline, không gọi API."""
+    try:
+        from wordfreq import word_frequency
+    except ImportError:
+        print("[X] Cài wordfreq để dùng --add-freq:  pip install wordfreq", file=sys.stderr)
+        sys.exit(1)
+    if not os.path.exists(outfile):
+        print("[X] Không tìm thấy " + outfile, file=sys.stderr)
+        sys.exit(1)
+    out = []
+    changed = 0
+    with open(outfile, "r", encoding="utf-8") as f:
+        for line in f:
+            e = json.loads(line)
+            if "freq" not in e:
+                e["freq"] = round(word_frequency(str(e.get("word", "")).lower(), "en"), 8)
+                changed += 1
+            out.append(json.dumps(e, ensure_ascii=False))
+    with open(outfile, "w", encoding="utf-8") as f:
+        f.write("\n".join(out) + "\n")
+    print(f"[OK] Thêm freq cho {changed}/{len(out)} dòng → " + outfile)
+
+
 def load_done(outfile):
-    """Đọc file đầu ra (nếu có) → cache vi/ipa + set từ đã xong (resume)."""
-    done = {}
+    """Đọc file đầu ra (nếu có) → cache vi/ipa + set dòng đã xong (resume).
+    Quan trọng: đánh dấu theo TỪNG DÒNG (word|definition) chứ không theo từ —
+    một từ nhiều nghĩa phải làm giàu ĐỦ mọi dòng mới tính là xong."""
+    done = set()
     vi_cache, ipa_cache = {}, {}
     if os.path.exists(outfile):
         with open(outfile, "r", encoding="utf-8") as f:
@@ -173,13 +202,18 @@ def load_done(outfile):
                     continue
                 w = str(e.get("word", "")).lower()
                 if w:
-                    done[w] = True
+                    done.add(line_fp(e))
                 if e.get("vi"):
                     vi_cache[e.get("definition", "")] = e["vi"]
                     vi_cache.setdefault(w, e["vi"])
                 if e.get("ipa"):
                     ipa_cache[w] = e["ipa"]
     return done, vi_cache, ipa_cache
+
+
+def line_fp(e):
+    """Dấu vân tay 1 dòng JSONL: word + định nghĩa (phân biệt các nghĩa của cùng từ)."""
+    return str(e.get("word", "")).lower() + "|" + str(e.get("definition", "")).strip().lower()[:200]
 
 
 def translate_with_cache(text, cache, lock):
@@ -204,8 +238,8 @@ def process_one(line, done, vi_cache, ipa_cache, lock, opt, word_count):
     word = str(e.get("word", "")).lower()
     if not word:
         return line
-    if word in done:
-        return line  # đã xử lý ở lần chạy trước (resume)
+    if line_fp(e) in done:
+        return line  # dòng đã xử lý ở lần chạy trước (resume)
 
     need_vi = not opt.skip_vi
     need_ipa = not opt.skip_ipa and is_single_word(word)
@@ -261,6 +295,11 @@ def main():
     if args.inplace:
         args.outfile = args.infile
 
+    # Mode đặc biệt: chỉ thêm cột freq cho file đã giàu (không gọi API)
+    if args.add_freq:
+        add_freq_pass(args.outfile)
+        return
+
     if not os.path.exists(args.infile):
         print(f"[X] Không tìm thấy {args.infile}")
         sys.exit(1)
@@ -301,7 +340,7 @@ def main():
 
     # --- resume + cache ---
     done, vi_cache, ipa_cache = load_done(args.outfile)
-    todo = [ln for ln in lines if json.loads(ln).get("word", "").lower() not in done]
+    todo = [ln for ln in lines if line_fp(json.loads(ln)) not in done]
     print(f"   Đã xong trước: {len(lines) - len(todo)} · Còn xử lý: {len(todo)}")
 
     if args.dry_run:
