@@ -92,7 +92,7 @@ describe('App smoke', () => {
     });
     await waitFor(() => useCourseStore.getState().course?.id === 'en');
     await waitFor(() => useCourseStore.getState().entries.length === 524, 8000);
-    await waitFor(() => container.textContent?.includes('Ôn tập nhanh'));
+    await waitFor(() => container.textContent?.includes('Đã học hôm nay'));
     expect(container.querySelector('.app-nav')).toBeTruthy();
     expect(useCourseStore.getState().entries.length).toBe(524);
   });

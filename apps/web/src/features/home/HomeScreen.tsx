@@ -1,14 +1,14 @@
 /**
- * HomeScreen — "Hôm nay": tiến độ từ mới, chọn bài học, thẻ từ mới, ôn tập nhanh.
+ * HomeScreen — "Hôm nay": chọn bài học (chỉ hiện bài; từ hiện khi bấm "Học bài này").
  */
 import { useEffect, useMemo, useState } from 'react';
 import type { WordEntry } from '@english/shared';
-import { Button, Card, EmptyState, PosChips, ProgressBar, Speak, Stat } from '../../components/ui';
+import { Button, Card, EmptyState, ProgressBar, Stat } from '../../components/ui';
 import { DAILY_QUOTA } from '../../data/courses';
 import { lessonLearnedCount, loadLesson, type LessonMeta } from '../../data/lessons';
 import type { ExtraSeedRow } from '../../data/registry';
 import { useLessons } from './useLessons';
-import { pickSense, todayStr } from '../../lib/format';
+import { todayStr } from '../../lib/format';
 import { computeStreak, learnedToday } from '../../lib/learning';
 import { useCourseStore } from '../../store/useCourseStore';
 
@@ -29,19 +29,9 @@ export function HomeScreen() {
     () => entries.filter((e) => e.learningStatus === 'new' && !learned.includes(e.id)),
     [entries, learned],
   );
-  const newWords = useMemo(
-    () =>
-      allNew.filter((e) => (e.senses || []).some((s) => s.meaning?.[course?.target.code || ''])),
-    [allNew, course],
-  );
-  const current = newWords[0] || null;
-  const missingTarget = course ? allNew.length - newWords.length : 0;
-
-  const due = useMemo(
-    () => entries.filter((e) => e.learningStatus !== 'new' && e.lastReviewDay !== today),
-    [entries, today],
-  );
-  const dueShow = due.slice(0, 5);
+  const missingTarget = course
+    ? allNew.filter((e) => !(e.senses || []).some((s) => s.meaning?.[course.target.code])).length
+    : 0;
 
   if (!course) return null;
 
@@ -85,37 +75,6 @@ export function HomeScreen() {
 
       {course.seed === 'en' && lessons.length > 0 && <LessonPanel lessons={lessons} />}
 
-      {current ? (
-        <Card>
-          <h3>Từ mới tiếp theo</h3>
-          <NewWordCard entry={current} />
-        </Card>
-      ) : (
-        <Card>
-          <EmptyState
-            big={learned.length > 0 ? '🎉' : '🌱'}
-            title={learned.length > 0 ? 'Hết từ mới cho hôm nay!' : 'Bắt đầu ngay hôm nay'}
-          >
-            <p style={{ margin: 0 }}>
-              {learned.length > 0
-                ? `Bạn đã học ${learned.length} từ. Ngày mai quay lại để học tiếp nhé.`
-                : 'Bấm nút bên dưới để xem từ mới đầu tiên.'}
-            </p>
-            <div className="row" style={{ justifyContent: 'center', marginTop: 14 }}>
-              <Button
-                variant={learned.length > 0 ? 'soft' : 'primary'}
-                onClick={() => {
-                  if (learned.length > 0) store.startFlashcardWith(due.map((d) => d.id));
-                  else if (newWords[0]) void store.markLearned(newWords[0].id);
-                }}
-              >
-                {learned.length > 0 ? '🗂️ Ôn tập ngay' : 'Học từ mới đầu tiên →'}
-              </Button>
-            </div>
-          </EmptyState>
-        </Card>
-      )}
-
       {missingTarget > 0 ? (
         <Card
           style={{ background: 'var(--amber-soft)', borderColor: '#f5dcae', padding: '12px 16px' }}
@@ -126,61 +85,15 @@ export function HomeScreen() {
           </div>
         </Card>
       ) : null}
-
-      <Card>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 8,
-          }}
-        >
-          <h2 style={{ margin: 0, fontSize: 16 }}>Ôn tập nhanh hôm nay</h2>
-          {due.length > 0 ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => store.startFlashcardWith(due.map((d) => d.id))}
-            >
-              Ôn tất cả ({due.length})
-            </Button>
-          ) : null}
-        </div>
-        {dueShow.length === 0 ? (
-          <EmptyState big="✅">
-            Hôm nay bạn đã ôn xong các từ đã học. Học từ mới lên nào!
-          </EmptyState>
-        ) : (
-          <ul className="word-list">
-            {dueShow.map((e) => {
-              const m = e.senses?.[0]?.meaning;
-              return (
-                <li key={e.id} className="word-item" onClick={() => store.openDetail(e.id)}>
-                  <span className={`status-dot ${e.learningStatus}`} />
-                  <div style={{ flex: 1 }}>
-                    <div className="w">{e.word}</div>
-                    <div className="meta">
-                      <PosChips entry={e} />
-                      {m?.[course.target.code] ? ` · ${m[course.target.code]}` : ''}
-                    </div>
-                  </div>
-                  <span className="chev">›</span>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </Card>
     </>
   );
 }
 
-/** Panel chọn bài học (en) — lưới bài + từ của bài khi chọn */
+/** Panel chọn bài học (en) — chỉ hiện CÁC BÀI; từ của bài hiện khi bấm "Học bài này" */
 function LessonPanel({ lessons }: { lessons: LessonMeta[] }) {
   const store = useCourseStore();
-  // Tự chọn bài đầu tiên để nội dung hiện ngay, không cần thêm 1 cú click
-  const [selected, setSelected] = useState<string | null>(lessons[0]?.id || null);
+  // Bài đang mở từ (chỉ được đặt khi bấm "Học bài này")
+  const [active, setActive] = useState<string | null>(null);
 
   return (
     <Card>
@@ -204,34 +117,40 @@ function LessonPanel({ lessons }: { lessons: LessonMeta[] }) {
           {lessons.map((l) => {
             const inCourse = l.id ? store.entries.filter((e) => e.lessonId === l.id).length : 0;
             return (
-              <div
-                key={l.id}
-                className={'lesson-card' + (selected === l.id ? ' selected' : '')}
-                onClick={() => setSelected(l.id)}
-              >
+              <div key={l.id} className={'lesson-card' + (active === l.id ? ' selected' : '')}>
                 <div className="lt">{l.title}</div>
                 <div className="lm">
                   🏷️ {l.tag} · {l.count} từ
                   {inCourse > 0 ? ` · đã thêm ${inCourse}` : ''}
                 </div>
+                <Button
+                  size="sm"
+                  style={{ width: '100%', marginTop: 10 }}
+                  onClick={async () => {
+                    await store.pickLesson(l.id);
+                    setActive(l.id);
+                  }}
+                >
+                  Học bài này →
+                </Button>
               </div>
             );
           })}
         </div>
       </div>
-      {selected ? (
-        <LessonWords key={selected} lessonId={selected} />
+      {active ? (
+        <LessonWords key={active} lessonId={active} onClose={() => setActive(null)} />
       ) : (
         <small className="help" style={{ marginTop: 10, display: 'block' }}>
-          Chọn 1 bài để xem từ vựng và bắt đầu học.
+          💡 Bấm "Học bài này" để thêm từ của bài vào kho và xem danh sách từ bên dưới.
         </small>
       )}
     </Card>
   );
 }
 
-/** Từ vựng của bài đã chọn — đọc thẳng file bài (xem trước, chưa cần gộp vào kho) */
-function LessonWords({ lessonId }: { lessonId: string }) {
+/** Từ vựng của bài đã bấm "Học bài này" — đọc thẳng file bài */
+function LessonWords({ lessonId, onClose }: { lessonId: string; onClose: () => void }) {
   const store = useCourseStore();
   const course = store.course;
   const [lesson, setLesson] = useState<(LessonMeta & { words: ExtraSeedRow[] }) | null>(null);
@@ -275,7 +194,6 @@ function LessonWords({ lessonId }: { lessonId: string }) {
       </div>
     );
 
-  const allMerged = inCourse >= total;
   return (
     <div style={{ marginTop: 12 }}>
       <div
@@ -310,16 +228,9 @@ function LessonWords({ lessonId }: { lessonId: string }) {
               🎮 Ôn bài này
             </Button>
           ) : null}
-          {!allMerged ? (
-            <Button
-              size="sm"
-              onClick={async () => {
-                await store.pickLesson(lessonId);
-              }}
-            >
-              Học bài này →
-            </Button>
-          ) : null}
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            ▲ Thu gọn
+          </Button>
         </div>
       </div>
       <ul className="word-list">
@@ -385,55 +296,6 @@ function LessonWords({ lessonId }: { lessonId: string }) {
           của bài vào kho và bắt đầu học.
         </small>
       ) : null}
-    </div>
-  );
-}
-
-/** Thẻ từ mới (nhìn + đánh giá đã hiểu / ôn lại sau) */
-function NewWordCard({ entry }: { entry: WordEntry }) {
-  const store = useCourseStore();
-  const course = store.course;
-  const s0 = pickSense(entry);
-  const m = s0?.meaning || {};
-  const target = course ? m[course.target.code] || '' : '';
-
-  return (
-    <div className="learn-card">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-        <span style={{ fontSize: 24, fontWeight: 800 }}>{entry.word}</span>
-        {course ? <Speak text={entry.word} lang={course.source.code} /> : null}
-        {s0?.pronunciation ? (
-          <span className="ipa" style={{ color: 'var(--ink-3)' }}>
-            {s0.pronunciation}
-          </span>
-        ) : null}
-      </div>
-      <div style={{ margin: '6px 0' }}>
-        <PosChips entry={entry} />
-      </div>
-      <div className="def" style={{ fontSize: 16 }}>
-        {target}
-      </div>
-      {s0?.meaning?.en ? (
-        <div style={{ color: 'var(--ink-3)', fontSize: 13 }}>{s0.meaning.en}</div>
-      ) : null}
-      {s0?.examples?.[0] ? (
-        <div style={{ color: 'var(--ink-3)', fontStyle: 'italic', fontSize: 13, marginTop: 6 }}>
-          ❝ {s0.examples[0]}
-        </div>
-      ) : null}
-      <div className="row" style={{ marginTop: 14 }}>
-        <Button
-          variant="ghost"
-          style={{ flex: 1 }}
-          onClick={() => void store.markLearned(entry.id)}
-        >
-          🔄 Ôn lại sau
-        </Button>
-        <Button style={{ flex: 2 }} onClick={() => void store.markLearned(entry.id)}>
-          ✓ Tôi đã hiểu từ này
-        </Button>
-      </div>
     </div>
   );
 }
