@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Từ Vựng Của Tôi</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <button class="logo" id="logoBtn" title="Về màn hình chọn khóa học">
+      <div class="logo-icon">📘</div>
+      <div class="logo-name">Từ Vựng Của Tôi<small>học mỗi ngày</small></div>
+    </button>
+    <span class="course-chip" id="courseChip" title="Khóa học đang mở"></span>
+    <nav id="mainNav">
+      <button data-tab="home">Hôm nay</button>
+      <button data-tab="vocab">Từ vựng</button>
+      <button data-tab="games">Ôn tập</button>
+      <button data-tab="stats">Thống kê</button>
+    </nav>
+    <button class="btn sm ghost" id="switchCourseBtn" title="Về màn hình chọn khóa học">⇄ Khóa học</button>
+    <div class="streak-chip" title="Số ngày học liên tiếp (khóa đang mở)">🔥 <span id="streakNum">0</span></div>
+  </div>
+</header>
+
+<main id="app"></main>
+
+<footer>Dữ liệu lưu trong trình duyệt (localStorage) — mỗi khóa học một kho từ riêng. Mẹo: bấm 🔈 để nghe phát âm từ.</footer>
+<div class="toast" id="toastEl"></div>
+
+<!-- Nạp theo thứ tự phụ thuộc: tiện ích → cấu hình → dữ liệu → UI → khởi động -->
+<script src="js/utils.js"></script>
+<script src="js/config.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/tts.js"></script>
+<script src="js/course.js"></script>
+<script src="js/dictionary.js"></script>
+<script src="js/bank-loader.js"></script>
+<script src="js/seed-data.js"></script>
+<script src="js/lesson-loader.js"></script>
+<script src="js/state.js"></script>
+<script src="js/learning.js"></script>
+<script src="js/ui-shared.js"></script>
+<script src="js/ui-picker.js"></script>
+<script src="js/ui-home.js"></script>
+<script src="js/ui-vocab.js"></script>
+<script src="js/ui-modal.js"></script>
+<script src="js/ui-games.js"></script>
+<script src="js/ui-stats.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

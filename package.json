@@ -1,0 +1,16 @@
+{
+  "name": "english-learning",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/web",
+    "packages/shared"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @english/web",
+    "build": "npm run build -w @english/web",
+    "preview": "npm run preview -w @english/web",
+    "test": "node _e2e.js",
+    "api": "uvicorn apps.api.main:app --reload --port 8000"
+  }
+}

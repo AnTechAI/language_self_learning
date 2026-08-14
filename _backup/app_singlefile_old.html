@@ -1,0 +1,1751 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Từ Vựng Của Tôi</title>
+<style>
+  :root{
+    --bg:#f3f5f7;
+    --panel:#ffffff;
+    --border:#e4e8ee;
+    --border-strong:#cfd6df;
+    --text:#1c2430;
+    --muted:#667085;
+    --primary:#16a34a;
+    --primary-dark:#15803d;
+    --primary-soft:#e8f6ee;
+    --amber:#d97706;
+    --amber-soft:#fdf4e3;
+    --danger:#dc2626;
+    --danger-soft:#fdecec;
+    --new:#98a2b3;
+    --learning:#d97706;
+    --mastered:#16a34a;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.07);
+    --shadow-lg:0 10px 30px rgba(16,24,40,.12);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  header{
+    position:sticky;top:0;z-index:40;
+    background:rgba(255,255,255,.92);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);
+    padding:10px 16px;
+  }
+  .header-inner{
+    max-width:980px;margin:0 auto;
+    display:flex;align-items:center;gap:14px;
+  }
+  .logo{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+  .logo-icon{
+    width:38px;height:38px;border-radius:12px;
+    background:linear-gradient(135deg,#22c55e,#15803d);
+    display:flex;align-items:center;justify-content:center;
+    font-size:20px;color:#fff;box-shadow:var(--shadow);
+  }
+  .logo-name{font-size:15px;font-weight:700;line-height:1.2;}
+  .logo-name small{display:block;font-size:11px;color:var(--muted);font-weight:500;}
+  nav{
+    display:flex;gap:2px;background:var(--bg);
+    padding:4px;border-radius:12px;border:1px solid var(--border);
+    margin-left:auto;
+  }
+  nav button{
+    border:none;background:transparent;padding:8px 13px;border-radius:9px;
+    cursor:pointer;font-size:13.5px;color:var(--muted);font-weight:600;
+    transition:all .15s;white-space:nowrap;
+  }
+  nav button:hover{color:var(--text);background:#fff;}
+  nav button.active{background:var(--text);color:#fff;box-shadow:var(--shadow);}
+  .streak-chip{
+    display:flex;align-items:center;gap:6px;
+    background:var(--amber-soft);color:var(--amber);
+    border:1px solid #f5dcae;padding:6px 12px;border-radius:999px;
+    font-size:13px;font-weight:700;flex-shrink:0;
+  }
+  main{max-width:980px;margin:0 auto;padding:22px 16px 40px;}
+  .panel{
+    background:var(--panel);border:1px solid var(--border);
+    border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:20px;margin-bottom:16px;
+  }
+  h2{font-size:17px;margin:0 0 12px;font-weight:700;}
+  h3{font-size:12px;margin:0 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700;}
+  .muted{color:var(--muted);}
+  .empty-state{text-align:center;padding:38px 20px;color:var(--muted);}
+  .empty-state .big{font-size:40px;margin-bottom:8px;}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;
+    border:1px solid var(--primary);background:var(--primary);color:#fff;
+    padding:10px 18px;border-radius:12px;cursor:pointer;
+    font-size:14px;font-weight:600;font-family:inherit;
+    transition:all .15s;text-decoration:none;
+  }
+  .btn:hover{background:var(--primary-dark);transform:translateY(-1px);box-shadow:var(--shadow);}
+  .btn:active{transform:translateY(0);}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none;}
+  .btn.ghost{background:#fff;color:var(--text);border-color:var(--border-strong);}
+  .btn.ghost:hover{background:var(--bg);}
+  .btn.soft{background:var(--primary-soft);color:var(--primary-dark);border-color:#cfe9da;}
+  .btn.soft:hover{background:#d8f0e3;}
+  .btn.danger{background:#fff;color:var(--danger);border-color:#f3c1c1;}
+  .btn.danger:hover{background:var(--danger-soft);}
+  .btn.sm{padding:6px 12px;font-size:12.5px;border-radius:9px;}
+  .btn-lg{width:100%;padding:13px;font-size:15px;}
+  .icon-btn{
+    border:none;background:transparent;cursor:pointer;color:var(--muted);
+    font-size:14px;padding:6px 9px;border-radius:9px;transition:all .15s;
+  }
+  .icon-btn:hover{background:var(--bg);color:var(--text);}
+  .speak-btn{
+    border:none;background:var(--primary-soft);color:var(--primary-dark);
+    width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:16px;
+    transition:all .15s;flex-shrink:0;
+  }
+  .speak-btn:hover{background:#d5eedd;transform:scale(1.08);}
+  label{display:block;font-size:12.5px;color:var(--muted);font-weight:600;margin:12px 0 5px;}
+  input[type=text],input[type=search],textarea,select{
+    width:100%;padding:10px 13px;border:1px solid var(--border-strong);
+    border-radius:11px;font-size:14.5px;font-family:inherit;
+    background:#fff;color:var(--text);transition:border .15s;
+  }
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);}
+  textarea{resize:vertical;min-height:56px;}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .row > .grow{flex:1;min-width:140px;}
+  small.help{display:block;color:var(--muted);font-size:12px;margin-top:4px;}
+  .badge{
+    display:inline-flex;align-items:center;gap:5px;
+    font-size:11px;padding:3px 10px;border-radius:999px;font-weight:700;
+  }
+  .badge.new{background:#eceff3;color:#5b6573;}
+  .badge.learning{background:var(--amber-soft);color:var(--learning);}
+  .badge.mastered{background:var(--primary-soft);color:var(--primary-dark);}
+  .pos-chip{
+    display:inline-flex;align-items:center;font-size:11.5px;font-weight:700;
+    background:#eef1f6;color:#45536b;padding:3px 10px;border-radius:8px;
+  }
+  .ipa-chip{
+    font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+    font-size:13px;color:var(--muted);background:var(--bg);
+    padding:3px 10px;border-radius:8px;border:1px solid var(--border);
+  }
+  .tag{
+    display:inline-flex;align-items:center;font-size:12px;
+    padding:4px 11px;border-radius:999px;background:#eef3fa;color:#35618f;
+    font-weight:600;
+  }
+  .syn-chip{background:var(--primary-soft);color:var(--primary-dark);}
+  .ant-chip{background:var(--danger-soft);color:var(--danger);}
+  .word-list{list-style:none;margin:0;padding:0;}
+  .word-item{
+    display:flex;align-items:center;gap:12px;
+    padding:13px 14px;border-radius:12px;cursor:pointer;
+    transition:background .12s;
+  }
+  .word-item:hover{background:#f8fafc;}
+  .word-item + .word-item{border-top:1px solid var(--border);}
+  .word-item .w{font-weight:700;font-size:16px;}
+  .word-item .meta{font-size:12.5px;color:var(--muted);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .chev{color:#c2cad4;font-size:14px;margin-left:auto;flex-shrink:0;}
+  .status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .status-dot.new{background:var(--new);}
+  .status-dot.learning{background:var(--learning);}
+  .status-dot.mastered{background:var(--mastered);}
+  .hero{
+    background:linear-gradient(135deg,#14532d,#16a34a 60%,#4ade80);
+    color:#fff;border-radius:20px;padding:24px;margin-bottom:16px;
+    box-shadow:var(--shadow-lg);position:relative;overflow:hidden;
+  }
+  .hero::after{
+    content:"";position:absolute;right:-40px;top:-40px;width:180px;height:180px;
+    border-radius:50%;background:rgba(255,255,255,.12);
+  }
+  .hero h2{margin:0;font-size:22px;font-weight:800;}
+  .hero p{margin:6px 0 0;opacity:.9;font-size:14px;}
+  .hero .row{margin-top:14px;position:relative;z-index:1;}
+  .hero .stat{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);
+    padding:8px 14px;border-radius:12px;font-size:13px;font-weight:600;backdrop-filter:blur(4px);}
+  .progress-track{height:10px;background:rgba(255,255,255,.25);border-radius:99px;overflow:hidden;margin-top:14px;position:relative;z-index:1;}
+  .progress-fill{height:100%;background:#fff;border-radius:99px;transition:width .4s ease;}
+  .learn-card{border:1px solid var(--border);border-radius:18px;padding:22px;background:#fff;}
+  .learn-word-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .learn-word{font-size:32px;font-weight:800;letter-spacing:-.5px;line-height:1.1;}
+  .def-line{border-left:3px solid var(--primary);padding:2px 0 2px 12px;margin:14px 0;}
+  .def-line .en{font-size:14.5px;color:var(--text);}
+  .def-line .vi{font-size:15.5px;font-weight:600;margin-top:4px;}
+  .example-box{background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-top:12px;font-size:14px;}
+  .example-box .q{color:var(--primary);font-weight:700;}
+  .collapse-btn{
+    display:inline-flex;align-items:center;gap:6px;
+    border:1px solid var(--border-strong);background:#fff;color:var(--text);
+    padding:7px 13px;border-radius:10px;cursor:pointer;font-size:12.5px;font-weight:600;
+    transition:all .15s;
+  }
+  .collapse-btn:hover{border-color:var(--primary);color:var(--primary-dark);background:var(--primary-soft);}
+  .collapse-btn .cnt{background:var(--bg);color:var(--muted);border-radius:99px;padding:0 7px;font-size:11px;}
+  .collapse-body{display:none;margin-top:10px;padding:12px;background:#f8fafc;border:1px solid var(--border);border-radius:12px;animation:fadeIn .2s;}
+  .collapse-body.open{display:block;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+  .detail-word{font-size:38px;font-weight:800;letter-spacing:-1px;line-height:1.1;}
+  .section-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px;}
+  .section-title .bar{width:4px;height:14px;background:var(--primary);border-radius:99px;}
+  .kv{display:flex;gap:10px;align-items:baseline;font-size:14.5px;}
+  .kv .k{color:var(--muted);font-weight:600;min-width:110px;flex-shrink:0;}
+  .game-menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px;}
+  .game-card{
+    border:1px solid var(--border);border-radius:16px;padding:18px;cursor:pointer;
+    background:#fff;text-align:left;transition:all .15s;box-shadow:var(--shadow);
+    font-family:inherit;
+  }
+  .game-card:hover{border-color:var(--primary);transform:translateY(-2px);box-shadow:var(--shadow-lg);}
+  .game-card .gi{font-size:28px;}
+  .game-card h3{margin:10px 0 4px;color:var(--text);text-transform:none;font-size:15.5px;letter-spacing:0;font-weight:700;}
+  .game-card p{margin:0;font-size:12.5px;color:var(--muted);}
+  .game-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .game-progress{height:5px;background:var(--border);border-radius:99px;overflow:hidden;margin:12px 0;}
+  .game-progress .fill{height:100%;background:var(--primary);border-radius:99px;transition:width .3s;}
+  .flashcard-wrap{perspective:1200px;}
+  .flashcard{
+    position:relative;width:100%;min-height:250px;cursor:pointer;
+    transform-style:preserve-3d;transition:transform .5s ease;
+  }
+  .flashcard.flipped{transform:rotateY(180deg);}
+  .flashcard .face{
+    position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    border:1px solid var(--border);border-radius:20px;background:#fff;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:28px 20px;box-shadow:var(--shadow);
+  }
+  .flashcard .back{transform:rotateY(180deg);}
+  .fc-word{font-size:30px;font-weight:800;}
+  .fc-ipa{font-size:14px;color:var(--muted);margin-top:6px;}
+  .fc-hint{font-size:12px;color:#a6b0bf;margin-top:18px;}
+  .fc-vi{font-size:20px;font-weight:700;color:var(--primary-dark);}
+  .fc-en{font-size:13.5px;color:var(--muted);margin-top:8px;max-width:420px;}
+  .choice-btn{
+    display:block;width:100%;text-align:left;padding:13px 16px;margin-bottom:9px;
+    border:1px solid var(--border-strong);border-radius:12px;background:#fff;
+    cursor:pointer;font-size:15px;font-family:inherit;font-weight:600;
+    transition:all .12s;
+  }
+  .choice-btn:hover{border-color:var(--primary);background:var(--primary-soft);}
+  .choice-btn.correct{border-color:var(--mastered);background:var(--primary-soft);}
+  .choice-btn.wrong{border-color:var(--danger);background:var(--danger-soft);}
+  .choice-btn:disabled{cursor:default;}
+  .feedback{margin-top:12px;padding:12px 14px;border-radius:12px;font-size:14px;font-weight:600;}
+  .feedback.ok{background:var(--primary-soft);color:var(--primary-dark);}
+  .feedback.no{background:var(--danger-soft);color:var(--danger);}
+  .guess-word{font-size:30px;font-weight:800;letter-spacing:3px;font-family:"SF Mono",ui-monospace,Consolas,monospace;word-break:break-all;}
+  .prompt-card{background:linear-gradient(135deg,#f8fafc,#eef6f1);border:1px solid var(--border);border-radius:16px;padding:18px;text-align:center;}
+  .prompt-card .p-vi{font-size:17px;font-weight:700;}
+  .prompt-card .p-en{font-size:15px;color:var(--muted);}
+  .result-card{border:1px solid var(--border);border-radius:16px;padding:18px;background:#fff;margin-top:12px;}
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:10px;margin-bottom:14px;}
+  .stat-box{border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center;background:#fff;}
+  .stat-box .num{font-size:24px;font-weight:800;line-height:1.1;}
+  .stat-box .lbl{font-size:11.5px;color:var(--muted);margin-top:3px;font-weight:600;}
+  .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:13px;}
+  .bar-row .lbl{width:88px;color:var(--muted);flex-shrink:0;font-weight:600;}
+  .bar-track{flex:1;background:#eef0f3;border-radius:99px;height:16px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:99px;transition:width .4s;}
+  .bar-row .val{width:38px;text-align:right;font-variant-numeric:tabular-nums;font-weight:700;}
+  .status-stack{display:flex;height:14px;border-radius:99px;overflow:hidden;margin:8px 0 4px;}
+  .status-stack div{height:100%;}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:6px;}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;}
+  .modal-bg{
+    position:fixed;inset:0;background:rgba(15,23,42,.45);
+    display:flex;align-items:flex-start;justify-content:center;
+    padding:26px 16px;overflow-y:auto;z-index:60;animation:fadeIn .15s;
+  }
+  .modal{
+    background:#fff;border-radius:18px;padding:22px;max-width:580px;width:100%;
+    box-shadow:var(--shadow-lg);animation:slideUp .2s;
+  }
+  @keyframes slideUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+  .close-x{cursor:pointer;font-size:22px;background:none;border:none;color:var(--muted);line-height:1;}
+  .close-x:hover{color:var(--text);}
+  .sense-block{border:1px solid var(--border);border-radius:13px;padding:13px;margin-top:12px;background:#fbfcfd;}
+  .sense-block .sense-head{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);font-weight:700;margin-bottom:4px;}
+  .divider{height:1px;background:var(--border);margin:18px 0;}
+  footer{text-align:center;color:#9aa5b1;font-size:12px;padding:0 16px 36px;}
+  .toast{
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);
+    background:#111827;color:#fff;padding:11px 20px;border-radius:12px;font-size:13.5px;
+    box-shadow:var(--shadow-lg);z-index:80;opacity:0;transition:all .25s;max-width:90vw;text-align:center;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  @media (max-width:640px){
+    .header-inner{flex-wrap:wrap;}
+    nav{margin-left:0;order:3;width:100%;justify-content:space-between;}
+    nav button{flex:1;padding:8px 6px;font-size:12.5px;}
+    .learn-word{font-size:26px;}
+    .detail-word{font-size:30px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">📘</div>
+      <div class="logo-name">Từ Vựng Của Tôi<small>học tiếng Anh mỗi ngày</small></div>
+    </div>
+    <nav id="mainNav">
+      <button data-tab="home">Hôm nay</button>
+      <button data-tab="vocab">Từ vựng</button>
+      <button data-tab="games">Ôn tập</button>
+      <button data-tab="stats">Thống kê</button>
+    </nav>
+    <div class="streak-chip" title="Số ngày học liên tiếp">🔥 <span id="streakNum">0</span></div>
+  </div>
+</header>
+
+<main id="app"></main>
+
+<footer>Dữ liệu lưu trong trình duyệt (localStorage). Mẹo: bấm 🔈 để nghe phát âm từ.</footer>
+<div class="toast" id="toastEl"></div>
+
+<script>
+/* ==================== STORAGE ==================== */
+const KEY = 'vocab_entries_v2';
+const KEY_DAILY = 'vocab_daily_v2';
+const KEY_HIST = 'vocab_history_v2';
+const DAILY_QUOTA = 8;
+
+const $ = s => document.querySelector(s);
+const app = document.getElementById('app');
+
+function loadEntries(){ try{ return JSON.parse(localStorage.getItem(KEY)) || []; }catch(e){ return []; } }
+function saveEntries(list){ localStorage.setItem(KEY, JSON.stringify(list)); }
+function loadDaily(){ try{ return JSON.parse(localStorage.getItem(KEY_DAILY)) || {}; }catch(e){ return {}; } }
+function saveDaily(o){ localStorage.setItem(KEY_DAILY, JSON.stringify(o)); }
+function loadHistory(){ try{ return JSON.parse(localStorage.getItem(KEY_HIST)) || []; }catch(e){ return []; } }
+function saveHistory(list){ localStorage.setItem(KEY_HIST, JSON.stringify(list.slice(-800))); }
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function fmtDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function uid(){ return 'w_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8); }
+
+function escapeHtml(str){
+  if(str===undefined||str===null) return '';
+  return String(str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function normalize(str){
+  return String(str||'').toLowerCase().trim()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[.,!?;:'"()\-–—]/g,'').replace(/\s+/g,' ');
+}
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function toast(msg){
+  const t = document.getElementById('toastEl');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=> t.classList.remove('show'), 2200);
+}
+
+/* ==================== TTS ==================== */
+function speak(text, lang){
+  if(!('speechSynthesis' in window)){ toast('Trình duyệt không hỗ trợ phát âm'); return; }
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang || 'en-US';
+  u.rate = 0.85;
+  const voices = window.speechSynthesis.getVoices();
+  const v = voices.find(v=>v.lang.replace('_','-').toLowerCase().startsWith((lang||'en-US').toLowerCase()));
+  if(v) u.voice = v;
+  window.speechSynthesis.speak(u);
+}
+
+/* ==================== STATE ==================== */
+let state = {
+  entries: loadEntries(),
+  tab: 'home',
+  vocabFilter: { search:'', status:'all', tag:'all' },
+  detailId: null,
+  gameScreen: 'menu',
+};
+let modalDraft = null;
+let session = null;
+
+/* ==================== LEARNING LOGIC ==================== */
+function markLearned(entry){
+  const changed = entry.learningStatus === 'new';
+  if(changed) entry.learningStatus = 'learning';
+  entry.lastReviewDay = todayStr();
+  const daily = loadDaily();
+  const t = todayStr();
+  daily[t] = daily[t] || [];
+  if(!daily[t].includes(entry.id)) daily[t].push(entry.id);
+  saveDaily(daily);
+  saveEntries(state.entries);
+  return changed;
+}
+function registerResult(entry, wasCorrect){
+  entry.correctStreak = entry.correctStreak || 0;
+  if(wasCorrect){
+    entry.correctStreak += 1;
+    if(entry.learningStatus==='new'){ markLearned(entry); }
+    else { entry.lastReviewDay = todayStr(); }
+  } else {
+    entry.correctStreak = 0;
+    if(entry.learningStatus==='mastered') entry.learningStatus = 'learning';
+    entry.lastReviewDay = todayStr();
+  }
+  if(entry.correctStreak >= 3 && entry.learningStatus !== 'mastered'){
+    entry.learningStatus = 'mastered';
+    toast('🎉 Đã thuộc: "'+entry.word+'"!');
+  }
+  saveEntries(state.entries);
+}
+function recordHistory(gameType, wordId, wasCorrect){
+  const h = loadHistory();
+  h.push({ ts:new Date().toISOString(), game:gameType, wordId, correct:wasCorrect });
+  saveHistory(h);
+}
+function getStreak(){
+  const daily = loadDaily();
+  const cursor = new Date(todayStr());
+  if(!(daily[fmtDate(cursor)]||[]).length) cursor.setDate(cursor.getDate()-1);
+  let streak = 0;
+  while(daily[fmtDate(cursor)] && daily[fmtDate(cursor)].length>0){
+    streak++;
+    cursor.setDate(cursor.getDate()-1);
+  }
+  return streak;
+}
+function learnedToday(){
+  const daily = loadDaily();
+  return daily[todayStr()] || [];
+}
+function statusLabel(s){ return s==='new' ? 'Mới' : s==='learning' ? 'Đang học' : 'Đã thuộc'; }
+
+/* ==================== RENDER ROOT ==================== */
+document.getElementById('mainNav').addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-tab]');
+  if(!btn) return;
+  state.tab = btn.dataset.tab;
+  state.detailId = null;
+  state.gameScreen = 'menu';
+  session = null;
+  render();
+});
+function render(){
+  document.querySelectorAll('#mainNav button').forEach(b=> b.classList.toggle('active', b.dataset.tab===state.tab));
+  $('#streakNum').textContent = getStreak();
+  if(state.tab==='home') renderHome();
+  else if(state.tab==='vocab') renderVocabTab();
+  else if(state.tab==='games') renderGamesTab();
+  else renderStatsTab();
+  window.scrollTo({top:0});
+}
+
+/* ==================== HOME / DAILY LEARNING ==================== */
+function renderHome(){
+  const learned = learnedToday();
+  const quota = DAILY_QUOTA;
+  const pct = Math.min(100, Math.round(learned.length/quota*100));
+  const newWords = state.entries.filter(e=> e.learningStatus==='new' && !learned.includes(e.id));
+  const current = newWords[0] || null;
+  const streak = getStreak();
+  const hour = new Date().getHours();
+  const greeting = hour<12 ? 'Chào buổi sáng' : hour<18 ? 'Chào buổi chiều' : 'Chào buổi tối';
+  const due = state.entries.filter(e=> e.learningStatus!=='new' && e.lastReviewDay!==todayStr());
+  const dueShow = due.slice(0,5);
+
+  let body = `
+    <div class="hero">
+      <h2>${greeting} 👋</h2>
+      <p>Hôm nay là ${new Date().toLocaleDateString('vi-VN',{weekday:'long',day:'numeric',month:'long'})}. Hãy học vài từ mới nhé!</p>
+      <div class="row">
+        <span class="stat">📖 Đã học hôm nay: <b>${learned.length}/${quota}</b> từ</span>
+        ${streak>0 ? `<span class="stat">🔥 ${streak} ngày liên tiếp</span>` : ''}
+        <span class="stat">🗂️ Còn <b>${state.entries.filter(e=>e.learningStatus==='new').length}</b> từ mới trong kho</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+    </div>`;
+
+  if(current){
+    body += `<div class="panel"><h3>Từ mới tiếp theo</h3>` + learnCard(current, 'learning') + `</div>`;
+  } else if(newWords.length===0 && learned.length>0){
+    body += `
+      <div class="panel">
+        <div class="empty-state">
+          <div class="big">🎉</div>
+          <h2 style="margin:0 0 6px;">Hết từ mới cho hôm nay!</h2>
+          <p>Bạn đã học ${learned.length} từ. Ngày mai quay lại để học tiếp nhé.</p>
+          <div class="row" style="justify-content:center;margin-top:14px;">
+            <button class="btn soft" id="goReviewBtn">🗂️ Ôn tập ngay</button>
+            <button class="btn ghost" id="addMoreHomeBtn">＋ Thêm từ mới</button>
+          </div>
+        </div>
+      </div>`;
+  } else {
+    body += `
+      <div class="panel">
+        <div class="empty-state">
+          <div class="big">🌱</div>
+          <h2 style="margin:0 0 6px;">Bắt đầu ngay hôm nay</h2>
+          <p>Bấm nút bên dưới để xem từ mới đầu tiên.</p>
+          <div class="row" style="justify-content:center;margin-top:14px;">
+            <button class="btn" id="startLearnBtn">Học từ mới đầu tiên →</button>
+            <button class="btn ghost" id="addMoreHomeBtn">＋ Thêm từ mới</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  body += `
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h2 style="margin:0;">Ôn tập nhanh hôm nay</h2>
+        ${due.length>0 ? `<button class="btn sm ghost" id="reviewAllBtn">Ôn tất cả (${due.length})</button>` : ''}
+      </div>
+      ${dueShow.length===0
+        ? `<div class="empty-state" style="padding:20px;"><div class="big">✅</div>Hôm nay bạn đã ôn xong các từ đã học. Học từ mới lên nào!</div>`
+        : `<ul class="word-list">${dueShow.map(e=>`
+          <li class="word-item" data-id="${e.id}">
+            <span class="status-dot ${e.learningStatus}"></span>
+            <div style="flex:1;">
+              <div class="w">${escapeHtml(e.word)}</div>
+              <div class="meta">${posChips(e)} ${e.lastReviewDay ? '· Ôn lần cuối: '+e.lastReviewDay : ''}</div>
+            </div>
+            <span class="chev">›</span>
+          </li>`).join('')}</ul>`}
+    </div>`;
+
+  app.innerHTML = body;
+
+  document.querySelectorAll('.learn-card').forEach(c=>{
+    c.querySelectorAll('.collapse-btn').forEach(b=> b.onclick = ()=> toggleCollapse(b));
+    const speakBtn = c.querySelector('.speak-btn');
+    if(speakBtn) speakBtn.onclick = ()=> speak(c.dataset.word);
+    const knowBtn = c.querySelector('.know-btn');
+    if(knowBtn) knowBtn.onclick = ()=>{ markLearned(state.entries.find(x=>x.id===c.dataset.id)); toast('✓ Đã học "'+c.dataset.word+'"'); renderHome(); };
+    const laterBtn = c.querySelector('.later-btn');
+    if(laterBtn) laterBtn.onclick = ()=>{ rotateNewQueue(c.dataset.id); renderHome(); };
+  });
+  const rb = $('#reviewAllBtn');
+  if(rb) rb.onclick = ()=> startFlashcardWith(due.map(x=>x.id));
+  const gr = $('#goReviewBtn');
+  if(gr) gr.onclick = ()=>{ state.tab='games'; state.gameScreen='menu'; render(); };
+  const am = $('#addMoreHomeBtn');
+  if(am) am.onclick = ()=> openModal('new');
+  const sl = $('#startLearnBtn');
+  if(sl) sl.onclick = renderHome;
+  document.querySelectorAll('.word-item').forEach(el=>{
+    el.onclick = ()=>{ state.tab='vocab'; state.detailId = el.dataset.id; render(); };
+  });
+}
+
+function rotateNewQueue(id){
+  const learned = learnedToday();
+  const newWords = state.entries.filter(e=> e.learningStatus==='new' && !learned.includes(e.id));
+  const idx = newWords.findIndex(x=>x.id===id);
+  if(idx<0) return;
+  newWords.push(newWords.splice(idx,1)[0]);
+  const order = newWords.map(x=>x.id);
+  sessionStorage.setItem('newQ', JSON.stringify(order));
+}
+
+/* Learn card reused in Home and translate results */
+function learnCard(e, mode){
+  const s0 = (e.senses&&e.senses[0]) || {};
+  const syn = e.synonyms||[], ant = e.antonyms||[], tags = e.tags||[];
+  return `
+  <div class="learn-card" data-id="${e.id}" data-word="${escapeHtml(e.word)}">
+    <div class="learn-word-row">
+      <div class="learn-word">${escapeHtml(e.word)}</div>
+      <button class="speak-btn" title="Nghe phát âm">🔈</button>
+      ${s0.pronunciation ? `<span class="ipa-chip">${escapeHtml(s0.pronunciation)}</span>` : ''}
+      ${posChips(e)}
+    </div>
+    <div class="def-line">
+      <div class="en">${escapeHtml(s0.definitionEN||'')}</div>
+      <div class="vi">${escapeHtml(s0.definitionVI||'')}</div>
+    </div>
+    ${(s0.examples&&s0.examples[0]) ? `<div class="example-box"><span class="q">❝ </span>${escapeHtml(s0.examples[0])}</div>` : ''}
+    <div class="row" style="margin-top:14px;">
+      ${syn.length ? `<button class="collapse-btn" data-toggle="syn">🔁 Đồng nghĩa <span class="cnt">${syn.length}</span></button>` : ''}
+      ${ant.length ? `<button class="collapse-btn" data-toggle="ant">↔️ Trái nghĩa <span class="cnt">${ant.length}</span></button>` : ''}
+      ${tags.length ? `<button class="collapse-btn" data-toggle="tag">🏷️ Chủ đề <span class="cnt">${tags.length}</span></button>` : ''}
+      ${e.wordRoot ? `<button class="collapse-btn" data-toggle="root">🌿 Gốc từ</button>` : ''}
+    </div>
+    <div class="collapse-body" data-body="syn">${syn.map(s=>`<span class="tag syn-chip" style="margin:3px;">${escapeHtml(s)}</span>`).join('')}</div>
+    <div class="collapse-body" data-body="ant">${ant.map(s=>`<span class="tag ant-chip" style="margin:3px;">${escapeHtml(s)}</span>`).join('')}</div>
+    <div class="collapse-body" data-body="tag">${tags.map(s=>`<span class="tag" style="margin:3px;">${escapeHtml(s)}</span>`).join('')}</div>
+    <div class="collapse-body" data-body="root">${escapeHtml(e.wordRoot||'')}</div>
+    ${mode==='learning' ? `
+      <div class="row" style="margin-top:16px;">
+        <button class="btn ghost later-btn" style="flex:1;">🔄 Ôn lại sau</button>
+        <button class="btn know-btn" style="flex:2;">✓ Tôi đã hiểu từ này</button>
+      </div>` : ''}
+  </div>`;
+}
+function toggleCollapse(btn){
+  const key = btn.dataset.toggle;
+  const root = btn.closest('.learn-card, .panel') || document;
+  const body = root.querySelector('[data-body="'+key+'"]');
+  if(!body) return;
+  const open = body.classList.toggle('open');
+  btn.style.borderColor = open ? 'var(--primary)' : '';
+  btn.style.color = open ? 'var(--primary-dark)' : '';
+  btn.style.background = open ? 'var(--primary-soft)' : '';
+}
+function posChips(e){
+  const pos = Array.from(new Set((e.senses||[]).map(s=>s.partOfSpeech).filter(Boolean)));
+  return pos.map(p=>`<span class="pos-chip">${escapeHtml(p)}</span>`).join('');
+}
+
+/* ==================== VOCAB TAB ==================== */
+function renderVocabTab(){
+  if(state.detailId){ renderDetail(state.detailId); return; }
+  const entries = state.entries;
+  const f = state.vocabFilter;
+  const allTags = Array.from(new Set(entries.flatMap(e=>e.tags||[]))).sort();
+
+  let filtered = entries.filter(e=>{
+    if(f.status!=='all' && e.learningStatus!==f.status) return false;
+    if(f.tag!=='all' && !(e.tags||[]).includes(f.tag)) return false;
+    if(f.search){
+      const s = f.search.toLowerCase();
+      const hay = [e.word, ...(e.senses||[]).map(sn=>(sn.definitionVI+' '+sn.definitionEN))].join(' ').toLowerCase();
+      if(!hay.includes(s)) return false;
+    }
+    return true;
+  });
+
+  app.innerHTML = `
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+        <h2 style="margin:0;">Kho từ vựng <span class="muted" style="font-size:13px;">(${entries.length} từ)</span></h2>
+        <button class="btn sm" id="addWordBtn">＋ Thêm từ mới</button>
+      </div>
+      <div class="row" style="margin-top:12px;">
+        <input type="search" id="searchInput" placeholder="Tìm từ hoặc nghĩa..." value="${escapeHtml(f.search)}" class="grow">
+        <select id="statusFilter" style="width:auto;">
+          <option value="all">Mọi trạng thái</option>
+          <option value="new">Mới</option>
+          <option value="learning">Đang học</option>
+          <option value="mastered">Đã thuộc</option>
+        </select>
+        <select id="tagFilter" style="width:auto;">
+          <option value="all">Mọi chủ đề</option>
+          ${allTags.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('')}
+        </select>
+      </div>
+      <small class="help" style="margin-top:8px;">💡 Bấm vào một từ để xem chi tiết. Thuộc tính phụ (đồng nghĩa, trái nghĩa, chủ đề…) nằm trong các nút "xem thêm".</small>
+    </div>
+    <div class="panel" style="padding:10px;">
+      ${filtered.length===0 ? `<div class="empty-state"><div class="big">📭</div>Chưa có từ nào phù hợp. Bấm "Thêm từ mới" để bắt đầu.</div>` : `
+      <ul class="word-list">
+        ${filtered.map(e=>{
+          const s0 = (e.senses&&e.senses[0])||{};
+          return `
+          <li class="word-item" data-id="${e.id}">
+            <span class="status-dot ${e.learningStatus}" title="${statusLabel(e.learningStatus)}"></span>
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span class="w">${escapeHtml(e.word)}</span>
+                ${posChips(e)}
+              </div>
+              <div class="meta">
+                ${s0.pronunciation ? `<span>${escapeHtml(s0.pronunciation)}</span>` : ''}
+                ${s0.definitionVI ? `<span>— ${escapeHtml(s0.definitionVI)}</span>` : ''}
+              </div>
+            </div>
+            <span class="badge ${e.learningStatus}">${statusLabel(e.learningStatus)}</span>
+            <span class="chev">›</span>
+          </li>`;
+        }).join('')}
+      </ul>`}
+    </div>
+  `;
+  $('#statusFilter').value = f.status;
+  $('#tagFilter').value = f.tag;
+  $('#addWordBtn').onclick = ()=> openModal('new');
+  $('#searchInput').oninput = e=>{ f.search=e.target.value; renderVocabTab(); };
+  $('#statusFilter').onchange = e=>{ f.status=e.target.value; renderVocabTab(); };
+  $('#tagFilter').onchange = e=>{ f.tag=e.target.value; renderVocabTab(); };
+  document.querySelectorAll('.word-item').forEach(el=>{
+    el.onclick = ()=>{ state.detailId = el.dataset.id; renderVocabTab(); };
+  });
+}
+
+/* ---------- Detail ---------- */
+function renderDetail(id){
+  const e = state.entries.find(x=>x.id===id);
+  if(!e){ state.detailId=null; renderVocabTab(); return; }
+  const syn = e.synonyms||[], ant = e.antonyms||[], tags = e.tags||[];
+  const s0 = (e.senses&&e.senses[0])||{};
+
+  app.innerHTML = `
+    <button class="btn sm ghost" id="backToListBtn" style="margin-bottom:12px;">← Quay lại danh sách</button>
+    <div class="panel">
+      <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;">
+          <div class="detail-word">${escapeHtml(e.word)}</div>
+          <div class="row" style="margin-top:8px;">
+            ${s0.pronunciation ? `<span class="ipa-chip">${escapeHtml(s0.pronunciation)}</span>` : ''}
+            ${posChips(e)}
+            <span class="badge ${e.learningStatus}">${statusLabel(e.learningStatus)}</span>
+          </div>
+        </div>
+        <button class="speak-btn" id="detailSpeak" style="width:44px;height:44px;font-size:20px;">🔈</button>
+      </div>
+
+      <div class="section-title"><span class="bar"></span>Nghĩa</div>
+      <div class="kv"><span class="k">Tiếng Anh</span><span>${escapeHtml(s0.definitionEN||'')}</span></div>
+      <div class="kv" style="margin-top:8px;"><span class="k">Tiếng Việt</span><span style="font-weight:600;">${escapeHtml(s0.definitionVI||'')}</span></div>
+
+      <div class="section-title"><span class="bar"></span>Ví dụ</div>
+      ${(s0.examples&&s0.examples.length)
+        ? s0.examples.map(ex=>`<div class="example-box" style="margin-top:8px;"><span class="q">❝ </span>${escapeHtml(ex)}</div>`).join('')
+        : `<div class="muted" style="font-size:13px;">Chưa có ví dụ.</div>`}
+
+      ${(e.senses&&e.senses.length>1) ? `
+        <div class="section-title"><span class="bar"></span>Các nghĩa khác (${e.senses.length-1})</div>
+        <button class="collapse-btn" data-toggle="senses">📚 Xem thêm ${e.senses.length-1} nghĩa khác</button>
+        <div class="collapse-body" data-body="senses">
+          ${e.senses.slice(1).map(s=>`
+            <div style="border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:8px;">
+              <div class="row"><span class="pos-chip">${escapeHtml(s.partOfSpeech||'')}</span> ${s.pronunciation?`<span class="ipa-chip">${escapeHtml(s.pronunciation)}</span>`:''}</div>
+              <div style="font-size:13.5px;margin-top:6px;">${escapeHtml(s.definitionEN)}</div>
+              <div style="font-weight:600;margin-top:2px;">${escapeHtml(s.definitionVI)}</div>
+            </div>`).join('')}
+        </div>` : ''}
+
+      <div class="section-title"><span class="bar"></span>Thuộc tính khác — bấm để xem thêm</div>
+      <div class="row" style="gap:8px;">
+        ${syn.length ? `<button class="collapse-btn" data-toggle="syn">🔁 Đồng nghĩa <span class="cnt">${syn.length}</span></button>` : ''}
+        ${ant.length ? `<button class="collapse-btn" data-toggle="ant">↔️ Trái nghĩa <span class="cnt">${ant.length}</span></button>` : ''}
+        ${tags.length ? `<button class="collapse-btn" data-toggle="tag">🏷️ Chủ đề <span class="cnt">${tags.length}</span></button>` : ''}
+        ${e.wordRoot ? `<button class="collapse-btn" data-toggle="root">🌿 Gốc từ</button>` : ''}
+        ${e.dateAdded ? `<button class="collapse-btn" data-toggle="date">🗓️ Ngày thêm</button>` : ''}
+      </div>
+      <div class="collapse-body" data-body="syn">${syn.map(s=>`<span class="tag syn-chip" style="margin:3px;">${escapeHtml(s)}</span>`).join('')}</div>
+      <div class="collapse-body" data-body="ant">${ant.map(s=>`<span class="tag ant-chip" style="margin:3px;">${escapeHtml(s)}</span>`).join('')}</div>
+      <div class="collapse-body" data-body="tag">${tags.map(s=>`<span class="tag" style="margin:3px;">${escapeHtml(s)}</span>`).join('')}</div>
+      <div class="collapse-body" data-body="root">${escapeHtml(e.wordRoot||'')}</div>
+      <div class="collapse-body" data-body="date">${escapeHtml((e.dateAdded||'').slice(0,10))}</div>
+
+      <div class="divider"></div>
+      <div class="row" style="justify-content:flex-end;">
+        <button class="btn sm ghost" id="cycleStatusBtn">${e.learningStatus==='mastered' ? '↩️ Đặt lại "Mới"' : e.learningStatus==='learning' ? '⭐ Đánh dấu đã thuộc' : '▶️ Bắt đầu học'}</button>
+        <button class="btn sm ghost" id="editWordBtn">✏️ Sửa</button>
+        <button class="btn sm danger" id="deleteWordBtn">🗑️ Xóa</button>
+      </div>
+    </div>`;
+
+  $('#backToListBtn').onclick = ()=>{ state.detailId=null; renderVocabTab(); };
+  $('#detailSpeak').onclick = ()=> speak(e.word);
+  document.querySelectorAll('.collapse-btn').forEach(b=> b.onclick = ()=> toggleCollapse(b));
+  $('#editWordBtn').onclick = ()=> openModal(e.id);
+  $('#deleteWordBtn').onclick = ()=>{
+    if(confirm('Xóa từ "'+e.word+'" khỏi kho từ vựng?')){
+      state.entries = state.entries.filter(x=>x.id!==e.id);
+      saveEntries(state.entries);
+      state.detailId=null;
+      renderVocabTab();
+    }
+  };
+  $('#cycleStatusBtn').onclick = ()=>{
+    if(e.learningStatus==='mastered'){ e.learningStatus='new'; e.correctStreak=0; toast('Đã đặt lại "Mới"'); }
+    else if(e.learningStatus==='learning'){ e.learningStatus='mastered'; toast('🎉 Đã đánh dấu thuộc!'); }
+    else { markLearned(e); toast('✓ Bắt đầu học "'+e.word+'"'); }
+    saveEntries(state.entries);
+    renderDetail(e.id);
+  };
+}
+
+/* ==================== MODAL ADD/EDIT ==================== */
+function openModal(id){
+  if(id==='new'){
+    modalDraft = { id:uid(), word:'', tags:[], dateAdded:new Date().toISOString(),
+      learningStatus:'new', correctStreak:0, wordRoot:'', synonyms:[], antonyms:[],
+      senses:[{pronunciation:'', partOfSpeech:'noun', definitionEN:'', definitionVI:'', examples:[]}] };
+  } else {
+    const found = state.entries.find(e=>e.id===id);
+    modalDraft = JSON.parse(JSON.stringify(found));
+  }
+  renderModal();
+}
+function closeModal(){
+  modalDraft = null;
+  const bg = document.getElementById('modalBg');
+  if(bg) bg.remove();
+}
+function renderModal(){
+  let bg = document.getElementById('modalBg');
+  if(!bg){ bg = document.createElement('div'); bg.id='modalBg'; bg.className='modal-bg'; document.body.appendChild(bg); }
+  const d = modalDraft;
+  const isNew = !state.entries.find(e=>e.id===d.id);
+
+  bg.innerHTML = `
+    <div class="modal">
+      <div class="modal-head">
+        <h2 style="margin:0;">${isNew ? '＋ Thêm từ mới' : '✏️ Sửa từ'}</h2>
+        <button class="close-x" id="closeModalBtn">×</button>
+      </div>
+      <small class="help">${isNew ? 'Nhập từ → bấm "🔍 Tra từ điển" để tự điền phiên âm, nghĩa Anh, loại từ, ví dụ. Rồi bổ sung nghĩa tiếng Việt.' : ''}</small>
+
+      <label>Từ tiếng Anh</label>
+      <div class="row">
+        <input type="text" id="wordInput" value="${escapeHtml(d.word)}" placeholder="vd: approve" class="grow">
+        <button class="btn sm soft" id="lookupBtn" type="button">🔍 Tra từ điển</button>
+      </div>
+      <small class="help" id="lookupStatus"></small>
+
+      <label>Chủ đề / tag (ngăn cách bằng dấu phẩy)</label>
+      <input type="text" id="tagsInput" value="${escapeHtml((d.tags||[]).join(', '))}" placeholder="vd: business, travel">
+
+      <label>Gốc từ (tuỳ chọn)</label>
+      <input type="text" id="rootInput" value="${escapeHtml(d.wordRoot||'')}" placeholder="vd: bene (well) + volens (wishing)">
+
+      <h3 style="margin-top:16px;">Các nghĩa</h3>
+      <div id="sensesContainer"></div>
+      <button class="btn sm ghost" id="addSenseBtn" type="button" style="margin-top:10px;">＋ Thêm nghĩa khác</button>
+
+      <div class="divider"></div>
+      <div class="row">
+        <button class="btn" id="saveWordBtn" style="flex:1;">Lưu lại</button>
+        <button class="btn ghost" id="cancelWordBtn">Hủy</button>
+      </div>
+    </div>
+  `;
+  renderSenses();
+  $('#closeModalBtn').onclick = closeModal;
+  $('#cancelWordBtn').onclick = closeModal;
+  $('#wordInput').oninput = e=> d.word = e.target.value;
+  $('#tagsInput').oninput = e=> d.tags = splitList(e.target.value);
+  $('#rootInput').oninput = e=> d.wordRoot = e.target.value.trim();
+  $('#addSenseBtn').onclick = ()=>{ d.senses.push({pronunciation:'',partOfSpeech:'noun',definitionEN:'',definitionVI:'',examples:[]}); renderSenses(); };
+  $('#saveWordBtn').onclick = saveWordFromModal;
+  $('#lookupBtn').onclick = doLookup;
+  $('#wordInput').focus();
+}
+function splitList(str){ return str.split(',').map(s=>s.trim()).filter(Boolean); }
+function renderSenses(){
+  const d = modalDraft;
+  const container = $('#sensesContainer');
+  container.innerHTML = d.senses.map((s,i)=>`
+    <div class="sense-block" data-idx="${i}">
+      <div class="sense-head">
+        <span>Nghĩa ${i+1}</span>
+        ${d.senses.length>1 ? `<button class="icon-btn remove-sense" data-idx="${i}">✕ Xóa</button>` : ''}
+      </div>
+      <div class="row">
+        <div class="grow">
+          <label>Phiên âm (IPA)</label>
+          <input type="text" class="sense-pron" data-idx="${i}" value="${escapeHtml(s.pronunciation)}" placeholder="/əˈpruːv/">
+        </div>
+        <div style="min-width:130px;">
+          <label>Loại từ</label>
+          <select class="sense-pos" data-idx="${i}">
+            ${['noun','verb','adjective','adverb','pronoun','preposition','conjunction','interjection','other'].map(p=>`<option value="${p}" ${s.partOfSpeech===p?'selected':''}>${p}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <label>Nghĩa tiếng Anh</label>
+      <textarea class="sense-defen" data-idx="${i}">${escapeHtml(s.definitionEN)}</textarea>
+      <label>Nghĩa tiếng Việt</label>
+      <textarea class="sense-defvi" data-idx="${i}">${escapeHtml(s.definitionVI)}</textarea>
+      <label>Câu ví dụ (mỗi câu một dòng)</label>
+      <textarea class="sense-examples" data-idx="${i}">${escapeHtml((s.examples||[]).join('\n'))}</textarea>
+    </div>`).join('');
+  container.querySelectorAll('.sense-pron').forEach(el=> el.oninput = e=> d.senses[+e.target.dataset.idx].pronunciation = e.target.value);
+  container.querySelectorAll('.sense-pos').forEach(el=> el.onchange = e=> d.senses[+e.target.dataset.idx].partOfSpeech = e.target.value);
+  container.querySelectorAll('.sense-defen').forEach(el=> el.oninput = e=> d.senses[+e.target.dataset.idx].definitionEN = e.target.value);
+  container.querySelectorAll('.sense-defvi').forEach(el=> el.oninput = e=> d.senses[+e.target.dataset.idx].definitionVI = e.target.value);
+  container.querySelectorAll('.sense-examples').forEach(el=> el.oninput = e=> d.senses[+e.target.dataset.idx].examples = e.target.value.split('\n').map(x=>x.trim()).filter(Boolean));
+  container.querySelectorAll('.remove-sense').forEach(el=> el.onclick = e=>{ d.senses.splice(+e.target.dataset.idx,1); renderSenses(); });
+}
+async function doLookup(){
+  const d = modalDraft;
+  const statusEl = $('#lookupStatus');
+  if(!d.word.trim()){ statusEl.textContent='Nhập từ tiếng Anh trước đã.'; statusEl.style.color='var(--danger)'; return; }
+  statusEl.textContent='Đang tra cứu…'; statusEl.style.color='var(--muted)';
+  try{
+    const r = await fetchFromDictionaryApi(d.word);
+    const oldVi = d.senses.map(s=>s.definitionVI);
+    d.senses = r.senses.map((s,i)=>({...s, definitionVI: oldVi[i]||''}));
+    d.synonyms = Array.from(new Set([...(d.synonyms||[]), ...r.synonyms]));
+    d.antonyms = Array.from(new Set([...(d.antonyms||[]), ...r.antonyms]));
+    renderSenses();
+    statusEl.textContent='✓ Đã tự điền. Bổ sung nghĩa tiếng Việt nhé.';
+    statusEl.style.color='var(--primary-dark)';
+  }catch(err){
+    statusEl.textContent='✗ '+err.message+' Bạn có thể nhập tay.';
+    statusEl.style.color='var(--danger)';
+  }
+}
+function saveWordFromModal(){
+  const d = modalDraft;
+  if(!d.word.trim()){ toast('Vui lòng nhập từ tiếng Anh'); return; }
+  for(const s of d.senses){
+    if(!s.definitionEN.trim() || !s.definitionVI.trim()){
+      if(!confirm('Có nghĩa chưa điền đầy đủ định nghĩa. Vẫn lưu?')) return;
+      break;
+    }
+  }
+  const idx = state.entries.findIndex(e=>e.id===d.id);
+  if(idx>=0) state.entries[idx] = d;
+  else state.entries.push(d);
+  saveEntries(state.entries);
+  closeModal();
+  if(state.tab==='vocab' && state.detailId) renderDetail(d.id);
+  else render();
+}
+async function fetchFromDictionaryApi(word){
+  const url = 'https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(word.trim().toLowerCase());
+  const res = await fetch(url);
+  if(!res.ok) throw new Error('Không tìm thấy từ trong từ điển (API).');
+  const data = await res.json();
+  const entryData = data[0];
+  const senses = [], synSet = new Set(), antSet = new Set();
+  (entryData.meanings||[]).forEach(m=>{
+    const defObj = (m.definitions && m.definitions[0]) || {};
+    senses.push({
+      pronunciation: entryData.phonetic || (entryData.phonetics&&entryData.phonetics.find(p=>p.text)?.text) || '',
+      partOfSpeech: m.partOfSpeech || '',
+      definitionEN: defObj.definition || '',
+      definitionVI: '',
+      examples: defObj.example ? [defObj.example] : []
+    });
+    (m.synonyms||[]).forEach(s=>synSet.add(s));
+    (m.antonyms||[]).forEach(a=>antSet.add(a));
+    (m.definitions||[]).forEach(d=>{
+      (d.synonyms||[]).forEach(s=>synSet.add(s));
+      (d.antonyms||[]).forEach(a=>antSet.add(a));
+    });
+  });
+  if(senses.length===0) senses.push({pronunciation:entryData.phonetic||'',partOfSpeech:'',definitionEN:'',definitionVI:'',examples:[]});
+  return { senses, synonyms:Array.from(synSet).slice(0,8), antonyms:Array.from(antSet).slice(0,8) };
+}
+
+/* ==================== GAMES TAB ==================== */
+function renderGamesTab(){
+  if(state.gameScreen !== 'menu') return; // active game renders itself
+  app.innerHTML = `
+    <div class="panel">
+      <h2>Chọn hình thức ôn tập</h2>
+      <div class="game-menu">
+        <button class="game-card" data-game="flashcard">
+          <div class="gi">🗂️</div>
+          <h3>Flashcard</h3>
+          <p>Bấm lật thẻ xem nghĩa, tự đánh giá nhớ hay chưa.</p>
+        </button>
+        <button class="game-card" data-game="translate">
+          <div class="gi">✍️</div>
+          <h3>Dịch nghĩa <span class="pos-chip" style="vertical-align:middle;">💡 có hint</span></h3>
+          <p>Đoán từ theo nghĩa + loại từ. Bấm gợi ý để lộ dần từng kí tự.</p>
+        </button>
+        <button class="game-card" data-game="synonym">
+          <div class="gi">🔁</div>
+          <h3>Chọn từ đồng nghĩa</h3>
+          <p>Trắc nghiệm 4 lựa chọn.</p>
+        </button>
+        <button class="game-card" data-game="antonym">
+          <div class="gi">↔️</div>
+          <h3>Chọn từ trái nghĩa</h3>
+          <p>Trắc nghiệm 4 lựa chọn.</p>
+        </button>
+      </div>
+    </div>`;
+  document.querySelectorAll('.game-card').forEach(el=>{
+    el.onclick = ()=>{ state.gameScreen = el.dataset.game; startGame(el.dataset.game); };
+  });
+}
+function startGame(type){
+  const pool = state.entries.filter(e=>e.senses && e.senses.some(s=>s.definitionVI));
+  if(type==='synonym'||type==='antonym'){
+    const key = type==='synonym'?'synonyms':'antonyms';
+    const eligible = pool.filter(e=>(e[key]||[]).length>0);
+    if(eligible.length<1 || pool.length<4){ showNotEnough(type==='synonym'?'từ đồng nghĩa':'từ trái nghĩa', 4); return; }
+    session = { type, queue:shuffle(eligible), idx:0, correct:0, total:0, key };
+    nextChoice();
+    return;
+  }
+  if(pool.length<1){ showNotEnough('nghĩa tiếng Việt', 1); return; }
+  if(type==='flashcard'){
+    session = { type, queue:shuffle(pool), idx:0, correct:0, total:0, revealed:false };
+    renderFlashcard();
+  } else if(type==='translate'){
+    session = { type, queue:shuffle(pool), idx:0, correct:0, total:0, dir:'vi2en', hints:0 };
+    renderTranslate();
+  }
+}
+function startFlashcardWith(ids){
+  const pool = state.entries.filter(e=>ids.includes(e.id) && e.senses && e.senses.some(s=>s.definitionVI));
+  if(pool.length===0){ toast('Không có từ nào để ôn'); return; }
+  state.tab='games'; state.gameScreen='flashcard';
+  session = { type:'flashcard', queue:pool, idx:0, correct:0, total:0, revealed:false };
+  render();
+}
+function showNotEnough(need, minCount){
+  app.innerHTML = `
+    <div class="panel"><div class="empty-state">
+      <div class="big">🙈</div>
+      Chưa đủ dữ liệu chơi trò này.<br> Cần ít nhất ${minCount} từ có <b>${need}</b> trong kho từ vựng.
+      <div class="row" style="justify-content:center;margin-top:16px;">
+        <button class="btn ghost" id="backToMenu2">← Quay lại</button>
+        <button class="btn" id="addMoreGameBtn">＋ Thêm từ mới</button>
+      </div>
+    </div></div>`;
+  $('#backToMenu2').onclick = ()=>{ state.gameScreen='menu'; renderGamesTab(); };
+  $('#addMoreGameBtn').onclick = ()=> openModal('new');
+}
+function gameShell(title, subtitle){
+  const s = session;
+  const pct = s.queue.length ? Math.round((s.idx/s.queue.length)*100) : 0;
+  return `
+    <div class="panel" style="padding:16px 20px;">
+      <div class="game-toolbar">
+        <div>
+          <h2 style="margin:0;">${title}</h2>
+          ${subtitle ? `<small class="muted">${subtitle}</small>` : ''}
+        </div>
+        <button class="btn sm ghost" id="exitGameBtn">✕ Thoát</button>
+      </div>
+      <div class="game-progress"><div class="fill" style="width:${pct}%"></div></div>
+      <div class="muted" style="font-size:12.5px;">Từ ${Math.min(s.idx+1,s.queue.length)}/${s.queue.length} · Đúng <b style="color:var(--primary-dark);">${s.correct}</b>/${s.total}</div>
+    </div>`;
+}
+function bindExit(){
+  const el = $('#exitGameBtn');
+  if(el) el.onclick = ()=>{ state.gameScreen='menu'; session=null; renderGamesTab(); };
+}
+function resultCard(entry, sense){
+  return `
+    <div class="result-card">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span style="font-size:20px;font-weight:800;">${escapeHtml(entry.word)}</span>
+        <button class="speak-btn" data-speak="${escapeHtml(entry.word)}">🔈</button>
+        ${sense.pronunciation?`<span class="ipa-chip">${escapeHtml(sense.pronunciation)}</span>`:''}
+        <span class="pos-chip">${escapeHtml(sense.partOfSpeech||'')}</span>
+      </div>
+      <div style="margin-top:8px;font-size:14px;">${escapeHtml(sense.definitionEN||'')}</div>
+      <div style="font-weight:700;margin-top:2px;">${escapeHtml(sense.definitionVI||'')}</div>
+      ${(sense.examples&&sense.examples[0])?`<div class="example-box" style="margin-top:10px;"><span class="q">❝ </span>${escapeHtml(sense.examples[0])}</div>`:''}
+    </div>`;
+}
+
+/* ---- Flashcard ---- */
+function renderFlashcard(){
+  const s = session;
+  if(s.idx>=s.queue.length){ app.innerHTML = gameShell('Flashcard') + summaryPanel(); bindExit(); bindReplay('flashcard'); return; }
+  const entry = s.queue[s.idx];
+  const sense = entry.senses.find(x=>x.definitionVI) || entry.senses[0];
+  app.innerHTML = gameShell('Flashcard','Bấm vào thẻ để lật xem nghĩa') + `
+    <div class="flashcard-wrap">
+      <div class="flashcard" id="cardEl" style="min-height:260px;">
+        <div class="face">
+          <div class="fc-word">${escapeHtml(entry.word)}</div>
+          ${sense.pronunciation?`<div class="fc-ipa">${escapeHtml(sense.pronunciation)}</div>`:''}
+          <div class="fc-hint">Bấm vào thẻ để lật</div>
+        </div>
+        <div class="face back">
+          <div class="fc-vi">${escapeHtml(sense.definitionVI)}</div>
+          <div class="fc-en">${escapeHtml(sense.definitionEN||'')}</div>
+          ${(sense.examples&&sense.examples[0])?`<div class="fc-en">❝ ${escapeHtml(sense.examples[0])}</div>`:''}
+          <div class="fc-hint">${escapeHtml(entry.word)} ${sense.pronunciation?'· '+escapeHtml(sense.pronunciation):''}</div>
+        </div>
+      </div>
+    </div>
+    ${s.revealed ? `
+      <div class="row" style="margin-top:16px;">
+        <button class="btn ghost" id="dontKnowBtn" style="flex:1;">😕 Chưa nhớ</button>
+        <button class="btn" id="knowBtn" style="flex:1;">😎 Đã nhớ</button>
+      </div>` : ''}
+  `;
+  bindExit();
+  const card = $('#cardEl');
+  card.onclick = ()=>{ if(!s.revealed){ s.revealed=true; card.classList.add('flipped'); } };
+  const dk = $('#dontKnowBtn'), kb = $('#knowBtn');
+  if(dk) dk.onclick = ()=> answerFlashcard(entry,false);
+  if(kb) kb.onclick = ()=> answerFlashcard(entry,true);
+}
+function answerFlashcard(entry, known){
+  registerResult(entry, known);
+  recordHistory('flashcard', entry.id, known);
+  session.total++; if(known) session.correct++;
+  session.idx++; session.revealed=false;
+  renderFlashcard();
+}
+
+/* ---- Translate with hint ---- */
+function renderTranslate(){
+  const s = session;
+  if(s.idx>=s.queue.length){ app.innerHTML = gameShell('Dịch nghĩa') + summaryPanel(); bindExit(); bindReplay('translate'); return; }
+  const entry = s.queue[s.idx];
+  const sense = entry.senses.find(x=>x.definitionVI) || entry.senses[0];
+  const dir = s.dir;
+  const target = dir==='vi2en' ? entry.word : sense.definitionVI;
+  const masked = maskText(target, s.hints);
+  const allRevealed = s.hints >= countAlpha(target);
+  const dirLabel = dir==='vi2en' ? 'Việt → Anh' : 'Anh → Việt';
+
+  const promptHtml = dir==='vi2en'
+    ? `<div class="prompt-card">
+         <span class="pos-chip">${escapeHtml(sense.partOfSpeech||'')}</span>
+         <div class="p-vi" style="margin-top:8px;">${escapeHtml(sense.definitionVI)}</div>
+         <div class="p-en" style="margin-top:4px;">${escapeHtml(sense.definitionEN||'')}</div>
+       </div>`
+    : `<div class="prompt-card">
+         <div style="display:flex;align-items:center;justify-content:center;gap:10px;">
+           <span style="font-size:26px;font-weight:800;">${escapeHtml(entry.word)}</span>
+           <button class="speak-btn" data-speak="${escapeHtml(entry.word)}">🔈</button>
+         </div>
+         ${sense.pronunciation?`<div class="muted" style="font-size:13px;">${escapeHtml(sense.pronunciation)}</div>`:''}
+         <span class="pos-chip">${escapeHtml(sense.partOfSpeech||'')}</span>
+       </div>`;
+
+  app.innerHTML = gameShell('Dịch nghĩa ('+dirLabel+')', 'Nhìn nghĩa + loại từ, đoán từ. Dùng 💡 để lộ dần kí tự.') + `
+    <div class="panel">
+      ${promptHtml}
+      <div style="text-align:center;margin:16px 0 4px;">
+        <small class="muted" style="font-size:12px;">${dir==='vi2en' ? 'Từ tiếng Anh là:' : 'Nghĩa tiếng Việt là:'}</small>
+        <div class="guess-word" style="margin-top:6px;">${masked.split('').map(c=>c==='_'?'<span style="color:#c2cad4;">_</span>':escapeHtml(c)).join('')}</div>
+      </div>
+      <label>${dir==='vi2en' ? 'Gõ từ tiếng Anh:' : 'Gõ nghĩa tiếng Việt:'}</label>
+      <input type="text" id="answerInput" autocomplete="off" placeholder="${dir==='vi2en' ? 'approve' : 'đồng ý, chấp thuận…'}">
+      <div class="row" style="margin-top:12px;">
+        <button class="btn ghost sm" id="hintBtn" ${allRevealed?'disabled':''}>💡 Gợi ý (${s.hints}/${countAlpha(target)})</button>
+        <button class="btn" id="submitAnswerBtn" style="flex:1;">Kiểm tra</button>
+      </div>
+      <div id="feedbackArea"></div>
+    </div>`;
+  bindExit();
+  const input = $('#answerInput');
+  input.value = s.tempAnswer || '';
+  input.focus();
+  $('#hintBtn').onclick = ()=>{
+    if(s.hints < countAlpha(target)){
+      s.tempAnswer = input.value;
+      s.hints++;
+      renderTranslate();
+    }
+  };
+  const submit = ()=>{
+    const userAns = input.value;
+    const answers = dir==='vi2en' ? [entry.word] : entry.senses.map(x=>x.definitionVI);
+    const isCorrect = answers.some(a=> normalize(userAns) === normalize(a));
+    input.disabled = true;
+    $('#submitAnswerBtn').disabled = true;
+    $('#hintBtn').disabled = true;
+    registerResult(entry, isCorrect);
+    recordHistory('translate', entry.id, isCorrect);
+    session.total++; if(isCorrect) session.correct++;
+    $('#feedbackArea').innerHTML = `
+      <div class="feedback ${isCorrect?'ok':'no'}">${isCorrect ? '✓ Chính xác! 🎉' : '✗ Chưa đúng.'}</div>
+      ${resultCard(entry, sense)}
+      <div class="row" style="margin-top:12px;">
+        <button class="btn" id="nextQBtn" style="flex:1;">Câu tiếp →</button>
+      </div>`;
+    $('#nextQBtn').onclick = ()=>{
+      session.idx++;
+      session.dir = Math.random()<0.5?'vi2en':'en2vi';
+      session.hints = 0;
+      session.tempAnswer = '';
+      renderTranslate();
+    };
+    const sp = $('#feedbackArea').querySelector('[data-speak]');
+    if(sp) sp.onclick = ()=> speak(sp.dataset.speak);
+  };
+  $('#submitAnswerBtn').onclick = submit;
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter') submit(); });
+  const sp = $('[data-speak]');
+  if(sp) sp.onclick = ()=> speak(sp.dataset.speak);
+}
+function countAlpha(str){ return [...String(str||'')].filter(c=>/[a-zA-ZÀ-ỹđ]/.test(c)).length; }
+function maskText(str, n){
+  let seen = 0;
+  return [...String(str||'')].map(ch=>{
+    if(/[a-zA-ZÀ-ỹđ]/.test(ch)){ seen++; return seen<=n ? ch : '_'; }
+    return ch;
+  }).join('');
+}
+
+/* ---- Synonym / Antonym ---- */
+function nextChoice(){
+  const s = session;
+  if(s.idx>=s.queue.length){ renderChoiceDone(); return; }
+  const entry = s.queue[s.idx];
+  const correctWord = shuffle(entry[s.key])[0];
+  const entryPos = (entry.senses&&entry.senses[0]&&entry.senses[0].partOfSpeech)||'';
+  const others = state.entries.filter(e=> e.word.toLowerCase()!==entry.word.toLowerCase() && e.word.toLowerCase()!==correctWord.toLowerCase());
+  let distractorPool = others.filter(e=>(e.senses&&e.senses[0]&&e.senses[0].partOfSpeech)===entryPos);
+  if(distractorPool.length<3) distractorPool = others;
+  const distractorWords = shuffle(Array.from(new Set(distractorPool.map(e=>e.word)))).slice(0,3);
+  const options = shuffle([correctWord, ...distractorWords]);
+  s.current = { entry, correctWord, options };
+  renderChoice();
+}
+function renderChoice(){
+  const s = session;
+  const title = s.type==='synonym' ? 'Chọn từ đồng nghĩa' : 'Chọn từ trái nghĩa';
+  const { entry, options } = s.current;
+  app.innerHTML = gameShell(title, 'Từ nào '+(s.type==='synonym'?'đồng nghĩa':'trái nghĩa')+' với từ bên dưới?') + `
+    <div class="panel">
+      <div style="text-align:center;padding:8px 0 18px;">
+        <div style="font-size:26px;font-weight:800;">${escapeHtml(entry.word)}</div>
+        ${(entry.senses&&entry.senses[0]&&entry.senses[0].pronunciation)?`<div class="muted" style="font-size:13px;">${escapeHtml(entry.senses[0].pronunciation)}</div>`:''}
+        ${posChips(entry)}
+      </div>
+      <div id="choicesArea">
+        ${options.map(o=>`<button class="choice-btn" data-word="${escapeHtml(o)}">${escapeHtml(o)}</button>`).join('')}
+      </div>
+      <div id="feedbackArea"></div>
+    </div>`;
+  bindExit();
+  document.querySelectorAll('.choice-btn').forEach(btn=> btn.onclick = ()=> answerChoice(btn.dataset.word));
+}
+function answerChoice(chosen){
+  const s = session;
+  const { entry, correctWord } = s.current;
+  const isCorrect = normalize(chosen) === normalize(correctWord);
+  document.querySelectorAll('.choice-btn').forEach(btn=>{
+    btn.disabled = true;
+    if(normalize(btn.dataset.word)===normalize(correctWord)) btn.classList.add('correct');
+    else if(btn.dataset.word===chosen) btn.classList.add('wrong');
+  });
+  registerResult(entry, isCorrect);
+  recordHistory(s.type, entry.id, isCorrect);
+  s.total++; if(isCorrect) s.correct++;
+  $('#feedbackArea').innerHTML = `
+    <div class="feedback ${isCorrect?'ok':'no'}">
+      ${isCorrect ? '✓ Chính xác!' : `✗ Chưa đúng. Đáp án: <b>${escapeHtml(correctWord)}</b>`}
+    </div>
+    <div class="row" style="margin-top:12px;"><button class="btn" id="nextQBtn" style="flex:1;">Câu tiếp →</button></div>`;
+  $('#nextQBtn').onclick = ()=>{ s.idx++; nextChoice(); };
+}
+function renderChoiceDone(){
+  const title = session.type==='synonym' ? 'Chọn từ đồng nghĩa' : 'Chọn từ trái nghĩa';
+  app.innerHTML = gameShell(title) + summaryPanel();
+  bindExit(); bindReplay(session.type);
+}
+function summaryPanel(){
+  const s = session;
+  const pct = s.total ? Math.round((s.correct/s.total)*100) : 0;
+  return `
+    <div class="panel" style="text-align:center;">
+      <h2>Hoàn thành! 🎉</h2>
+      <div class="stat-grid" style="max-width:360px;margin:14px auto;">
+        <div class="stat-box"><div class="num">${s.total}</div><div class="lbl">Số câu</div></div>
+        <div class="stat-box"><div class="num">${s.correct}</div><div class="lbl">Đúng</div></div>
+        <div class="stat-box"><div class="num" style="color:var(--primary);">${pct}%</div><div class="lbl">Tỷ lệ</div></div>
+      </div>
+      <div class="row" style="max-width:360px;margin:0 auto;">
+        <button class="btn ghost" id="backToMenuBtn2">← Menu</button>
+        <button class="btn" id="replayBtn">Chơi lại</button>
+      </div>
+    </div>`;
+}
+function bindReplay(type){
+  const back = $('#backToMenuBtn2');
+  if(back) back.onclick = ()=>{ state.gameScreen='menu'; session=null; renderGamesTab(); };
+  const replay = $('#replayBtn');
+  if(replay) replay.onclick = ()=> startGame(type);
+}
+
+/* ==================== STATS TAB ==================== */
+function renderStatsTab(){
+  const entries = state.entries;
+  const total = entries.length;
+  const counts = { new:0, learning:0, mastered:0 };
+  entries.forEach(e=> counts[e.learningStatus] = (counts[e.learningStatus]||0)+1);
+
+  const history = loadHistory();
+  const byGame = {};
+  history.forEach(h=>{
+    byGame[h.game] = byGame[h.game] || { correct:0, total:0 };
+    byGame[h.game].total++;
+    if(h.correct) byGame[h.game].correct++;
+  });
+  const gameNames = { flashcard:'Flashcard', translate:'Dịch nghĩa', synonym:'Đồng nghĩa', antonym:'Trái nghĩa' };
+
+  const daily = loadDaily();
+  const last14 = [];
+  const cursor = new Date(todayStr());
+  for(let i=0;i<14;i++){ last14.unshift({ date:fmtDate(cursor), n:(daily[fmtDate(cursor)]||[]).length }); cursor.setDate(cursor.getDate()-1); }
+  const maxDaily = Math.max(1, ...last14.map(d=>d.n));
+  const totalLearnedAll = Object.values(daily).reduce((a,b)=>a+b.length,0);
+  const pctNew = total ? Math.round(counts.new/total*100) : 0;
+  const pctLearning = total ? Math.round(counts.learning/total*100) : 0;
+  const pctMastered = total ? Math.round(counts.mastered/total*100) : 0;
+
+  app.innerHTML = `
+    <div class="panel">
+      <h2>Tổng quan</h2>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="num">${total}</div><div class="lbl">Tổng từ</div></div>
+        <div class="stat-box"><div class="num" style="color:var(--new);">${counts.new||0}</div><div class="lbl">Mới</div></div>
+        <div class="stat-box"><div class="num" style="color:var(--learning);">${counts.learning||0}</div><div class="lbl">Đang học</div></div>
+        <div class="stat-box"><div class="num" style="color:var(--mastered);">${counts.mastered||0}</div><div class="lbl">Đã thuộc</div></div>
+        <div class="stat-box"><div class="num" style="color:var(--amber);">${getStreak()}</div><div class="lbl">Streak 🔥</div></div>
+        <div class="stat-box"><div class="num" style="color:var(--primary);">${totalLearnedAll}</div><div class="lbl">Lượt đã học</div></div>
+      </div>
+      <div class="status-stack">
+        <div style="width:${pctNew}%;background:var(--new);"></div>
+        <div style="width:${pctLearning}%;background:var(--learning);"></div>
+        <div style="width:${pctMastered}%;background:var(--mastered);"></div>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--new);"></i>Mới ${pctNew}%</span>
+        <span><i style="background:var(--learning);"></i>Đang học ${pctLearning}%</span>
+        <span><i style="background:var(--mastered);"></i>Đã thuộc ${pctMastered}%</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Từ học mỗi ngày (14 ngày gần nhất)</h2>
+      ${totalLearnedAll===0 ? `<div class="empty-state">Chưa có dữ liệu. Vào tab "Hôm nay" để học từ đầu tiên!</div>` :
+        last14.map(d=>`
+          <div class="bar-row">
+            <span class="lbl">${d.date.slice(5)}</span>
+            <div class="bar-track"><div class="bar-fill" style="width:${(d.n/maxDaily*100)}%;background:${d.n>0?'var(--primary)':'#e8ebf0'};"></div></div>
+            <span class="val">${d.n}</span>
+          </div>`).join('')}
+    </div>
+
+    <div class="panel">
+      <h2>Tỷ lệ đúng theo trò chơi</h2>
+      ${Object.keys(byGame).length===0 ? `<div class="empty-state">Chưa có dữ liệu chơi game.</div>` :
+        Object.entries(byGame).map(([g,v])=>{
+          const p = v.total ? Math.round(v.correct/v.total*100) : 0;
+          return `
+            <div class="bar-row">
+              <span class="lbl">${gameNames[g]||g}</span>
+              <div class="bar-track"><div class="bar-fill" style="width:${p}%;background:${p>=80?'var(--mastered)':p>=50?'var(--learning)':'var(--danger)'};"></div></div>
+              <span class="val">${p}%</span>
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin:-3px 0 8px 98px;">${v.correct}/${v.total} câu đúng</div>`;
+        }).join('')}
+    </div>
+  `;
+}
+
+/* ==================== SEED VOCABULARY (built-in dictionary) ==================== */
+/* format: [word, ipa, pos, defEN, defVI, example, tag, syn[], ant[], root] */
+const SEED_WORDS = [
+  /* --- công việc / business --- */
+  ['approve','/əˈpruːv/','verb','To officially agree to or accept something as satisfactory.','Đồng ý, chấp thuận.','The committee approved the new budget.','công việc',['agree','sanction','endorse'],['disapprove','reject','deny'],'ad (to) + probare (to test, approve)'],
+  ['negotiate','/nɪˈɡəʊʃieɪt/','verb','To discuss something in order to reach an agreement.','Đàm phán.','The two sides negotiated a new trade deal.','công việc',['bargain','mediate','deal'],['refuse'],'neg (not) + otium (leisure)'],
+  ['revenue','/ˈrevənjuː/','noun','Income generated from business activities.','Doanh thu.','The company\'s revenue grew by 20% this year.','công việc',['income','earnings','proceeds'],['expenditure','expense'],'re (back) + venire (come)'],
+  ['deficit','/ˈdefɪsɪt/','noun','The amount by which spending exceeds income.','Thâm hụt.','The government is trying to reduce the budget deficit.','công việc',['shortfall','loss'],['surplus'],'deficit (lacking)'],
+  ['merger','/ˈmɜːdʒər/','noun','The combination of two companies into one.','Sáp nhập.','The merger created the largest bank in the country.','công việc',['consolidation','amalgamation'],['separation','split'],'mergere (to dip, sink)'],
+  ['entrepreneur','/ˌɒntrəprəˈnɜːr/','noun','A person who sets up and runs a business.','Doanh nhân, người khởi nghiệp.','She became a successful entrepreneur at a young age.','công việc',['businessperson','founder'],['employee'],'entre (between) + prendre (to take)'],
+  ['bankrupt','/ˈbæŋkrʌpt/','adjective','Unable to pay one\'s debts.','Phá sản.','The airline went bankrupt after years of losses.','công việc',['insolvent','broke'],['solvent','prosperous'],'banca (bench) + rupta (broken)'],
+  ['justify','/ˈdʒʌstɪfaɪ/','verb','To show or prove to be right or reasonable.','Biện minh, chứng minh là đúng.','He couldn\'t justify the extra expense.','công việc',['defend','rationalize','vindicate'],['condemn'],'justus (right) + facere (make)'],
+  ['legitimate','/lɪˈdʒɪtɪmət/','adjective','Conforming to the law or to rules; valid.','Hợp pháp, chính đáng.','He raised a legitimate concern about the plan.','công việc',['valid','lawful','legal'],['illegitimate','unlawful'],'legitimare (to declare lawful)'],
+  ['urgent','/ˈɜːdʒənt/','adjective','Requiring immediate action or attention.','Khẩn cấp.','This is an urgent matter that needs your attention today.','công việc',['pressing','critical','crucial'],['unimportant','trivial'],'urgere (to press)'],
+  ['persuade','/pəˈsweɪd/','verb','To cause someone to do something through reasoning.','Thuyết phục.','She persuaded him to apply for the job.','công việc',['convince','influence'],['dissuade','deter'],'per (thoroughly) + suadere (advise)'],
+  ['stakeholder','/ˈsteɪkhəʊldər/','noun','A person or group with an interest in an organization.','Bên liên quan.','The project needs approval from all stakeholders.','công việc',['participant','investor'],[]],
+  ['delegate','/ˈdelɪɡeɪt/','verb','To give part of your work to someone else.','Ủy quyền, phân công.','A good manager knows how to delegate tasks.','công việc',['assign','entrust','depute'],['hoard'],'de (away) + legare (send)'],
+  ['collaborate','/kəˈlæbəreɪt/','verb','To work together with others on a project.','Hợp tác.','The two teams collaborated on the research.','công việc',['cooperate','work together'],['compete'],'com (together) + laborare (work)'],
+  ['benchmark','/ˈbentʃmɑːk/','noun','A standard or point of reference for comparison.','Chuẩn mực, điểm chuẩn.','This report sets a benchmark for the industry.','công việc',['standard','reference','yardstick'],[]],
+  ['deadline','/ˈdedlaɪn/','noun','The latest time by which something must be done.','Hạn chót.','The deadline for the report is Friday.','công việc',['due date','time limit'],[]],
+  ['invoice','/ˈɪnvɔɪs/','noun','A list of goods or services with payment due.','Hóa đơn.','Please pay the invoice within 30 days.','công việc',['bill','receipt'],[]],
+  ['profit','/ˈprɒfɪt/','noun','Money gained after costs are paid.','Lợi nhuận.','The store made a healthy profit last year.','công việc',['gain','earnings','return'],['loss'],'pro (forward) + facere (make)'],
+  ['investment','/ɪnˈvestmənt/','noun','Money put into something to gain profit later.','Sự đầu tư.','Education is the best investment you can make.','công việc',['capital','stake'],[]],
+  ['promotion','/prəˈməʊʃn/','noun','A move to a higher position; or advertising.','Sự thăng chức; quảng bá.','She earned a promotion after two years.','công việc',['advancement','marketing'],['demotion'],'promovere (to move forward)'],
+  ['interview','/ˈɪntəvjuː/','noun','A formal meeting to ask questions.','Buổi phỏng vấn.','The job interview went very well.','công việc',['meeting','talk'],[]],
+  ['strategy','/ˈstrætədʒi/','noun','A plan of action to achieve a goal.','Chiến lược.','The company needs a clear marketing strategy.','công việc',['plan','approach','tactic'],[]],
+  ['logistics','/ləˈdʒɪstɪks/','noun','The careful organization of a complex operation.','Hậu cần, logistics.','The event logistics were handled by a professional team.','công việc',['organization','planning'],[]],
+  ['procrastinate','/prəˈkræstɪneɪt/','verb','To delay or postpone action.','Trì hoãn.','Stop procrastinating and start your homework.','công việc',['delay','postpone'],['expedite','hasten'],'pro (forward) + cras (tomorrow)'],
+  /* --- học thuật / academic --- */
+  ['hypothesis','/haɪˈpɒθəsɪs/','noun','A proposed explanation made on limited evidence.','Giả thuyết.','The scientist tested her hypothesis in the lab.','học thuật',['theory','assumption'],['fact','proof'],'hypo (under) + thesis (placing)'],
+  ['analyze','/ˈænəlaɪz/','verb','To examine something in detail.','Phân tích.','Researchers analyzed the data for several months.','học thuật',['examine','evaluate','study'],['ignore'],'ana (up) + lyein (loosen)'],
+  ['curriculum','/kəˈrɪkjələm/','noun','The subjects comprising a course of study.','Chương trình học.','The school updated its curriculum this year.','học thuật',['syllabus','program'],[]],
+  ['plagiarism','/ˈpleɪdʒərɪzəm/','noun','Using another person\'s work as your own.','Đạo văn.','The student was penalized for plagiarism.','học thuật',['copying','theft of work'],['originality']],
+  ['cite','/saɪt/','verb','To quote a source as evidence.','Trích dẫn.','Always cite your sources in an academic essay.','học thuật',['quote','reference'],[],'citare (to summon)'],
+  ['inevitable','/ɪnˈevɪtəbl/','adjective','Certain to happen; unavoidable.','Không thể tránh khỏi.','Change is inevitable in a growing company.','học thuật',['unavoidable','certain','inescapable'],['avoidable','preventable'],'in (not) + evitabilis (avoidable)'],
+  ['skeptical','/ˈskeptɪkəl/','adjective','Not easily convinced; having doubts.','Hoài nghi.','Investors remained skeptical about the new plan.','học thuật',['doubtful','dubious'],['convinced','credulous']],
+  ['eloquent','/ˈeləkwənt/','adjective','Fluent and persuasive in speaking or writing.','Hùng biện, lưu loát.','The lawyer gave an eloquent closing argument.','học thuật',['articulate','fluent','persuasive'],['inarticulate','tongue-tied'],'e (out) + loqui (speak)'],
+  ['meticulous','/məˈtɪkjələs/','adjective','Showing great attention to detail; very careful.','Tỉ mỉ, cẩn thận.','The report was written in a meticulous way.','học thuật',['careful','precise','thorough'],['careless','sloppy']],
+  ['abundant','/əˈbʌndənt/','adjective','Existing or available in large quantities.','Dồi dào, phong phú.','The region has abundant natural resources.','học thuật',['plentiful','ample','copious'],['scarce','insufficient']],
+  ['diligent','/ˈdɪlɪdʒənt/','adjective','Showing care and conscientiousness in work.','Siêng năng, chăm chỉ.','She is a diligent student who never misses class.','học thuật',['hardworking','industrious'],['lazy','idle'],'diligere (to value highly)'],
+  ['evidence','/ˈevɪdəns/','noun','Facts or signs that support a belief.','Bằng chứng.','There is clear evidence of climate change.','học thuật',['proof','signs'],[]],
+  ['conclusion','/kənˈkluːʒn/','noun','A judgement reached after reasoning.','Kết luận.','The study reached a surprising conclusion.','học thuật',['deduction','inference'],[]],
+  ['research','/rɪˈsɜːtʃ/','noun','Systematic investigation to discover facts.','Nghiên cứu.','She does research on renewable energy.','học thuật',['study','investigation'],[]],
+  ['experiment','/ɪkˈsperɪmənt/','noun','A scientific test to discover something.','Thí nghiệm.','The experiment confirmed their prediction.','học thuật',['test','trial'],[]],
+  ['phenomenon','/fəˈnɒmɪnən/','noun','A fact or event observed to exist.','Hiện tượng.','Rainbows are a natural phenomenon.','học thuật',['occurrence','event'],[]],
+  ['principle','/ˈprɪnsəpl/','noun','A fundamental truth or rule.','Nguyên tắc.','Honesty is one of his core principles.','học thuật',['rule','doctrine'],[]],
+  ['methodology','/ˌmeθəˈdɒlədʒi/','noun','A system of methods used in a study.','Phương pháp luận.','The methodology of the survey was sound.','học thuật',['approach','procedure'],[]],
+  ['argument','/ˈɑːɡjumənt/','noun','A set of reasons given to support an idea.','Lập luận.','Her argument convinced the committee.','học thuật',['reasoning','case'],[]],
+  ['perspective','/pəˈspektɪv/','noun','A particular way of viewing things.','Quan điểm, góc nhìn.','Try to see the issue from another perspective.','học thuật',['viewpoint','standpoint'],[]],
+  ['criterion','/kraɪˈtɪəriən/','noun','A standard used to judge something.','Tiêu chí.','Price is the main criterion for choosing a phone.','học thuật',['standard','benchmark'],[]],
+  ['abstract','/ˈæbstrækt/','adjective','Existing in thought rather than physical form.','Trừu tượng.','Justice is an abstract concept.','học thuật',['theoretical','conceptual'],['concrete','practical']],
+  ['allocate','/ˈæləkeɪt/','verb','To distribute for a particular purpose.','Phân bổ.','The manager allocated the budget to each team.','học thuật',['assign','distribute'],[]],
+  ['anticipate','/ænˈtɪsɪpeɪt/','verb','To expect or predict something.','Dự đoán, mong đợi.','We anticipate strong sales this quarter.','học thuật',['expect','foresee'],[]],
+  ['assumption','/əˈsʌmpʃn/','noun','Something accepted as true without proof.','Giả định.','The plan is based on the assumption that sales rise.','học thuật',['presumption','supposition'],[]],
+  ['bias','/ˈbaɪəs/','noun','An unfair preference for or against something.','Thiên kiến, thiên vị.','The survey had a bias toward younger people.','học thuật',['prejudice','partiality'],['fairness','objectivity']],
+  ['dilemma','/dɪˈlemə/','noun','A difficult choice between two options.','Tình thế tiến thoái lưỡng nan.','She faced a dilemma: work or travel abroad.','học thuật',['predicament','quandary'],[]],
+  ['enhance','/ɪnˈhɑːns/','verb','To improve the quality or value of something.','Nâng cao, tăng cường.','Lighting can enhance the mood of a room.','học thuật',['improve','boost'],['diminish','reduce']],
+  ['fluctuate','/ˈflʌktʃueɪt/','verb','To rise and fall irregularly.','Dao động.','Oil prices fluctuate from month to month.','học thuật',['vary','oscillate'],['stabilize'],'fluctus (wave)'],
+  ['incentive','/ɪnˈsentɪv/','noun','Something that motivates action.','Động lực, khích lệ.','The bonus is an incentive to work harder.','học thuật',['motivation','stimulus'],['deterrent']],
+  ['infrastructure','/ˈɪnfrəstrʌktʃər/','noun','The basic physical systems of a country or organization.','Cơ sở hạ tầng.','The city needs better infrastructure for transport.','học thuật',['facilities','systems'],[]],
+  ['magnitude','/ˈmæɡnɪtjuːd/','noun','Great size or importance.','Độ lớn, tầm quan trọng.','We underestimated the magnitude of the problem.','học thuật',['scale','extent'],[]],
+  ['precise','/prɪˈsaɪs/','adjective','Exact and accurate.','Chính xác, rõ ràng.','Please give the precise measurements.','học thuật',['exact','accurate'],['vague','imprecise'],'prae (before) + caedere (cut)'],
+  ['verify','/ˈverɪfaɪ/','verb','To confirm the truth or accuracy of something.','Xác minh.','Please verify your email address.','học thuật',['confirm','check'],['disprove']],
+  /* --- đời sống / daily life --- */
+  ['chore','/tʃɔːr/','noun','A routine or minor household task.','Việc vặt, việc nhà.','Doing the dishes is my least favorite chore.','đời sống',['task','duty'],['leisure','pastime']],
+  ['errand','/ˈerənd/','noun','A short trip to carry out a task.','Việc cần làm bên ngoài.','I need to run a few errands this afternoon.','đời sống',['task','mission'],[]],
+  ['leftover','/ˈleftəʊvər/','noun','Food remaining after a meal.','Đồ ăn thừa.','We had the leftovers for lunch the next day.','đời sống',['remainder','surplus'],[]],
+  ['commute','/kəˈmjuːt/','verb','To travel regularly between home and work.','Đi làm hàng ngày (di chuyển).','He commutes to the city by train every day.','đời sống',['travel','journey'],[]],
+  ['frugal','/ˈfruːɡəl/','adjective','Sparing or economical with money.','Tiết kiệm.','They live a frugal lifestyle to save for retirement.','đời sống',['thrifty','economical'],['wasteful','extravagant']],
+  ['genuine','/ˈdʒenjuɪn/','adjective','Truly what it is said to be; authentic.','Chân thật, thật.','This bag is made of genuine leather.','đời sống',['authentic','real','sincere'],['fake','artificial','counterfeit']],
+  ['notorious','/nəʊˈtɔːriəs/','adjective','Famous for something bad.','Khét tiếng.','The city is notorious for its traffic jams.','đời sống',['infamous','disreputable'],['reputable','esteemed']],
+  ['quaint','/kweɪnt/','adjective','Attractively unusual or old-fashioned.','Cổ kính, đáng yêu.','They stayed in a quaint little village in France.','đời sống',['charming','picturesque'],['modern','ordinary']],
+  ['tedious','/ˈtiːdiəs/','adjective','Too long, slow, or dull.','Nhàm chán, tẻ nhạt.','Filling out tax forms is a tedious task.','đời sống',['boring','dull','monotonous'],['exciting','interesting'],'taedium (boredom)'],
+  ['wholesome','/ˈhəʊlsəm/','adjective','Conducive to health or well-being.','Lành mạnh.','They serve wholesome, home-cooked meals.','đời sống',['healthy','nutritious'],['unhealthy','harmful']],
+  ['groceries','/ˈɡrəʊsəriz/','noun','Food and household supplies bought regularly.','Đồ tạp hóa, thực phẩm.','I need to buy groceries for the week.','đời sống',['food','supplies'],[]],
+  ['recipe','/ˈresəpi/','noun','Instructions for preparing a dish.','Công thức nấu ăn.','This recipe takes only twenty minutes.','đời sống',['instructions'],[]],
+  ['laundry','/ˈlɔːndri/','noun','Clothes needing washing or being washed.','Việc giặt giũ.','I do laundry every Sunday morning.','đời sống',['washing'],[]],
+  ['rent','/rent/','noun','Money paid for using a place or thing.','Tiền thuê nhà.','The rent is due on the first of the month.','đời sống',['payment','lease'],[]],
+  ['neighbor','/ˈneɪbər/','noun','A person living next to you.','Hàng xóm.','Our neighbor waters our plants when we travel.','đời sống',['resident','nearby'],[]],
+  ['schedule','/ˈʃedjuːl/','noun','A plan of things to do and when.','Lịch trình, lịch biểu.','My schedule is full this week.','đời sống',['timetable','program'],[]],
+  ['routine','/ruːˈtiːn/','noun','A regular way of doing things.','Thói quen, nề nếp.','Exercise is part of my morning routine.','đời sống',['habit','pattern'],[]],
+  ['appointment','/əˈpɔɪntmənt/','noun','An arranged meeting or time.','Cuộc hẹn.','I have a dentist appointment at three.','đời sống',['meeting','booking'],[]],
+  ['household','/ˈhaʊshəʊld/','noun','A house and the people living in it.','Hộ gia đình.','Most households now have internet access.','đời sống',['family','home'],[]],
+  ['appliance','/əˈplaɪəns/','noun','A device used for household tasks.','Thiết bị gia dụng.','The kitchen is full of modern appliances.','đời sống',['device','machine'],[]],
+  /* --- du lịch / travel --- */
+  ['itinerary','/aɪˈtɪnərəri/','noun','A planned route or schedule for a journey.','Lịch trình.','Our itinerary includes three cities in ten days.','du lịch',['schedule','plan','route'],[]],
+  ['accommodation','/əˌkɒməˈdeɪʃn/','noun','A place where someone stays.','Chỗ ở, nơi lưu trú.','The hotel offers comfortable accommodation.','du lịch',['lodging','housing'],[]],
+  ['destination','/ˌdestɪˈneɪʃn/','noun','The place to which someone is travelling.','Điểm đến.','Paris is a popular tourist destination.','du lịch',['goal','target'],['origin','departure']],
+  ['souvenir','/ˌsuːvəˈnɪər/','noun','An object kept as a reminder of a place.','Quà lưu niệm.','I bought a small souvenir from the market.','du lịch',['memento','keepsake'],[]],
+  ['excursion','/ɪkˈskɜːʃn/','noun','A short journey for pleasure.','Chuyến đi ngắn, tham quan.','We went on a day excursion to the countryside.','du lịch',['trip','outing','tour'],[]],
+  ['luggage','/ˈlʌɡɪdʒ/','noun','Bags and suitcases for travel.','Hành lý.','Keep an eye on your luggage at the station.','du lịch',['baggage','bags'],[]],
+  ['passport','/ˈpɑːspɔːt/','noun','An official document for international travel.','Hộ chiếu.','You need a valid passport to fly abroad.','du lịch',['document'],[]],
+  ['visa','/ˈviːzə/','noun','An official permission to enter a country.','Thị thực.','She applied for a tourist visa to Japan.','du lịch',['permit'],[]],
+  ['customs','/ˈkʌstəmz/','noun','The place where goods are checked at a border.','Hải quan.','We waited in line at customs for an hour.','du lịch',['border control'],[]],
+  ['departure','/dɪˈpɑːtʃər/','noun','The act of leaving a place.','Sự khởi hành.','The departure time is 9 a.m.','du lịch',['exit','leave'],['arrival']],
+  ['arrival','/əˈraɪvl/','noun','The act of reaching a place.','Sự đến nơi.','The flight\'s arrival was delayed by rain.','du lịch',['coming'],['departure']],
+  ['reservation','/ˌrezəˈveɪʃn/','noun','A booking of a place or seat.','Sự đặt chỗ.','I made a reservation for two at the restaurant.','du lịch',['booking'],[]],
+  ['landmark','/ˈlændmɑːk/','noun','A famous or easily recognized place.','Địa danh nổi tiếng.','The Eiffel Tower is a famous landmark.','du lịch',['monument','attraction'],[]],
+  ['currency','/ˈkʌrənsi/','noun','The money used in a country.','Tiền tệ.','You can exchange currency at the bank.','du lịch',['money','cash'],[]],
+  ['embassy','/ˈembəsi/','noun','The official office of a country abroad.','Đại sứ quán.','He went to the embassy to renew his passport.','du lịch',['consulate'],[]],
+  /* --- cảm xúc / emotions --- */
+  ['anxious','/ˈæŋkʃəs/','adjective','Feeling worried or nervous.','Lo lắng.','She felt anxious before the job interview.','cảm xúc',['worried','nervous','uneasy'],['calm','relaxed']],
+  ['delighted','/dɪˈlaɪtɪd/','adjective','Feeling great pleasure.','Vui mừng, hài lòng.','We were delighted with the results.','cảm xúc',['pleased','thrilled','glad'],['disappointed','upset']],
+  ['furious','/ˈfjʊəriəs/','adjective','Extremely angry.','Giận dữ, phẫn nộ.','He was furious when he found out.','cảm xúc',['enraged','livid','irate'],['calm','pleased']],
+  ['grateful','/ˈɡreɪtfl/','adjective','Feeling or showing thankfulness.','Biết ơn.','I am grateful for all your help.','cảm xúc',['thankful','appreciative'],['ungrateful']],
+  ['melancholy','/ˈmelənkəli/','adjective','Feeling pensive sadness.','U sầu, buồn bã.','The old song filled her with melancholy.','cảm xúc',['sad','sorrowful','wistful'],['cheerful','happy']],
+  ['hostile','/ˈhɒstaɪl/','adjective','Unfriendly; antagonistic.','Thù địch.','The two companies have a hostile relationship.','cảm xúc',['aggressive','antagonistic','unfriendly'],['friendly','amicable']],
+  ['keen','/kiːn/','adjective','Showing eagerness or enthusiasm.','Hăng hái, thích thú.','She is keen to start her new job.','cảm xúc',['eager','enthusiastic','avid'],['indifferent','apathetic']],
+  ['reluctant','/rɪˈlʌktənt/','adjective','Unwilling and hesitant.','Miễn cưỡng, do dự.','He was reluctant to share his opinion.','cảm xúc',['unwilling','hesitant'],['willing','eager']],
+  ['overwhelmed','/ˌəʊvəˈwelmd/','adjective','Feeling suddenly overcome by emotion or pressure.','Choáng ngợp.','She felt overwhelmed by the amount of work.','cảm xúc',['swamped','flooded'],['calm','in control']],
+  ['content','/kənˈtent/','adjective','Feeling satisfied with what you have.','Hài lòng, mãn nguyện.','He is content with his simple life.','cảm xúc',['satisfied','pleased'],['dissatisfied','restless']],
+  ['jealous','/ˈdʒeləs/','adjective','Feeling envy toward another\'s advantages.','Ghen tị.','She was jealous of her sister\'s success.','cảm xúc',['envious','covetous'],['admiring','proud']],
+  ['nostalgic','/nɒˈstældʒɪk/','adjective','Feeling longing for the past.','Hoài niệm.','The old photos made him nostalgic.','cảm xúc',['wistful','sentimental'],[]],
+  ['optimistic','/ˌɒptɪˈmɪstɪk/','adjective','Expecting good things to happen.','Lạc quan.','She is optimistic about the future.','cảm xúc',['hopeful','positive'],['pessimistic'],'optimus (best)'],
+  ['pessimistic','/ˌpesɪˈmɪstɪk/','adjective','Expecting the worst to happen.','Bi quan.','Don\'t be so pessimistic about the exam.','cảm xúc',['gloomy','negative'],['optimistic'],'pessimus (worst)'],
+  ['embarrassed','/ɪmˈbærəst/','adjective','Feeling awkward or ashamed.','Xấu hổ, ngượng ngùng.','He was embarrassed by the silly mistake.','cảm xúc',['ashamed','awkward'],['proud','confident']],
+  ['relieved','/rɪˈliːvd/','adjective','Feeling happy that worry is gone.','Nhẹ nhõm.','She was relieved to hear the good news.','cảm xúc',['reassured','comforted'],['worried','anxious']],
+  ['frustrated','/frʌˈstreɪtɪd/','adjective','Feeling annoyed because you cannot do something.','Bực bội, thất vọng.','He was frustrated with the slow internet.','cảm xúc',['annoyed','exasperated'],['satisfied','content']],
+  ['proud','/praʊd/','adjective','Feeling deep pleasure from achievements.','Tự hào.','Her parents were proud of her results.','cảm xúc',['pleased','honored'],['ashamed']],
+  /* --- môi trường / environment --- */
+  ['sustainable','/səˈsteɪnəbl/','adjective','Able to be maintained without harming the environment.','Bền vững.','The company invested in sustainable energy.','môi trường',['renewable','viable'],['unsustainable'],'sub (up to) + tenere (to hold)'],
+  ['pollution','/pəˈluːʃn/','noun','The contamination of the environment.','Ô nhiễm.','Air pollution is serious in big cities.','môi trường',['contamination'],['purity']],
+  ['drought','/draʊt/','noun','A prolonged period of low rainfall.','Hạn hán.','The drought severely affected farmers.','môi trường',['dry spell'],['flood']],
+  ['ecosystem','/ˈiːkəʊsɪstəm/','noun','A community of organisms interacting with their environment.','Hệ sinh thái.','Coral reefs support a rich ecosystem.','môi trường',['habitat','environment'],[]],
+  ['renewable','/rɪˈnjuːəbl/','adjective','Naturally replenished; not depleted by use.','Tái tạo được.','Solar and wind are renewable energy sources.','môi trường',['sustainable','inexhaustible'],['non-renewable','finite']],
+  ['recycle','/ˌriːˈsaɪkl/','verb','To process waste so it can be reused.','Tái chế.','Remember to recycle paper and plastic.','môi trường',['reuse','repurpose'],['waste']],
+  ['conservation','/ˌkɒnsəˈveɪʃn/','noun','The protection of nature and resources.','Sự bảo tồn.','The park focuses on wildlife conservation.','môi trường',['preservation','protection'],['destruction']],
+  ['emissions','/ɪˈmɪʃnz/','noun','Gases released into the air.','Khí thải.','Cars produce harmful emissions.','môi trường',['discharge','exhaust'],[]],
+  ['biodiversity','/ˌbaɪəʊdaɪˈvɜːsəti/','noun','The variety of life in a habitat.','Đa dạng sinh học.','Tropical forests have high biodiversity.','môi trường',['variety'],[]],
+  ['deforestation','/ˌdiːˌfɒrɪˈsteɪʃn/','noun','The clearing of forests.','Nạn phá rừng.','Deforestation threatens many species.','môi trường',['clearing'],['reforestation']],
+  ['climate','/ˈklaɪmət/','noun','The usual weather conditions of an area.','Khí hậu.','The climate here is warm and humid.','môi trường',['weather','conditions'],[]],
+  /* --- sức khỏe / health --- */
+  ['nutritious','/njuːˈtrɪʃəs/','adjective','Efficient as food; nourishing.','Bổ dưỡng.','A nutritious breakfast helps you focus.','sức khỏe',['nourishing','healthy'],['unhealthy']],
+  ['fatigue','/fəˈtiːɡ/','noun','Extreme tiredness.','Mệt mỏi.','Long hours left her with constant fatigue.','sức khỏe',['exhaustion','tiredness'],['energy','vigor']],
+  ['recover','/rɪˈkʌvər/','verb','To return to a normal state of health.','Hồi phục.','It took him weeks to recover from the flu.','sức khỏe',['heal','recuperate'],['worsen','relapse']],
+  ['chronic','/ˈkrɒnɪk/','adjective','Persisting for a long time.','Mãn tính.','She suffers from a chronic back condition.','sức khỏe',['persistent','long-lasting'],['acute','temporary']],
+  ['prescription','/prɪˈskrɪpʃn/','noun','A doctor\'s written order for medicine.','Đơn thuốc.','You need a prescription for this medicine.','sức khỏe',['order','instruction'],[]],
+  ['diagnosis','/ˌdaɪəɡˈnəʊsɪs/','noun','The identification of an illness.','Chẩn đoán.','The doctor confirmed the diagnosis.','sức khỏe',['assessment','analysis'],[]],
+  ['symptom','/ˈsɪmptəm/','noun','A sign of illness.','Triệu chứng.','A cough is a common symptom of a cold.','sức khỏe',['sign','indication'],[]],
+  ['treatment','/ˈtriːtmənt/','noun','Medical care given to a patient.','Sự điều trị.','The treatment takes about two weeks.','sức khỏe',['therapy','care'],[]],
+  ['prevention','/prɪˈvenʃn/','noun','Action taken to stop something happening.','Sự phòng ngừa.','Prevention is better than cure.','sức khỏe',['avoidance'],[]],
+  ['immunity','/ɪˈmjuːnəti/','noun','The body\'s ability to resist disease.','Miễn dịch.','Vaccines build immunity to viruses.','sức khỏe',['resistance','protection'],['susceptibility']],
+  ['vaccine','/ˈvæksiːn/','noun','A substance that trains the body to fight disease.','Vắc-xin.','The new vaccine is highly effective.','sức khỏe',['immunization','shot'],[]],
+  ['therapy','/ˈθerəpi/','noun','Treatment to heal illness or injury.','Liệu pháp.','He goes to therapy once a week.','sức khỏe',['treatment','counseling'],[]],
+  /* --- công nghệ / technology --- */
+  ['obsolete','/ˈɒbsəliːt/','adjective','No longer used; out of date.','Lỗi thời.','This software is obsolete and unsupported.','công nghệ',['outdated','old-fashioned'],['modern','current']],
+  ['versatile','/ˈvɜːsətaɪl/','adjective','Able to adapt to many functions.','Đa năng, linh hoạt.','This tool is versatile and can be used for many tasks.','công nghệ',['adaptable','flexible','multifaceted'],['limited','inflexible']],
+  ['software','/ˈsɒftweər/','noun','Programs used by computers.','Phần mềm.','We installed new software on our laptops.','công nghệ',['programs','applications'],['hardware']],
+  ['hardware','/ˈhɑːdweər/','noun','The physical parts of a computer.','Phần cứng.','He knows how to fix computer hardware.','công nghệ',['equipment','machinery'],['software']],
+  ['algorithm','/ˈælɡərɪðəm/','noun','A set of steps to solve a problem.','Thuật toán.','The app uses a smart algorithm to learn your taste.','công nghệ',['procedure','formula'],[]],
+  ['database','/ˈdeɪtəbeɪs/','noun','An organized collection of data.','Cơ sở dữ liệu.','All customer records are in the database.','công nghệ',['records','data store'],[]],
+  ['network','/ˈnetwɜːk/','noun','Connected computers or people.','Mạng lưới.','The office network is down.','công nghệ',['system','web'],[]],
+  ['encryption','/ɪnˈkrɪpʃn/','noun','The process of coding data for security.','Mã hóa.','Encryption keeps your messages private.','công nghệ',['coding','scrambling'],['decryption']],
+  ['innovation','/ˌɪnəˈveɪʃn/','noun','A new idea, method, or product.','Sự đổi mới, sáng tạo.','Innovation drives economic growth.','công nghệ',['invention','breakthrough'],[]],
+  ['automation','/ˌɔːtəˈmeɪʃn/','noun','The use of machines to do work.','Tự động hóa.','Automation reduced the need for manual labor.','công nghệ',['mechanization'],[]],
+  ['digital','/ˈdɪdʒɪtl/','adjective','Relating to electronic data.','Kỹ thuật số.','Most banks now offer digital services.','công nghệ',['electronic','online'],['analog']],
+  ['artificial','/ˌɑːtɪˈfɪʃl/','adjective','Made by humans; not natural.','Nhân tạo.','Artificial intelligence is changing the world.','công nghệ',['man-made','synthetic'],['natural','genuine']],
+  ['device','/dɪˈvaɪs/','noun','A piece of electronic equipment.','Thiết bị.','This device tracks your daily steps.','công nghệ',['gadget','apparatus'],[]],
+  ['download','/ˌdaʊnˈləʊd/','verb','To copy data from the internet.','Tải xuống.','I downloaded the app from the store.','công nghệ',['transfer','fetch'],['upload']],
+  ['upload','/ˌʌpˈləʊd/','verb','To send data to the internet.','Tải lên.','She uploaded the photos to her blog.','công nghệ',['transfer','post'],['download']],
+  /* --- tính cách / personality --- */
+  ['benevolent','/bəˈnevələnt/','adjective','Well meaning and kindly.','Nhân từ, tốt bụng.','She was known as a benevolent employer.','tính cách',['kind','charitable','generous'],['malevolent','cruel'],'bene (well) + volent (wishing)'],
+  ['candid','/ˈkændɪd/','adjective','Truthful and straightforward.','Thẳng thắn, chân thật.','He gave a candid answer to the reporter.','tính cách',['frank','honest','sincere'],['evasive','deceptive']],
+  ['zealous','/ˈzeləs/','adjective','Showing great energy and enthusiasm.','Nhiệt tình, hăng hái.','She is a zealous supporter of the cause.','tính cách',['enthusiastic','passionate','ardent'],['apathetic','indifferent']],
+  ['ambitious','/æmˈbɪʃəs/','adjective','Having a strong desire to succeed.','Đầy tham vọng.','He is ambitious and works very hard.','tính cách',['driven','aspiring'],['unambitious','lazy']],
+  ['arrogant','/ˈærəɡənt/','adjective','Behaving as if more important than others.','Kiêu ngạo.','His arrogant attitude annoyed everyone.','tính cách',['conceited','proud','haughty'],['humble','modest']],
+  ['humble','/ˈhʌmbl/','adjective','Not proud; modest.','Khiêm tốn.','Despite his fame, he remains humble.','tính cách',['modest','unassuming'],['arrogant','proud']],
+  ['compassionate','/kəmˈpæʃənət/','adjective','Feeling concern for others\' suffering.','Giàu lòng trắc ẩn.','She is a compassionate nurse.','tính cách',['caring','sympathetic'],['cruel','callous']],
+  ['reliable','/rɪˈlaɪəbl/','adjective','Able to be trusted.','Đáng tin cậy.','He is a reliable friend who keeps promises.','tính cách',['dependable','trustworthy'],['unreliable','flaky']],
+  ['stubborn','/ˈstʌbən/','adjective','Refusing to change one\'s mind.','Bướng bỉnh.','He is too stubborn to accept advice.','tính cách',['obstinate','headstrong'],['flexible','yielding']],
+  ['flexible','/ˈfleksəbl/','adjective','Able to change or adapt easily.','Linh hoạt.','Her schedule is flexible this week.','tính cách',['adaptable','adjustable'],['rigid','inflexible']],
+  ['outgoing','/ˈaʊtɡəʊɪŋ/','adjective','Friendly and sociable.','Hướng ngoại, hòa đồng.','She is outgoing and makes friends easily.','tính cách',['sociable','extroverted'],['introverted','shy']],
+  ['generous','/ˈdʒenərəs/','adjective','Willing to give more than expected.','Hào phóng.','He is generous with his time and money.','tính cách',['charitable','giving'],['selfish','stingy']],
+  ['courageous','/kəˈreɪdʒəs/','adjective','Brave; not afraid of danger.','Can đảm.','The firefighters made a courageous rescue.','tính cách',['brave','fearless'],['cowardly','timid']],
+  /* --- giao tiếp / communication --- */
+  ['concise','/kənˈsaɪs/','adjective','Short and clear.','Ngắn gọn, súc tích.','Please give a concise summary of the report.','giao tiếp',['brief','succinct'],['lengthy','wordy']],
+  ['elaborate','/ɪˈlæbəreɪt/','verb','To explain in more detail.','Trình bày chi tiết.','Could you elaborate on your plan?','giao tiếp',['expand','detail'],['summarize']],
+  ['summarize','/ˈsʌməraɪz/','verb','To state the main points briefly.','Tóm tắt.','Can you summarize the article in a sentence?','giao tiếp',['outline','condense'],['expand']],
+  ['clarify','/ˈklærəfaɪ/','verb','To make something easier to understand.','Làm rõ.','Let me clarify what I meant.','giao tiếp',['explain','illuminate'],['confuse']],
+  ['feedback','/ˈfiːdbæk/','noun','Opinions about how well something is done.','Phản hồi.','The teacher gave useful feedback on my essay.','giao tiếp',['response','comments'],[]],
+  ['debate','/dɪˈbeɪt/','noun','A formal discussion of opposing views.','Cuộc tranh luận.','The debate lasted two hours.','giao tiếp',['discussion','argument'],[]],
+  ['articulate','/ɑːˈtɪkjuleɪt/','adjective','Able to express ideas clearly.','Rõ ràng, lưu loát.','She is an articulate speaker.','giao tiếp',['fluent','expressive'],['inarticulate','mumbling']],
+  ['acknowledge','/əkˈnɒlɪdʒ/','verb','To admit or recognize something.','Thừa nhận, ghi nhận.','He acknowledged his mistake.','giao tiếp',['admit','recognize'],['deny','ignore']],
+  ['converse','/kənˈvɜːs/','verb','To talk informally.','Trò chuyện.','We conversed about our travels.','giao tiếp',['talk','chat'],['remain silent']],
+  ['interpret','/ɪnˈtɜːprɪt/','verb','To explain the meaning of something.','Giải thích, diễn giải.','How do you interpret these results?','giao tiếp',['explain','translate'],['misread']],
+
+  /* --- ẩm thực / food --- */
+  ['delicious','/dɪˈlɪʃəs/','adjective','Very pleasant to taste.','Ngon, thơm ngon.','The soup was absolutely delicious.','ẩm thực',['tasty','yummy','savory'],['disgusting','awful']],
+  ['savory','/ˈseɪvəri/','adjective','Having a pleasant salty or spicy taste.','Đậm đà (vị mặn).','This is a savory dish with mushrooms.','ẩm thực',['tasty','flavorful'],['sweet','bland']],
+  ['bland','/blænd/','adjective','Lacking flavor; tasteless.','Nhạt nhẽo, vô vị.','The sauce was too bland for my taste.','ẩm thực',['tasteless','plain'],['spicy','flavorful']],
+  ['spicy','/ˈspaɪsi/','adjective','Having a strong hot flavor from spices.','Cay, có vị gia vị.','The curry is quite spicy.','ẩm thực',['hot','pungent'],['mild','bland']],
+  ['crispy','/ˈkrɪspi/','adjective','Firm and easily broken; crunchy.','Giòn, giòn tan.','The fried chicken has crispy skin.','ẩm thực',['crunchy','crusty'],['soft','soggy']],
+  ['tender','/ˈtendər/','adjective','Soft and easy to cut or chew.','Mềm, mềm mại.','The steak was tender and juicy.','ẩm thực',['soft','delicate'],['tough','hard']],
+  ['raw','/rɔː/','adjective','Not cooked.','Sống (chưa nấu chín).','Sushi is made with raw fish.','ẩm thực',['uncooked','fresh'],['cooked','ripe']],
+  ['ripe','/raɪp/','adjective','Fully grown and ready to eat.','Chín (trái cây).','These bananas are perfectly ripe.','ẩm thực',['mature','ready'],['unripe','green']],
+  ['stale','/steɪl/','adjective','No longer fresh; old.','Ôi thiu, cũ, để lâu.','The bread went stale overnight.','ẩm thực',['old','musty'],['fresh','crisp']],
+  ['ingredient','/ɪnˈɡriːdiənt/','noun','A food item used to make a dish.','Nguyên liệu.','Flour is the main ingredient in bread.','ẩm thực',['component','element'],[]],
+  ['flavor','/ˈfleɪvər/','noun','The taste of food or drink.','Hương vị.','This ice cream has a vanilla flavor.','ẩm thực',['taste','savor'],[]],
+  ['cuisine','/kwɪˈziːn/','noun','A style of cooking.','Ẩm thực, phong cách nấu ăn.','Italian cuisine is famous worldwide.','ẩm thực',['cooking','food'],[]],
+  ['appetizer','/ˈæpɪtaɪzər/','noun','A small dish served before the main meal.','Món khai vị.','We ordered spring rolls as an appetizer.','ẩm thực',['starter',"hors d'oeuvre"],['dessert']],
+  ['dessert','/dɪˈzɜːt/','noun','A sweet course served at the end of a meal.','Món tráng miệng.','We had chocolate cake for dessert.','ẩm thực',['sweet','pudding'],[]],
+  ['beverage','/ˈbevərɪdʒ/','noun','Any drink other than water.','Đồ uống.','The menu lists many hot beverages.','ẩm thực',['drink','refreshment'],[]],
+  ['appetite','/ˈæpɪtaɪt/','noun','A desire for food.','Sự thèm ăn.','Exercise gives me a good appetite.','ẩm thực',['hunger','craving'],['satiety']],
+  ['feast','/fiːst/','noun','A large, special meal.','Bữa tiệc lớn, yến tiệc.','The wedding feast lasted all evening.','ẩm thực',['banquet','celebration'],[]],
+
+  /* --- thời tiết / weather --- */
+  ['drizzle','/ˈdrɪzl/','noun','Light, fine rain.','Mưa phùn.','A light drizzle fell all morning.','thời tiết',['sprinkle','mist'],['downpour']],
+  ['breeze','/briːz/','noun','A gentle wind.','Gió nhẹ.','A cool breeze came from the sea.','thời tiết',['wind','draft'],['gale','storm']],
+  ['frost','/frɒst/','noun','Thin ice formed on cold surfaces.','Sương giá, băng giá.','The garden was covered in frost.','thời tiết',['ice','rime'],[]],
+  ['humidity','/hjuːˈmɪdəti/','noun','The amount of moisture in the air.','Độ ẩm.','The humidity makes the heat unbearable.','thời tiết',['moisture','dampness'],['dryness']],
+  ['scorching','/ˈskɔːtʃɪŋ/','adjective','Extremely hot.','Nóng gay gắt, thiêu đốt.','It was a scorching summer day.','thời tiết',['burning','boiling'],['freezing','cool']],
+  ['chilly','/ˈtʃɪli/','adjective','Uncomfortably cold.','Se lạnh, lạnh giá.','It was chilly in the morning.','thời tiết',['cold','crisp'],['warm','hot']],
+  ['forecast','/ˈfɔːkɑːst/','noun','A prediction of future weather.','Dự báo thời tiết.','The forecast says rain tomorrow.','thời tiết',['prediction','outlook'],[]],
+  ['thunderstorm','/ˈθʌndəstɔːm/','noun','A storm with thunder and lightning.','Giông bão, mưa dông.','The thunderstorm knocked out the power.','thời tiết',['tempest','storm'],[]],
+  ['hail','/heɪl/','noun','Frozen rain falling as small balls.','Mưa đá.','Hail damaged the car roof.','thời tiết',['pellets','sleet'],[]],
+  ['foggy','/ˈfɒɡi/','adjective','Full of thick mist.','Có sương mù.','The airport was closed because of foggy weather.','thời tiết',['misty','hazy'],['clear','sunny']],
+  ['pleasant','/ˈpleznt/','adjective','Giving pleasure; agreeable.','Dễ chịu, dễ thương.','The weather was pleasant for a walk.','thời tiết',['nice','enjoyable'],['unpleasant','nasty']],
+
+  /* --- thể thao / sports --- */
+  ['referee','/ˌrefəˈrɪər/','noun','The official who controls a game.','Trọng tài.','The referee showed a red card.','thể thao',['official','umpire'],[]],
+  ['tournament','/ˈtʊənəmənt/','noun','A series of games to find a winner.','Giải đấu.','Our team reached the final of the tournament.','thể thao',['competition','championship'],[]],
+  ['champion','/ˈtʃæmpiən/','noun','The winner of a competition.','Nhà vô địch.','She became the national champion.','thể thao',['winner','titleholder'],['loser']],
+  ['coach','/kəʊtʃ/','noun','A person who trains athletes.','Huấn luyện viên.','The coach planned a new training routine.','thể thao',['trainer','instructor'],[]],
+  ['athlete','/ˈæθliːt/','noun','A person trained in sports.','Vận động viên.','Top athletes train for hours daily.','thể thao',['sportsperson','competitor'],[]],
+  ['stamina','/ˈstæmɪnə/','noun','The ability to keep going for a long time.','Sức bền, sức chịu đựng.','Marathon runners need great stamina.','thể thao',['endurance','staying power'],['weakness']],
+  ['victory','/ˈvɪktəri/','noun','Success in a contest.','Chiến thắng.','The team celebrated their victory.','thể thao',['win','triumph'],['defeat','loss']],
+  ['defeat','/dɪˈfiːt/','noun','The act of losing a contest.','Thất bại.','It was a heavy defeat for the home team.','thể thao',['loss','failure'],['victory','win']],
+  ['spectator','/spekˈteɪtər/','noun','A person watching an event.','Khán giả.','Thousands of spectators filled the stadium.','thể thao',['viewer','audience'],[]],
+  ['opponent','/əˈpəʊnənt/','noun','A person you compete against.','Đối thủ.','She beat her opponent in the final set.','thể thao',['rival','adversary'],['ally','partner']],
+
+  /* --- thời trang / fashion --- */
+  ['elegant','/ˈelɪɡənt/','adjective','Graceful and stylish.','Thanh lịch, trang nhã.','She wore an elegant black dress.','thời trang',['graceful','refined'],['clumsy','tasteless']],
+  ['trendy','/ˈtrendi/','adjective','Very fashionable.','Hợp thời trang, mốt.','He always wears trendy sneakers.','thời trang',['fashionable','stylish'],['old-fashioned','dated']],
+  ['casual','/ˈkæʒuəl/','adjective','Relaxed and informal.','Giản dị, thường ngày.','The office allows casual clothes on Fridays.','thời trang',['informal','relaxed'],['formal']],
+  ['formal','/ˈfɔːml/','adjective','Following official rules or style.','Trang trọng, chính thức.','A suit is required for the formal event.','thời trang',['official','ceremonial'],['casual','informal']],
+  ['fabric','/ˈfæbrɪk/','noun','Cloth used to make clothes.','Vải, chất liệu.','This shirt is made of soft cotton fabric.','thời trang',['cloth','material'],[]],
+  ['accessory','/əkˈsesəri/','noun','A small item worn to complete an outfit.','Phụ kiện.','A scarf is a great winter accessory.','thời trang',['addition','extra'],[]],
+  ['outfit','/ˈaʊtfɪt/','noun','A set of clothes worn together.','Trang phục, bộ đồ.','She chose a bright outfit for the party.','thời trang',['costume','ensemble'],[]],
+  ['wardrobe','/ˈwɔːdrəʊb/','noun','A collection of clothes; a closet.','Tủ quần áo; bộ sưu tập quần áo.','My wardrobe is full but I have nothing to wear.','thời trang',['closet','attire'],[]],
+  ['fashion','/ˈfæʃn/','noun','A popular style of clothing.','Thời trang.','Fashion changes very quickly these days.','thời trang',['style','trend'],[]],
+  ['stylish','/ˈstaɪlɪʃ/','adjective','Fashionable and attractive.','Sành điệu, thời trang.','She has a stylish haircut.','thời trang',['chic','smart'],['unfashionable','plain']],
+
+  /* --- nghệ thuật / arts --- */
+  ['masterpiece','/ˈmɑːstəpiːs/','noun','An outstanding work of art.','Kiệt tác.','The painting is considered his masterpiece.','nghệ thuật',['classic','work of art'],[]],
+  ['sculpture','/ˈskʌlptʃər/','noun','A three-dimensional work of art.','Điêu khắc, tác phẩm điêu khắc.','A marble sculpture stands in the park.','nghệ thuật',['statue','carving'],[]],
+  ['portrait','/ˈpɔːtrɪt/','noun','A painting or photo of a person.','Chân dung.','The artist painted a portrait of the mayor.','nghệ thuật',['picture','likeness'],[]],
+  ['gallery','/ˈɡæləri/','noun','A room or building for showing art.','Phòng trưng bày.','The gallery displays modern paintings.','nghệ thuật',['museum','exhibition'],[]],
+  ['melody','/ˈmelədi/','noun','A sequence of musical notes.','Giai điệu.','The melody of the song is very catchy.','nghệ thuật',['tune','theme'],[]],
+  ['rhythm','/ˈrɪðəm/','noun','A regular pattern of sounds.','Nhịp điệu.','The drums set a fast rhythm.','nghệ thuật',['beat','cadence'],[]],
+  ['instrument','/ˈɪnstrəmənt/','noun','An object used to make music.','Nhạc cụ.','She plays three musical instruments.','nghệ thuật',['tool','device'],[]],
+  ['performance','/pəˈfɔːməns/','noun','An act of performing for an audience.','Buổi biểu diễn, màn trình diễn.','The concert was a brilliant performance.','nghệ thuật',['show','presentation'],[]],
+  ['creativity','/ˌkriːeɪˈtɪvəti/','noun','The ability to make new things.','Sự sáng tạo.','The project required a lot of creativity.','nghệ thuật',['imagination','originality'],[]],
+  ['inspiration','/ˌɪnspəˈreɪʃn/','noun','Something that makes you want to create.','Nguồn cảm hứng.','Nature is a great source of inspiration.','nghệ thuật',['motivation','influence'],[]],
+
+  /* --- pháp luật / law --- */
+  ['lawsuit','/ˈlɔːsuːt/','noun','A claim taken to a court of law.','Vụ kiện.','They filed a lawsuit against the company.','pháp luật',['case','legal action'],[]],
+  ['verdict','/ˈvɜːdɪkt/','noun','The decision of a court or jury.','Phán quyết.','The jury reached a guilty verdict.','pháp luật',['decision','judgement'],[]],
+  ['witness','/ˈwɪtnəs/','noun','A person who saw something happen.','Nhân chứng.','The witness described what she saw.','pháp luật',['observer','bystander'],[]],
+  ['defendant','/dɪˈfendənt/','noun','A person accused in a court of law.','Bị cáo.','The defendant pleaded not guilty.','pháp luật',['accused'],['plaintiff']],
+  ['attorney','/əˈtɜːni/','noun','A lawyer.','Luật sư.','She hired an attorney to handle the case.','pháp luật',['lawyer','counsel'],[]],
+  ['contract','/ˈkɒntrækt/','noun','A formal written agreement.','Hợp đồng.','Read the contract before signing it.','pháp luật',['agreement','deal'],[]],
+  ['legislation','/ˌledʒɪsˈleɪʃn/','noun','Laws made by a government.','Pháp luật, luật.','New legislation on data privacy was passed.','pháp luật',['law','statute'],[]],
+  ['offense','/əˈfens/','noun','An illegal act.','Hành vi vi phạm.','Driving without a license is an offense.','pháp luật',['crime','violation'],[]],
+  ['innocent','/ˈɪnəsnt/','adjective','Not guilty of a crime.','Vô tội.','The court found him innocent.','pháp luật',['guiltless','blameless'],['guilty']],
+  ['guilty','/ˈɡɪlti/','adjective','Responsible for a crime.','Có tội, phạm tội.','She felt guilty about the mistake.','pháp luật',['culpable','blameworthy'],['innocent']],
+
+  /* --- khoa học / science --- */
+  ['molecule','/ˈmɒlɪkjuːl/','noun','The smallest unit of a substance.','Phân tử.','A water molecule has two hydrogen atoms.','khoa học',['particle','atom'],[]],
+  ['gravity','/ˈɡrævəti/','noun','The force that pulls things to the ground.','Trọng lực.','Gravity keeps the planets in orbit.','khoa học',['attraction','pull'],[]],
+  ['evolution','/ˌiːvəˈluːʃn/','noun','The gradual change of living things.','Sự tiến hóa.','The theory of evolution explains species change.','khoa học',['development','progress'],[]],
+  ['cell','/sel/','noun','The basic unit of living things.','Tế bào.','The human body is made of billions of cells.','khoa học',['unit','structure'],[]],
+  ['organism','/ˈɔːɡənɪzəm/','noun','A living being.','Sinh vật.','Bacteria are tiny organisms.','khoa học',['creature','being'],[]],
+  ['radiation','/ˌreɪdiˈeɪʃn/','noun','Energy sent out as waves or particles.','Bức xạ.','Too much radiation is harmful to health.','khoa học',['rays','energy'],[]],
+  ['species','/ˈspiːʃiːz/','noun','A group of similar living things.','Loài.','This species of bird migrates every winter.','khoa học',['kind','type'],[]],
+  ['laboratory','/ləˈbɒrətri/','noun','A room for scientific experiments.','Phòng thí nghiệm.','Samples were tested in the laboratory.','khoa học',['lab','workshop'],[]],
+  ['measurement','/ˈmeʒəmənt/','noun','The size or amount found by measuring.','Sự đo lường, số đo.','Take the measurements before cutting.','khoa học',['dimension','calculation'],[]],
+  ['theory','/ˈθɪəri/','noun','An idea used to explain something.','Học thuyết, giả thuyết.','Einstein\'s theory changed physics.','khoa học',['hypothesis','principle'],['fact']],
+
+  /* --- giao thông / transport --- */
+  ['congestion','/kənˈdʒestʃən/','noun','Too much traffic blocking roads.','Sự tắc đường.','City congestion wastes hours each week.','giao thông',['traffic jam','gridlock'],['flow']],
+  ['pedestrian','/pəˈdestriən/','noun','A person walking on the street.','Người đi bộ.','The crossing is for pedestrians only.','giao thông',['walker'],['driver']],
+  ['vehicle','/ˈviːəkl/','noun','A machine used to carry people or goods.','Phương tiện (xe cộ).','Park your vehicle in the garage.','giao thông',['car','transport'],[]],
+  ['intersection','/ˌɪntəˈsekʃn/','noun','A place where roads cross.','Ngã tư, giao lộ.','Turn left at the next intersection.','giao thông',['crossroads','junction'],[]],
+  ['fare','/feər/','noun','The price of a journey.','Giá vé.','The bus fare is two dollars.','giao thông',['charge','ticket price'],[]],
+  ['detour','/ˈdiːtʊər/','noun','A longer way around an obstacle.','Đường vòng.','We took a detour to avoid the traffic.','giao thông',['diversion','bypass'],[]],
+  ['platform','/ˈplætfɔːm/','noun','The area beside the track where trains stop.','Sân ga.','The train leaves from platform four.','giao thông',['stage','area'],[]],
+  ['traffic','/ˈtræfɪk/','noun','Vehicles moving on roads.','Giao thông, xe cộ.','The traffic was heavy this morning.','giao thông',['vehicles','congestion'],[]],
+  ['subway','/ˈsʌbweɪ/','noun','An underground railway.','Tàu điện ngầm.','The subway is the fastest way to travel downtown.','giao thông',['metro','underground'],[]],
+  ['commuter','/kəˈmjuːtər/','noun','A person who travels to work daily.','Người đi làm hàng ngày.','The train is full of commuters every morning.','giao thông',['traveler','passenger'],[]],
+
+  /* --- thiên nhiên / nature --- */
+  ['landscape','/ˈlændskeɪp/','noun','A view of a large area of land.','Phong cảnh, quang cảnh.','The landscape of the valley was breathtaking.','thiên nhiên',['scenery','view'],[]],
+  ['valley','/ˈvæli/','noun','Low land between hills or mountains.','Thung lũng.','A river flows through the valley.','thiên nhiên',['dale','hollow'],['mountain','peak']],
+  ['summit','/ˈsʌmɪt/','noun','The highest point of a mountain.','Đỉnh núi.','They reached the summit at sunrise.','thiên nhiên',['peak','top'],['base','foot']],
+  ['waterfall','/ˈwɔːtəfɔːl/','noun','Water falling from a height.','Thác nước.','We hiked to see the famous waterfall.','thiên nhiên',['cascade','falls'],[]],
+  ['meadow','/ˈmedəʊ/','noun','A field of grass and flowers.','Đồng cỏ.','Cows grazed in the green meadow.','thiên nhiên',['field','pasture'],[]],
+  ['horizon','/həˈraɪzn/','noun','The line where the sky meets the land or sea.','Đường chân trời.','The sun sank below the horizon.','thiên nhiên',['skyline','vista'],[]],
+  ['sunrise','/ˈsʌnraɪz/','noun','The time when the sun appears.','Bình minh.','We watched the sunrise from the beach.','thiên nhiên',['dawn','daybreak'],['sunset']],
+  ['sunset','/ˈsʌnset/','noun','The time when the sun goes down.','Hoàng hôn.','The sunset painted the sky orange.','thiên nhiên',['dusk','evening'],['sunrise']],
+  ['shore','/ʃɔːr/','noun','Land at the edge of the sea or lake.','Bờ biển, bờ.','Waves crashed against the shore.','thiên nhiên',['beach','coast'],[]],
+  ['wilderness','/ˈwɪldənəs/','noun','A wild, uninhabited area.','Vùng hoang dã.','They camped in the remote wilderness.','thiên nhiên',['wilds','wasteland'],['city','civilization']],
+  ['forest','/ˈfɒrɪst/','noun','A large area of trees.','Rừng.','Many animals live in the forest.','thiên nhiên',['woods','jungle'],[]],
+
+  /* --- tài chính / finance --- */
+  ['budget','/ˈbʌdʒɪt/','noun','A plan for how to spend money.','Ngân sách, dự toán.','We set a budget for the trip.','tài chính',['allowance','fund'],[]],
+  ['mortgage','/ˈmɔːɡɪdʒ/','noun','A loan used to buy a house.','Khoản vay mua nhà, thế chấp.','They are paying off a thirty-year mortgage.','tài chính',['loan','debt'],[]],
+  ['dividend','/ˈdɪvɪdend/','noun','A share of profits paid to shareholders.','Cổ tức.','The company pays a dividend every year.','tài chính',['payout','return'],[]],
+  ['inflation','/ɪnˈfleɪʃn/','noun','A general rise in prices.','Lạm phát.','Inflation reduced the value of savings.','tài chính',['price rise'],['deflation']],
+  ['tax','/tæks/','noun','Money paid to the government.','Thuế.','Income tax is deducted from your salary.','tài chính',['levy','duty'],[]],
+  ['subsidy','/ˈsʌbsədi/','noun','Money given by the government to support something.','Trợ cấp.','Farmers receive a subsidy for crops.','tài chính',['grant','aid'],[]],
+  ['expense','/ɪkˈspens/','noun','Money spent on something.','Chi phí, khoản chi.','Travel expenses will be reimbursed.','tài chính',['cost','spending'],['income','revenue']],
+  ['savings','/ˈseɪvɪŋz/','noun','Money kept for future use.','Tiền tiết kiệm.','She keeps her savings in the bank.','tài chính',['funds','reserves'],['debt']],
+  ['wealth','/welθ/','noun','A large amount of money or possessions.','Sự giàu có.','He built his wealth through hard work.','tài chính',['riches','fortune'],['poverty']],
+  ['poverty','/ˈpɒvəti/','noun','The state of being very poor.','Sự nghèo đói.','Many families live in poverty.','tài chính',['hardship','destitution'],['wealth','riches']],
+  ['transaction','/trænˈzækʃn/','noun','A business deal or purchase.','Giao dịch.','The bank confirmed the transaction.','tài chính',['deal','payment'],[]],
+
+  /* --- sức khỏe tinh thần / wellness --- */
+  ['wellbeing','/ˌwelˈbiːɪŋ/','noun','The state of being healthy and happy.','Sức khỏe, hạnh phúc.','Yoga improves both body and wellbeing.','sức khỏe',['health','welfare'],[]],
+  ['mindfulness','/ˈmaɪndfəlnəs/','noun','Awareness of the present moment.','Chánh niệm.','Mindfulness helps reduce stress.','sức khỏe',['awareness','attention'],['distraction']],
+  ['insomnia','/ɪnˈsɒmniə/','noun','Difficulty sleeping.','Chứng mất ngủ.','Caffeine at night can cause insomnia.','sức khỏe',['sleeplessness'],['sound sleep']],
+  ['stress','/stres/','noun','Mental or emotional pressure.','Căng thẳng, áp lực.','Too much stress affects your health.','sức khỏe',['pressure','tension'],['calm','relaxation']],
+  ['relaxation','/ˌriːlækˈseɪʃn/','noun','The state of being calm and free from tension.','Sự thư giãn.','A warm bath is perfect for relaxation.','sức khỏe',['rest','calm'],['stress','tension']],
+
+  /* --- từ thông dụng / common & social --- */
+  ['convenient','/kənˈviːniənt/','adjective','Easy and suitable for your needs.','Tiện lợi.','Online shopping is very convenient.','đời sống',['handy','practical'],['inconvenient','awkward']],
+  ['efficient','/ɪˈfɪʃnt/','adjective','Working well without wasting time or energy.','Hiệu quả.','The new system is more efficient.','công việc',['effective','productive'],['inefficient','wasteful']],
+  ['significant','/sɪɡˈnɪfɪkənt/','adjective','Important or large enough to matter.','Đáng kể, quan trọng.','There was a significant improvement.','học thuật',['notable','considerable'],['insignificant','minor']],
+  ['appropriate','/əˈprəʊpriət/','adjective','Suitable for a situation.','Phù hợp, thích hợp.','Wear appropriate clothes for the interview.','đời sống',['suitable','fitting'],['inappropriate','unsuitable']],
+  ['responsible','/rɪˈspɒnsəbl/','adjective','Having a duty to deal with something.','Có trách nhiệm.','She is responsible for the budget.','công việc',['accountable','in charge'],['irresponsible']],
+  ['independent','/ˌɪndɪˈpendənt/','adjective','Not needing help from others.','Độc lập.','He became financially independent.','xã hội',['self-sufficient','free'],['dependent','reliant']],
+  ['determine','/dɪˈtɜːmɪn/','verb','To find out or decide something.','Xác định, quyết định.','Tests will determine the cause.','học thuật',['decide','ascertain'],[]],
+  ['achieve','/əˈtʃiːv/','verb','To succeed in reaching a goal.','Đạt được.','She achieved her dream of becoming a doctor.','công việc',['accomplish','attain'],['fail']],
+  ['develop','/dɪˈveləp/','verb','To grow or improve gradually.','Phát triển.','The company developed new software.','công việc',['improve','advance'],['decline','regress']],
+  ['benefit','/ˈbenɪfɪt/','noun','An advantage or good result.','Lợi ích.','Exercise has many health benefits.','xã hội',['advantage','gain'],['disadvantage','harm']],
+  ['advantage','/ədˈvɑːntɪdʒ/','noun','A condition that helps you succeed.','Lợi thế.','Speaking English gives you an advantage.','xã hội',['benefit','edge'],['disadvantage']],
+  ['environment','/ɪnˈvaɪrənmənt/','noun','The natural world around us.','Môi trường.','We must protect the environment.','môi trường',['surroundings','nature'],[]],
+  ['government','/ˈɡʌvənmənt/','noun','The group that rules a country.','Chính phủ.','The government announced new policies.','xã hội',['authorities','administration'],[]],
+  ['society','/səˈsaɪəti/','noun','People living together in communities.','Xã hội.','Technology is changing society.','xã hội',['community','public'],[]],
+  ['culture','/ˈkʌltʃər/','noun','The customs and beliefs of a group.','Văn hóa.','Each country has its own culture.','xã hội',['traditions','customs'],[]],
+  ['tradition','/trəˈdɪʃn/','noun','A custom passed down over time.','Truyền thống.','It is a tradition to eat mooncakes at Mid-Autumn.','xã hội',['custom','practice'],[]],
+  ['economy','/ɪˈkɒnəmi/','noun','The system of producing and trading goods.','Nền kinh tế.','The economy grew by five percent.','tài chính',['trade','financial system'],[]],
+];
+
+/* multi-sense bonus entry: record (noun vs verb) */
+const RECORD_ENTRY = {
+  word:'record', tags:['học thuật','công nghệ'],
+  synonyms:['document','disc'], antonyms:[],
+  senses:[
+    { pronunciation:'/ˈrekɔːd/', partOfSpeech:'noun', definitionEN:'A piece of evidence or information kept for future reference.', definitionVI:'Hồ sơ, bản ghi.', examples:['Keep a record of all your expenses.'] },
+    { pronunciation:'/rɪˈkɔːd/', partOfSpeech:'verb', definitionEN:'To set down in writing or capture in permanent form.', definitionVI:'Ghi lại, thu âm.', examples:['They recorded the meeting for people who could not attend.'] }
+  ]
+};
+
+function buildSeedEntries(){
+  const now = new Date().toISOString();
+  const list = SEED_WORDS.map(([word, ipa, pos, defEN, defVI, example, tag, syn, ant, root])=>({
+    id: uid(), word, tags:[tag], dateAdded: now, learningStatus:'new', correctStreak:0,
+    synonyms: syn||[], antonyms: ant||[], wordRoot: root||'',
+    senses:[{ pronunciation: ipa, partOfSpeech: pos, definitionEN: defEN, definitionVI: defVI, examples:[example] }]
+  }));
+  list.push({ id: uid(), dateAdded: now, learningStatus:'new', correctStreak:0, ...RECORD_ENTRY });
+  return list;
+}
+
+/* ==================== INIT / MIGRATION ==================== */
+function init(){
+  // migrate old v1 data into v2 storage if present
+  if(state.entries.length === 0){
+    try{
+      const old = localStorage.getItem('vocab_entries_v1');
+      if(old){
+        const parsed = JSON.parse(old);
+        if(Array.isArray(parsed) && parsed.length){
+          state.entries = parsed.map(e=>({ wordRoot:'', ...e, learningStatus: e.learningStatus||'new' }));
+          saveEntries(state.entries);
+        }
+      }
+    }catch(e){ /* ignore */ }
+  }
+  // merge built-in seed words that are not yet in the bank (never overwrite user data)
+  const existing = new Set(state.entries.map(e=> e.word.toLowerCase()));
+  let added = 0;
+  const now = new Date().toISOString();
+  SEED_WORDS.forEach(([word, ipa, pos, defEN, defVI, example, tag, syn, ant, root])=>{
+    if(existing.has(word.toLowerCase())) return;
+    state.entries.push({
+      id: uid(), word, tags:[tag], dateAdded: now, learningStatus:'new', correctStreak:0,
+      synonyms: syn||[], antonyms: ant||[], wordRoot: root||'',
+      senses:[{ pronunciation: ipa, partOfSpeech: pos, definitionEN: defEN, definitionVI: defVI, examples:[example] }]
+    });
+    added++;
+  });
+  if(!existing.has('record')) state.entries.push({ id: uid(), dateAdded: now, learningStatus:'new', correctStreak:0, ...RECORD_ENTRY, tags:['học thuật','công nghệ'] });
+  if(added>0 || state.entries.length>0) saveEntries(state.entries);
+}
+
+init();
+render();
+
+
+</script>
+</body>
+</html>
