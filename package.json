@@ -11,6 +11,7 @@
     "build": "npm run build -w @english/web",
     "preview": "npm run preview -w @english/web",
     "test": "node _e2e.js",
+    "test:react": "npm run test -w @english/web",
     "typecheck": "npm run typecheck -w @english/shared && npm run typecheck -w @english/web",
     "lint": "eslint .",
     "format": "prettier --write .",

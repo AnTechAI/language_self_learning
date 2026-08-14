@@ -23,6 +23,8 @@ jobs:
         run: npm run typecheck
       - name: Test app legacy (e2e, 142 tests)
         run: npm test
+      - name: Test lớp dữ liệu React (IndexedDB, 12 tests)
+        run: npm run test:react
       - name: Build production (Vite)
         run: npm run build
 
