@@ -32,6 +32,6 @@ npm run api                          # → http://localhost:8000/health
 ## Đường dẫn quan trọng
 
 - App legacy (dùng hằng ngày): `apps/web/public/legacy/index.html` — mở bằng
-  file:// hoặc qua dev server tại `/legacy/`.
+  file:// hoặc qua dev server tại `/legacy/index.html`.
 - App React mới: `apps/web/src/` (đang ở GĐ 0 — khung trống).
 - Dữ liệu thô: `data/raw/english-dictionary.jsonl` (41MB — git-ignored).

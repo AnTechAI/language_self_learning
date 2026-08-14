@@ -19,7 +19,9 @@ Toàn bộ tính năng hiện tại: kho từ vựng theo khóa học (en/zh), 7
 ## 3. Cách chạy
 
 ```bash
-npm install && npm run dev        # mở http://localhost:5173/legacy/
+npm install && npm run dev        # mở http://localhost:5173/legacy/index.html
+# (chú ý: dev server KHÔNG tự resolve /legacy/ → dùng đủ /legacy/index.html;
+#  bản production dist/ thì /legacy/ chạy bình thường)
 # hoặc mở trực tiếp bằng file://:  apps/web/public/legacy/index.html
 ```
 
