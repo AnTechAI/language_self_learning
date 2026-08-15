@@ -14,6 +14,7 @@
 | [WEB-REACT.md](WEB-REACT.md) | App React mới: làm gì, cấu trúc, cách port màn hình | `apps/web/src/` |
 | [API-SYNC.md](API-SYNC.md) | Backend FastAPI: đồng bộ đa người dùng, auth, sync protocol | `apps/api/` |
 | [DATA-PIPELINES.md](DATA-PIPELINES.md) | 5 tool sinh dữ liệu từ jsonl: lệnh, định dạng, cache | `data/scripts/` |
+| **[data/scripts/README.md](../data/scripts/README.md)** | Hướng dẫn nhanh từng script: mô tả, cách dùng, flags, luồng | `data/scripts/` |
 | [TOOLING.md](TOOLING.md) | ESLint/Prettier/TS/CI: làm gì, phạm vi, format config | `eslint.config.mjs`, `.prettierrc`, CI |
 | [INDEXEDDB.md](INDEXEDDB.md) | Lớp dữ liệu mới (GĐ 2): schema, repo API, migration | `apps/web/src/db/` |
 | [DESIGN.md](DESIGN.md) | Design system React (GĐ 3): tokens, màn hình, hành vi port | `apps/web/src/styles/`, `components/`, `features/` |
