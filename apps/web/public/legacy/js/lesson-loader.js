@@ -51,7 +51,7 @@
       const head = document.head || document.getElementsByTagName('head')[0] || document.body;
       const s = document.createElement('script');
       s.src = 'js/lessons/manifest.js';
-      s.onerror = () => { lessons.manifestPending = null; reject(new Error('Không tải được js/lessons/manifest.js — hãy chạy node tools/build-lessons.js')); };
+      s.onerror = () => { lessons.manifestPending = null; reject(new Error('Không tải được js/lessons/manifest.js — hãy chạy node data/scripts/cli.js lessons')); };
       head.appendChild(s);
     });
   };

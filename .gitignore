@@ -13,10 +13,10 @@ venv/
 # ===== Dữ liệu thô & sinh ra (KHÔNG commit) =====
 # 41MB từ điển gốc — giữ ngoài git
 data/raw/
-# 25MB từ điển offline chunk + bài học — sinh lại bằng tools (xem docs/DATA-PIPELINES.md)
+# 25MB từ điển offline chunk + bài học — sinh lại bằng data/scripts (xem docs/DATA-PIPELINES.md)
 apps/web/public/legacy/js/bank/
 apps/web/public/legacy/js/lessons/
-tools/out/
+data/scripts/out/
 
 # ===== Hệ điều hành / editor =====
 .DS_Store

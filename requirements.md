@@ -100,18 +100,18 @@ Mỗi từ vựng cần lưu các trường sau:
 
 ---## 7. Từ điển ngoại tuyến truy xuất theo nhu cầu (Offline dictionary bank)
 
-- `english-dictionary.jsonl` (207.272 entry) **KHÔNG nạp vào app** — được `tools/build-chunks.js` chia thành **104 chunk nhỏ** (`js/bank/chunk-NNN.js`, ~24.7MB tổng) + `js/bank/manifest.js` (danh sách chunk).
+- `english-dictionary.jsonl` (207.272 entry) **KHÔNG nạp vào app** — được `data/scripts/build-chunks.js` chia thành **104 chunk nhỏ** (`js/bank/chunk-NNN.js`, ~24.7MB tổng) + `js/bank/manifest.js` (danh sách chunk).
 - App chỉ tải **ĐÚNG 1 chunk chứa từ cần tra** (chèn `<script>` động — chạy tốt trên `file://`): băm FNV-1a `word % N` → tên chunk → load → tìm entry. Mỗi lần tra tải ~270KB.
 - Nút "🔍 Tra từ điển" trong modal Thêm từ: **ưu tiên từ điển máy** (offline, nhanh, đủ mọi nghĩa/loại từ/đồng-trái nghĩa) → **fallback API online** (nếu từ không có trong máy).
 - Chunk bị thiếu/hỏng → tự động bỏ qua, fallback API → app không bao giờ lỗi vì thiếu bank.
-- Tái sinh khi cần: `node tools/build-chunks.js` (thêm `--size 3000` để chunk to hơn).
+- Tái sinh khi cần: `node data/scripts/cli.js chunks` (thêm `--size 3000` để chunk to hơn).
 - Không có phiên âm trong JSONL nên khi tra từ điển máy, phiên âm để trống (người dùng tự bổ sung hoặc từ đã có trong 523 từ cơ bản thì có sẵn).
 
 ## 8. BÀI HỌC (Lesson) — học từ mới theo bài, games theo bài
 
-- `tools/build-lessons.js` đọc english-dictionary.jsonl (dịch Việt + IPA API) → **chia BÀI HỌC, mỗi bài 20 từ** → xuất `js/lessons/` (manifest.js + lesson-001.js…).
+- `data/scripts/build-lessons.js` đọc english-dictionary.jsonl (dịch Việt + IPA API) → **chia BÀI HỌC, mỗi bài 20 từ** → xuất `js/lessons/` (manifest.js + lesson-001.js…).
 - App chỉ tải ĐÚNG bài học người dùng chọn (`js/lesson-loader.js`, chèn `<script>` động — chạy tốt trên `file://`).
 - **"Học từ mới"** (tab Hôm nay): chọn bài → **tự thêm 20 từ của bài vào kho** (entry có `lessonId` + tag chủ đề) → hiện thẻ từ mới đầu tiên để học. Idempotent (không thêm trùng).
 - **Tab Từ vựng**: chip điều hướng [Tất cả từ] / [Bài 1 · chủ đề]…; mở bài → xem 20 từ với trạng thái học; nút "Học bài này".
 - **Games**: bộ chọn **Phạm vi** (Tất cả từ / theo bài học) — chọn bài nào thì flashcard/dịch nghĩa/đồng-trái nghĩa chỉ dùng từ bài đó.
-- Tái sinh bài học: `node tools/build-lessons.js --file tools/lesson-words.txt` (cache API ở tools/out/lesson-cache.json — chạy lại nhanh).
+- Tái sinh bài học: `node data/scripts/cli.js lessons --file data/scripts/lesson-words.txt` (cache API ở data/scripts/out/lesson-cache.json — chạy lại nhanh).

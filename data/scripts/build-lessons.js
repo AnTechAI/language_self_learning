@@ -2,7 +2,7 @@
  * build-lessons.js — TẠO BÀI HỌC (LESSON) từ english-dictionary.jsonl.
  *
  * Luồng:
- *   1) Đọc danh sách từ cần dựng (--file tools/lesson-words.txt / --words / --limit).
+ *   1) Đọc danh sách từ cần dựng (--file data/scripts/lesson-words.txt / --words / --limit).
  *   2) Với mỗi từ: gom MỌI dòng trong JSONL → nhiều nghĩa/loại từ,
  *      dịch nghĩa tiếng Việt (Google Translate), lấy phiên âm IPA (Free Dictionary API).
  *   3) CHIA THÀNH CÁC BÀI HỌC, mỗi bài đúng LESSON_SIZE từ (mặc định 20).
@@ -12,34 +12,34 @@
  *      App chỉ TẢI ĐÚNG bài học người dùng chọn (truy xuất theo nhu cầu, offline).
  *
  * Cách dùng:
- *   node tools/build-lessons.js --file tools/lesson-words.txt
- *   node tools/build-lessons.js --words "laundry kettle broom"
- *   node tools/build-lessons.js --limit 60 --tag "đời sống"
- *   node tools/build-lessons.js --size 10        # mỗi bài 10 từ thay vì 20
- *   node tools/build-lessons.js --no-cache       # không dùng lại cache API cũ
+ *   node data/scripts/cli.js lessons --file data/scripts/lesson-words.txt
+ *   node data/scripts/cli.js lessons --words "laundry kettle broom"
+ *   node data/scripts/cli.js lessons --limit 60 --tag "đời sống"
+ *   node data/scripts/cli.js lessons --size 10        # mỗi bài 10 từ thay vì 20
+ *   node data/scripts/cli.js lessons --no-cache       # không dùng lại cache API cũ
  *
  * CHẾ ĐỘ ENRICHED (GĐ 4 — chia bài từ TOÀN BỘ từ đã làm giàu, KHÔNG gọi API):
- *   Nếu có data/raw/english-dictionary.enriched.jsonl (tools/enrich-vi-ipa.py)
+ *   Nếu có data/raw/english-dictionary.enriched.jsonl (data/scripts/enrich-vi-ipa.py)
  *   thì MẶC ĐỊNH dùng nguồn đó: đọc thẳng vi/ipa/freq → xếp theo TẦN SUẤT
  *   (từ thông dụng trước) → chia bài 20 từ. Không dịch, không lấy IPA nữa.
  *
- *   node tools/build-lessons.js                              # enriched, tần suất
- *   node tools/build-lessons.js --source raw                 # ép dùng jsonl gốc
- *   node tools/build-lessons.js --src <file>                 # file enriched khác
- *   node tools/build-lessons.js --limit 1000                 # chỉ 1000 từ thông dụng nhất
- *   node tools/build-lessons.js --from 1000 --limit 1000     # lô tiếp theo (bài 51+)
- *   node tools/build-lessons.js --order alpha                # xếp theo a→z thay vì tần suất
- *   node tools/build-lessons.js --include-seed               # giữ cả từ đã có trong seed
- *   node tools/build-lessons.js --keep-existing              # THÊM bài mới, không xóa bài cũ
- *   node tools/build-lessons.js --out-dir /tmp/lessons       # ghi ra thư mục khác (test)
+ *   node data/scripts/cli.js lessons                              # enriched, tần suất
+ *   node data/scripts/cli.js lessons --source raw                 # ép dùng jsonl gốc
+ *   node data/scripts/cli.js lessons --src <file>                 # file enriched khác
+ *   node data/scripts/cli.js lessons --limit 1000                 # chỉ 1000 từ thông dụng nhất
+ *   node data/scripts/cli.js lessons --from 1000 --limit 1000     # lô tiếp theo (bài 51+)
+ *   node data/scripts/cli.js lessons --order alpha                # xếp theo a→z thay vì tần suất
+ *   node data/scripts/cli.js lessons --include-seed               # giữ cả từ đã có trong seed
+ *   node data/scripts/cli.js lessons --keep-existing              # THÊM bài mới, không xóa bài cũ
+ *   node data/scripts/cli.js lessons --out-dir /tmp/lessons       # ghi ra thư mục khác (test)
  *
- * Cache kết quả API ở tools/out/lesson-cache.json để chạy lại không tốn request.
+ * Cache kết quả API ở data/scripts/out/lesson-cache.json để chạy lại không tốn request.
  */
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 
-const ROOT = path.resolve(__dirname, '..');
+const ROOT = path.resolve(__dirname, '..', '..');
 const SEED_FILE = path.join(ROOT, 'apps', 'web', 'public', 'legacy', 'js', 'seed-data.js');
 const JSONL_FILE = path.join(ROOT, 'data', 'raw', 'english-dictionary.jsonl');
 const ENRICHED_FILE = path.join(ROOT, 'data', 'raw', 'english-dictionary.enriched.jsonl');
@@ -252,7 +252,7 @@ function parseArgs() {
 async function buildLessonsFromEnriched(opt) {
   const srcFile = opt.src || (fs.existsSync(ENRICHED_FILE) ? ENRICHED_FILE : '');
   if (!srcFile || !fs.existsSync(srcFile)) {
-    console.error('✗ Chế độ enriched cần ' + ENRICHED_FILE + ' — hãy chạy: python tools/enrich-vi-ipa.py');
+    console.error('✗ Chế độ enriched cần ' + ENRICHED_FILE + ' — hãy chạy: python data/scripts/enrich-vi-ipa.py');
     process.exit(1);
   }
   const outDir = opt.outDir ? path.resolve(ROOT, opt.outDir) : OUT_DIR;
@@ -376,7 +376,7 @@ async function buildLessonsFromEnriched(opt) {
   const stamp = new Date().toISOString().slice(0, 10);
   const allMeta = [...existingLessons, ...lessons.map((l) => ({ id: l.id, title: l.title, file: l.id + '.js', tag: l.tag, count: l.words.length }))];
   fs.writeFileSync(path.join(outDir, 'manifest.js'),
-    '/* Bài học — sinh bởi tools/build-lessons.js (' + stamp + ') · nguồn: ' + path.basename(srcFile) + ' */\n' +
+    '/* Bài học — sinh bởi data/scripts/build-lessons.js (' + stamp + ') · nguồn: ' + path.basename(srcFile) + ' */\n' +
     'window.VocabApp.lessonsInit(' + JSON.stringify(allMeta) + ');\n', 'utf-8');
 
   console.log(`\n📚 Xong: ${lessons.length} bài học (mỗi bài ${opt.size} từ) tại ${outDir}.`);
@@ -498,7 +498,7 @@ async function buildLessonsFromEnriched(opt) {
     fs.writeFileSync(path.join(OUT_DIR, l.id + '.js'), body, 'utf-8');
   });
   fs.writeFileSync(path.join(OUT_DIR, 'manifest.js'),
-    '/* Bài học — sinh bởi tools/build-lessons.js (' + stamp + ') */\n' +
+    '/* Bài học — sinh bởi data/scripts/build-lessons.js (' + stamp + ') */\n' +
     'window.VocabApp.lessonsInit(' + JSON.stringify(lessons.map((l) => ({ id: l.id, title: l.title, file: l.id + '.js', tag: l.tag, count: l.words.length }))) + ');\n', 'utf-8');
 
   console.log(`\n📚 Xong: ${lessons.length} bài học, mỗi bài ${opt.size} từ (${built.length} từ OK, ${skipped.length} lỗi).`);

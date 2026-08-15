@@ -16,7 +16,15 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "api": "uvicorn apps.api.main:app --reload --port 8000"
+    "api": "uvicorn apps.api.main:app --reload --port 8000",
+    "data": "node data/scripts/cli.js",
+    "data:lessons": "node data/scripts/cli.js lessons",
+    "data:chunks": "node data/scripts/cli.js chunks",
+    "data:seed": "node data/scripts/cli.js seed",
+    "data:icons": "node data/scripts/cli.js icons",
+    "data:enrich": "node data/scripts/cli.js enrich",
+    "data:fetch": "node data/scripts/cli.js fetch",
+    "data:build": "node data/scripts/cli.js build"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

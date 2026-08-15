@@ -1,7 +1,7 @@
 # Danh sách từ vựng để nạp thêm — 1 từ mỗi dòng:  từ, chủ đề
 # Dòng "@chủ đề" áp dụng cho các từ phía sau. Dòng "#" là ghi chú.
-# Lệnh chạy:  node tools/fetch-vocab.js          (chưa sửa file app)
-#             node tools/fetch-vocab.js --apply  (tự chèn vào js/seed-data.js)
+# Lệnh chạy:  node data/scripts/cli.js fetch          (chưa sửa file app)
+#             node data/scripts/cli.js fetch --apply  (tự chèn vào js/seed-data.js)
 
 @động vật
 animal

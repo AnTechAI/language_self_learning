@@ -11,24 +11,24 @@ Tại sao cần:
     {"word":"...","partOfSpeech":"...","definition":"...","examples":[...],
      "synonyms":[...],"antonyms":[...],"vi":"Nghĩa tiếng Việt.","ipa":"/ˈ.../"}
 
-  - vi:  Google Translate (endpoint miễn phí, giống tools/fetch-vocab.js)
+  - vi:  Google Translate (endpoint miễn phí, giống data/scripts/fetch-vocab.js)
          — dịch TỪ trước, nếu kém thì dịch ĐỊNH NGHĨA (cache theo văn bản gốc)
   - ipa: Free Dictionary API (api.dictionaryapi.dev) — chỉ từ ĐƠN (cụm từ bỏ)
   - freq: (tùy chọn --freq) tần suất từ qua thư viện wordfreq (ngoại tuyến)
          → dùng để sắp xếp bài học theo độ phổ biến (xem docs/VOCABULARY-STRATEGY.md)
 
 Cách dùng:
-  python tools/enrich-vi-ipa.py                    # làm giàu toàn bộ (resume được)
-  python tools/enrich-vi-ipa.py --limit 50         # thử 50 từ
-  python tools/enrich-vi-ipa.py --words "brave gratitude"   # vài từ chỉ định
-  python tools/enrich-vi-ipa.py --file list.txt    # 1 từ mỗi dòng
-  python tools/enrich-vi-ipa.py --workers 4 --delay 0.2     # tăng tốc (coi chừng chặn)
-  python tools/enrich-vi-ipa.py --skip-ipa         # chỉ thêm nghĩa Việt
-  python tools/enrich-vi-ipa.py --freq             # thêm cột freq (cần: pip install wordfreq)
-  python tools/enrich-vi-ipa.py --add-freq          # CHỈ thêm freq cho file đã giàu (không gọi API)
-  python tools/enrich-vi-ipa.py --dry-run          # chạy thử không gọi API
-  python tools/enrich-vi-ipa.py --inplace          # ghi đè file gốc (mặc định ghi file mới)
-  python tools/enrich-vi-ipa.py --out <file>       # chỉ định file đầu ra
+  python data/scripts/enrich-vi-ipa.py                    # làm giàu toàn bộ (resume được)
+  python data/scripts/enrich-vi-ipa.py --limit 50         # thử 50 từ
+  python data/scripts/enrich-vi-ipa.py --words "brave gratitude"   # vài từ chỉ định
+  python data/scripts/enrich-vi-ipa.py --file list.txt    # 1 từ mỗi dòng
+  python data/scripts/enrich-vi-ipa.py --workers 4 --delay 0.2     # tăng tốc (coi chừng chặn)
+  python data/scripts/enrich-vi-ipa.py --skip-ipa         # chỉ thêm nghĩa Việt
+  python data/scripts/enrich-vi-ipa.py --freq             # thêm cột freq (cần: pip install wordfreq)
+  python data/scripts/enrich-vi-ipa.py --add-freq          # CHỈ thêm freq cho file đã giàu (không gọi API)
+  python data/scripts/enrich-vi-ipa.py --dry-run          # chạy thử không gọi API
+  python data/scripts/enrich-vi-ipa.py --inplace          # ghi đè file gốc (mặc định ghi file mới)
+  python data/scripts/enrich-vi-ipa.py --out <file>       # chỉ định file đầu ra
 
 An toàn:
   - Không sửa file gốc (mặc định). Ghi ra file .enriched.jsonl.
@@ -57,7 +57,7 @@ for stream in (sys.stdout, sys.stderr):
     except Exception:
         pass
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DEFAULT_IN = os.path.join(ROOT, "data", "raw", "english-dictionary.jsonl")
 DEFAULT_OUT = os.path.join(ROOT, "data", "raw", "english-dictionary.enriched.jsonl")
 

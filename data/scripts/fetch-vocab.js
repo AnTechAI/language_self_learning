@@ -8,27 +8,27 @@
  *   3) Xuất ra đúng định dạng nén của SEED_WORDS trong js/seed-data.js.
  *
  * Cách dùng:
- *   node tools/fetch-vocab.js                     # đọc danh sách tools/new-words.txt
- *   node tools/fetch-vocab.js tools/words2.txt    # dùng danh sách khác
- *   node tools/fetch-vocab.js --words "gratitude curious brave"
- *   node tools/fetch-vocab.js --tag "cảm xúc"     # ghi đè chủ đề cho toàn bộ
- *   node tools/fetch-vocab.js --limit 30          # giới hạn số từ xử lý
- *   node tools/fetch-vocab.js --apply             # TỰ CHÈN vào js/seed-data.js
- *   node tools/fetch-vocab.js --fixpos            # chỉ sửa loại từ (không thêm mới)
- *   node tools/fetch-vocab.js --enrich            # THÊM NGHĨA cho từ đã có (đa nghĩa)
- *   node tools/fetch-vocab.js --enrich --words "present run"
+ *   node data/scripts/cli.js fetch                     # đọc danh sách data/scripts/new-words.txt
+ *   node data/scripts/cli.js fetch data/scripts/words2.txt    # dùng danh sách khác
+ *   node data/scripts/cli.js fetch --words "gratitude curious brave"
+ *   node data/scripts/cli.js fetch --tag "cảm xúc"     # ghi đè chủ đề cho toàn bộ
+ *   node data/scripts/cli.js fetch --limit 30          # giới hạn số từ xử lý
+ *   node data/scripts/cli.js fetch --apply             # TỰ CHÈN vào js/seed-data.js
+ *   node data/scripts/cli.js fetch --fixpos            # chỉ sửa loại từ (không thêm mới)
+ *   node data/scripts/cli.js fetch --enrich            # THÊM NGHĨA cho từ đã có (đa nghĩa)
+ *   node data/scripts/cli.js fetch --enrich --words "present run"
  *
  * Từ mới lấy về sẽ kèm CÁC NGHĨA BỔ SUNG (tối đa 3) — ví dụ present có
  * verb + noun + adjective. Chạy --enrich để bổ sung nghĩa cho các từ đã có
  * (chỉ thêm, không ghi đè; app tự nâng cấp dữ liệu cũ qua settings.seedVersion).
  *
- * Kết quả luôn lưu vào tools/out/ (vocab-batch.json + vocab-batch.js).
+ * Kết quả luôn lưu vào data/scripts/out/ (vocab-batch.json + vocab-batch.js).
  * Không có --apply thì KHÔNG sửa file app — bạn xem trước rồi mới chèn.
  */
 const fs = require('fs');
 const path = require('path');
 
-const ROOT = path.resolve(__dirname, '..');
+const ROOT = path.resolve(__dirname, '..', '..');
 const SEED_FILE = path.join(ROOT, 'apps', 'web', 'public', 'legacy', 'js', 'seed-data.js');
 const OUT_DIR = path.join(__dirname, 'out');
 
@@ -313,7 +313,7 @@ function findSeedEnd(src) {
 }
 
 /**
- * --fixpos: đọc tools/out/vocab-batch.json (dữ liệu đã lấy), kiểm tra lại POS
+ * --fixpos: đọc data/scripts/out/vocab-batch.json (dữ liệu đã lấy), kiểm tra lại POS
  * từ API rồi SỬA TRỰC TIẾP trong js/seed-data.js (không thêm từ mới).
  */
 async function fixPOS() {
@@ -351,7 +351,7 @@ async function fixPOS() {
  * SEED_WORDS — giữ nguyên 10 phần tử đầu (word/ipa/pos/… đã chỉnh tay),
  * chỉ thêm object nghĩa bổ sung vào cuối dòng. Ghi file định kỳ để dừng
  * giữa chừng không mất tiến độ (chạy lại sẽ bỏ qua từ đã có nghĩa bổ sung).
- * Dùng: node tools/fetch-vocab.js --enrich [--words "present light run"]
+ * Dùng: node data/scripts/cli.js fetch --enrich [--words "present light run"]
  */
 async function enrich() {
   const opt = parseArgs();
@@ -427,22 +427,22 @@ async function enrich() {
   const json = { fetchedAt: stamp, rows, skipped };
   fs.writeFileSync(path.join(OUT_DIR, 'vocab-batch.json'), JSON.stringify(json, null, 2), 'utf-8');
 
-  const jsOut = `/* TỪ VỰNG SINH TỰ ĐỘNG (${stamp}) — bởi tools/fetch-vocab.js.
+  const jsOut = `/* TỪ VỰNG SINH TỰ ĐỘNG (${stamp}) — bởi data/scripts/fetch-vocab.js.
    Chèn khối dưới đây vào mảng SEED_WORDS trong js/seed-data.js
-   (hoặc dùng: node tools/fetch-vocab.js --apply) */
+   (hoặc dùng: node data/scripts/cli.js fetch --apply) */
   // ── batch: ${stamp} ──\n${rows.map(toRow).join('\n')}\n`;
   fs.writeFileSync(path.join(OUT_DIR, 'vocab-batch.js'), jsOut, 'utf-8');
 
   console.log(`\n📦 Xong: ${rows.length} từ OK, ${skipped.length} từ lỗi, ${dupes} từ trùng.`);
-  console.log(`   Kết quả thô: tools/out/vocab-batch.json`);
-  console.log(`   Dạng nén sẵn: tools/out/vocab-batch.js`);
+  console.log(`   Kết quả thô: data/scripts/out/vocab-batch.json`);
+  console.log(`   Dạng nén sẵn: data/scripts/out/vocab-batch.js`);
 
   if (opt.apply && rows.length) {
     const src = fs.readFileSync(SEED_FILE, 'utf-8');
     const end = findSeedEnd(src);
     if (end < 0) { console.error('✗ Không tìm thấy cuối mảng SEED_WORDS — chèn tay qua vocab-batch.js.'); process.exit(1); }
     const newRows = rows.map(toRow).join('\n');
-    const out = src.slice(0, end) + `\n  // ── batch: ${stamp} (tools/fetch-vocab.js) ──\n${newRows}\n` + src.slice(end);
+    const out = src.slice(0, end) + `\n  // ── batch: ${stamp} (data/scripts/fetch-vocab.js) ──\n${newRows}\n` + src.slice(end);
     fs.writeFileSync(SEED_FILE, out, 'utf-8');
     const { execSync } = require('child_process');
     try { execSync('node --check ' + JSON.stringify(SEED_FILE)); console.log(`✅ Đã chèn ${rows.length} từ vào js/seed-data.js (node --check OK).`); }
@@ -450,6 +450,6 @@ async function enrich() {
   } else if (opt.apply && !rows.length) {
     console.log('ℹ️ Không có từ mới để chèn (tất cả đã có hoặc bị lỗi).');
   } else {
-    console.log('ℹ️ Chưa sửa file app. Muốn tự chèn chạy thêm: node tools/fetch-vocab.js --apply');
+    console.log('ℹ️ Chưa sửa file app. Muốn tự chèn chạy thêm: node data/scripts/cli.js fetch --apply');
   }
 })();

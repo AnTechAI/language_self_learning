@@ -33,7 +33,7 @@ apps/web/
     ├── data/                  # dữ liệu + shim legacy
     │   ├── courses.ts         # cấu hình khóa học (en/zh)
     │   ├── seed.ts            # toEntry / mergeSeeds / applySeedUpgrade
-    │   ├── seed.generated.ts  # 524 EN + 90 ZH (sinh bởi tools/export-seed.js)
+    │   ├── seed.generated.ts  # 524 EN + 90 ZH (sinh bởi data/scripts/export-seed.js)
     │   ├── registry.ts        # shim window.VocabApp + loadScript + once()
     │   ├── bank.ts            # từ điển offline theo chunk (FNV-1a hash)
     │   └── lessons.ts         # bài học theo nhu cầu (manifest + merge)
@@ -72,7 +72,7 @@ apps/web/
 - **Runtime cache-first**: bank chunk (max 110 file — đủ 104 chunk), lessons
   (max 200 file), các file legacy còn lại — tra từ lần đầu tải 1 chunk, sau đó offline.
 - **Manifest tĩnh** `public/manifest.webmanifest` (`manifest: false`) + icon PNG
-  tự sinh bằng `node tools/make-icons.js` (Node zlib, không cần thư viện).
+  tự sinh bằng `node data/scripts/cli.js icons` (Node zlib, không cần thư viện).
 - `navigateFallback: '/index.html'` + denylist `/^\/legacy\//` — SPA về index,
   legacy giữ nguyên trang riêng.
 - **Dev**: plugin tắt SW (mặc định) — `npm run dev` không bị ảnh hưởng; chỉ

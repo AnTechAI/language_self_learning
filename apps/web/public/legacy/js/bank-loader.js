@@ -58,7 +58,7 @@
       const s = document.createElement('script');
       s.src = 'js/bank/manifest.js';
       s.onload = resolve;
-      s.onerror = () => reject(new Error('Không tải được js/bank/manifest.js (thiếu chunk? hãy chạy node tools/build-chunks.js)'));
+      s.onerror = () => reject(new Error('Không tải được js/bank/manifest.js (thiếu chunk? hãy chạy node data/scripts/cli.js chunks)'));
       document.head.appendChild(s);
     });
   }

@@ -1,4 +1,4 @@
-# Danh sách từ cho BÀI HỌC (Lesson) — bởi tools/build-lessons.js
+# Danh sách từ cho BÀI HỌC (Lesson) — bởi data/scripts/build-lessons.js
 # Mỗi dòng: 1 từ tiếng Anh (đơn hoặc cụm). @chủ đề đặt dòng chủ đề.
 # Từ đã có trong kho cơ bản (js/seed-data.js) sẽ tự được BỎ QUA.
 @đời sống

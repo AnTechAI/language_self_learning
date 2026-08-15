@@ -68,7 +68,7 @@
           </select>
           <button class="btn" id="learnLessonBtn">Học bài này →</button>
         </div>
-        <small class="help" style="margin-top:6px;">Chọn bài → ${lessonFocusId ? '20 từ mới của bài được tự thêm vào kho và hiện ngay bên dưới để học.' : 'Chưa có bài học — chạy node tools/build-lessons.js để tạo bài từ english-dictionary.jsonl.'}</small>
+        <small class="help" style="margin-top:6px;">Chọn bài → ${lessonFocusId ? '20 từ mới của bài được tự thêm vào kho và hiện ngay bên dưới để học.' : 'Chưa có bài học — chạy node data/scripts/cli.js lessons để tạo bài từ english-dictionary.jsonl.'}</small>
       </div>`;
     }
 

@@ -25,7 +25,7 @@
 - **ESLint/Prettier chỉ áp dụng** cho: `apps/web/src/`, `packages/shared/`, config files.
 - **Ngoại lệ cố ý** (`eslint.config.mjs` ignores + `.prettierignore`):
   - `apps/web/public/` (app legacy — JS thuần, đã có 142 test bảo vệ, format sẽ gây nhiễu diff)
-  - `tools/`, `_e2e.js`, `data/`, `docs/` (giữ nguyên format hiện tại)
+  - `data/scripts/`, `_e2e.js`, `data/`, `docs/` (giữ nguyên format hiện tại)
   - `**/dist/**`, `**/node_modules/**`, `package-lock.json`
 
 ## 4. CI — `.github/workflows/ci.yml`

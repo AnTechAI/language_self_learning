@@ -13,22 +13,22 @@
  *      (kèm nghĩa bổ sung {p,i,e,v,x,s,a} — xem header seed-data.js).
  *
  * Cách dùng:
- *   node tools/build-from-jsonl.js --words "gratitude brave polite"
- *   node tools/build-from-jsonl.js --file danh-sach-tu.txt        # 1 từ mỗi dòng:  từ, chủ đề
- *   node tools/build-from-jsonl.js --limit 100 --tag "đời sống"   # 100 từ đơn đầu tiên trong file
- *   node tools/build-from-jsonl.js ... --max-senses 6             # giới hạn số nghĩa/từ
- *   node tools/build-from-jsonl.js ... --apply                    # TỰ CHÈN vào js/seed-data.js
- *   node tools/build-from-jsonl.js ... --phrases                  # cho phép cả cụm nhiều từ
- *   node tools/build-from-jsonl.js ... --allow-no-ipa             # chấp nhận từ không có phiên âm
+ *   node data/scripts/cli.js build --words "gratitude brave polite"
+ *   node data/scripts/cli.js build --file danh-sach-tu.txt        # 1 từ mỗi dòng:  từ, chủ đề
+ *   node data/scripts/cli.js build --limit 100 --tag "đời sống"   # 100 từ đơn đầu tiên trong file
+ *   node data/scripts/cli.js build ... --max-senses 6             # giới hạn số nghĩa/từ
+ *   node data/scripts/cli.js build ... --apply                    # TỰ CHÈN vào js/seed-data.js
+ *   node data/scripts/cli.js build ... --phrases                  # cho phép cả cụm nhiều từ
+ *   node data/scripts/cli.js build ... --allow-no-ipa             # chấp nhận từ không có phiên âm
  *
  * Mặc định chỉ lấy TỪ ĐƠN + BẮT BUỘC có phiên âm (đúng quy ước app), bỏ qua
- * từ đã có trong kho. Xem trước ở tools/out/jsonl-rows.js trước khi --apply.
+ * từ đã có trong kho. Xem trước ở data/scripts/out/jsonl-rows.js trước khi --apply.
  */
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 
-const ROOT = path.resolve(__dirname, '..');
+const ROOT = path.resolve(__dirname, '..', '..');
 const SEED_FILE = path.join(ROOT, 'apps', 'web', 'public', 'legacy', 'js', 'seed-data.js');
 const JSONL_FILE = path.join(ROOT, 'data', 'raw', 'english-dictionary.jsonl');
 const OUT_DIR = path.join(__dirname, 'out');
@@ -311,20 +311,20 @@ function parseArgs() {
   // --- Xuất kết quả ---
   const stamp = new Date().toISOString().slice(0, 10);
   fs.writeFileSync(path.join(OUT_DIR, 'jsonl-rows.json'), JSON.stringify({ fetchedAt: stamp, rows: rows.map((r) => ({ word: r.row[0], row: r.row, tag: r.tag })), skipped }, null, 2), 'utf-8');
-  const jsOut = `/* TỪ VỰNG DỰNG TỪ english-dictionary.jsonl (${stamp}) — bởi tools/build-from-jsonl.js.
+  const jsOut = `/* TỪ VỰNG DỰNG TỪ english-dictionary.jsonl (${stamp}) — bởi data/scripts/build-from-jsonl.js.
    Chèn khối dưới đây vào mảng SEED_WORDS trong js/seed-data.js
-   (hoặc dùng: node tools/build-from-jsonl.js … --apply) */
+   (hoặc dùng: node data/scripts/cli.js build … --apply) */
   // ── jsonl-batch: ${stamp} ──\n${rows.map(toRow).join('\n')}\n`;
   fs.writeFileSync(path.join(OUT_DIR, 'jsonl-rows.js'), jsOut, 'utf-8');
 
   console.log(`\n📦 Xong: ${rows.length} từ OK, ${skipped.length} từ lỗi.`);
-  console.log(`   Xem trước: tools/out/jsonl-rows.js  (+ dữ liệu thô jsonl-rows.json)`);
+  console.log(`   Xem trước: data/scripts/out/jsonl-rows.js  (+ dữ liệu thô jsonl-rows.json)`);
 
   if (opt.apply && rows.length) {
     const src = fs.readFileSync(SEED_FILE, 'utf-8');
     const end = findSeedEnd(src);
     if (end < 0) { console.error('✗ Không tìm thấy cuối mảng SEED_WORDS — chèn tay qua jsonl-rows.js.'); process.exit(1); }
-    const out = src.slice(0, end) + `\n  // ── jsonl-batch: ${stamp} (tools/build-from-jsonl.js) ──\n${rows.map(toRow).join('\n')}\n` + src.slice(end);
+    const out = src.slice(0, end) + `\n  // ── jsonl-batch: ${stamp} (data/scripts/build-from-jsonl.js) ──\n${rows.map(toRow).join('\n')}\n` + src.slice(end);
     fs.writeFileSync(SEED_FILE, out, 'utf-8');
     const { execSync } = require('child_process');
     try { execSync('node --check ' + JSON.stringify(SEED_FILE)); console.log(`✅ Đã chèn ${rows.length} từ vào js/seed-data.js (node --check OK).`); }

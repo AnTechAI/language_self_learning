@@ -6,20 +6,20 @@
  *   Lượt 1: đếm số entry hợp lệ → N = ceil(total / size)
  *   Lượt 2: bucket = hashWord(word) % N → mỗi bucket là 1 file chunk-NNN.js
  *   - Mỗi entry nén thành mảng: [word, pos, definition, example, syn[], ant[]]
- *   - Nếu file nguồn là bản LÀM GIÀU (tools/enrich-vi-ipa.py — có trường vi/ipa)
+ *   - Nếu file nguồn là bản LÀM GIÀU (data/scripts/enrich-vi-ipa.py — có trường vi/ipa)
  *     thì thêm 2 cột: [.., vi, ipa] → từ điển hiển thị nghĩa Việt + phiên âm
  *   - App (js/bank-loader.js) tra từ → chunkName = hash%N → chỉ tải 1 file đó
  *
  * Cách dùng:
- *   node tools/build-chunks.js                # sinh lại toàn bộ js/bank/
- *   node tools/build-chunks.js --size 3000    # số entry mỗi chunk (mặc định 2000)
- *   node tools/build-chunks.js --src data/raw/english-dictionary.enriched.jsonl  # nguồn khác
+ *   node data/scripts/cli.js chunks                # sinh lại toàn bộ js/bank/
+ *   node data/scripts/cli.js chunks --size 3000    # số entry mỗi chunk (mặc định 2000)
+ *   node data/scripts/cli.js chunks --src data/raw/english-dictionary.enriched.jsonl  # nguồn khác
  */
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 
-const ROOT = path.resolve(__dirname, '..');
+const ROOT = path.resolve(__dirname, '..', '..');
 const JSONL_FILE = path.join(ROOT, 'data', 'raw', 'english-dictionary.jsonl');
 const ENRICHED_FILE = path.join(ROOT, 'data', 'raw', 'english-dictionary.enriched.jsonl');
 const OUT_DIR = path.join(ROOT, 'apps', 'web', 'public', 'legacy', 'js', 'bank');
@@ -100,7 +100,7 @@ async function countEntries(file) {
     fs.writeFileSync(path.join(OUT_DIR, name), body, 'utf-8');
   }
   fs.writeFileSync(path.join(OUT_DIR, 'manifest.js'),
-    '/* Từ điển ngoại tuyến — sinh bởi tools/build-chunks.js (' + new Date().toISOString().slice(0, 10) + ') */\n' +
+    '/* Từ điển ngoại tuyến — sinh bởi data/scripts/build-chunks.js (' + new Date().toISOString().slice(0, 10) + ') */\n' +
     'window.VocabApp.bankInit(' + JSON.stringify(names) + ');\n', 'utf-8');
 
   const totalBytes = names.reduce((s, n) => s + fs.statSync(path.join(OUT_DIR, n)).size, 0) + fs.statSync(path.join(OUT_DIR, 'manifest.js')).size;

@@ -165,7 +165,7 @@
           <button class="btn sm" id="addWordBtn">＋ Thêm từ mới</button>
         </div>
         ${VA.getCourse().seed === 'en' ? chipsRow(null) : ''}
-        ${noLessonsBanner ? `<small class="help" style="margin-top:8px;">💡 Chưa có bài học — chạy <code>node tools/build-lessons.js</code> để tạo các bài 20 từ từ english-dictionary.jsonl.</small>` : ''}
+        ${noLessonsBanner ? `<small class="help" style="margin-top:8px;">💡 Chưa có bài học — chạy <code>node data/scripts/cli.js lessons</code> để tạo các bài 20 từ từ english-dictionary.jsonl.</small>` : ''}
         <div class="row" style="margin-top:12px;">
           <input type="search" id="searchInput" placeholder="Tìm từ hoặc nghĩa..." value="${escapeHtml(f.search)}" class="grow">
           <select id="statusFilter" style="width:auto;">

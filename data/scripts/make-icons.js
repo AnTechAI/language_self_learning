@@ -2,13 +2,13 @@
  * make-icons.js — SINH ICON PWA (PNG) cho app: nền brand + dấu ✓ trắng.
  * Dùng zlib của Node (không cần thư viện ngoài). Chạy lại bất cứ lúc nào.
  *
- *   node tools/make-icons.js            # ghi public/icons/icon-192.png + icon-512.png
+ *   node data/scripts/cli.js icons            # ghi public/icons/icon-192.png + icon-512.png
  */
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 
-const OUT_DIR = path.resolve(__dirname, '..', 'apps', 'web', 'public', 'icons');
+const OUT_DIR = path.resolve(__dirname, '..', '..', 'apps', 'web', 'public', 'icons');
 const BRAND = [0x10, 0xb9, 0x81]; // #10b981
 const CHECK = [255, 255, 255];
 

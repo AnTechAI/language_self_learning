@@ -18,7 +18,7 @@ english-learning/
 │   └── api/                      → FastAPI skeleton (docs/API-SYNC.md)
 ├── packages/shared/src/index.ts  → types dùng chung web+api
 ├── data/raw/english-dictionary.jsonl → 41MB nguồn (git-ignored)
-├── tools/                        → 4 tool sinh dữ liệu (docs/DATA-PIPELINES.md)
+├── data/scripts/                        → 4 tool sinh dữ liệu (docs/DATA-PIPELINES.md)
 └── docs/                         → tài liệu (chính là file này)
 ```
 

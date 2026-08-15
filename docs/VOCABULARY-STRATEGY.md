@@ -1,6 +1,6 @@
 # Chiến thuật LƯU & HỌC toàn bộ từ vựng (207.272 từ)
 
-> Trạng thái: đề xuất (GĐ 4+) · Tool làm giàu đã có: `tools/enrich-vi-ipa.py`
+> Trạng thái: đề xuất (GĐ 4+) · Tool làm giàu đã có: `data/scripts/enrich-vi-ipa.py`
 
 ## 1. Hiện trạng & vấn đề
 
@@ -26,16 +26,16 @@ Việt + IPA cho toàn bộ, và (b) cơ chế đưa từ vào kho học theo nh
      (qua bài học, qua nút "Thêm vào kho", qua seed). Không bao giờ là 207k entry.
 2. **Điều gì được học = do người dùng quyết định**, không phải tải hết về.
 3. **Mọi thứ regenerable**: JSONL, bank, enriched đều nằm trong `.gitignore`
-   (mục `data/raw/` + `tools/out/`) — chỉ commit công cụ + docs.
+   (mục `data/raw/` + `data/scripts/out/`) — chỉ commit công cụ + docs.
 
 ## 3. Chiến thuật LƯU TRỮ
 
-### 3.1 Làm giàu master data — `tools/enrich-vi-ipa.py` ✅ (đã có)
+### 3.1 Làm giàu master data — `data/scripts/enrich-vi-ipa.py` ✅ (đã có)
 
 ```
-python tools/enrich-vi-ipa.py --limit 10000     # chạy từng bước
-python tools/enrich-vi-ipa.py --freq            # thêm cột freq (pip install wordfreq)
-python tools/enrich-vi-ipa.py --inplace         # ghi đè gốc (mặc định: file .enriched.jsonl)
+python data/scripts/enrich-vi-ipa.py --limit 10000     # chạy từng bước
+python data/scripts/enrich-vi-ipa.py --freq            # thêm cột freq (pip install wordfreq)
+python data/scripts/enrich-vi-ipa.py --inplace         # ghi đè gốc (mặc định: file .enriched.jsonl)
 ```
 
 - `vi` = Google Translate: từ đơn nghĩa dịch **TỪ** (ngắn gọn); từ đa nghĩa
@@ -46,10 +46,10 @@ python tools/enrich-vi-ipa.py --inplace         # ghi đè gốc (mặc định:
   không theo từ — tránh mất nghĩa của từ đa nghĩa); cache theo văn bản gốc
   (từ/định nghĩa) không gọi trùng; backoff khi bị 429/lỗi mạng.
 
-### 3.2 Bank chunk mở rộng — `tools/build-chunks.js` ✅ (đã có)
+### 3.2 Bank chunk mở rộng — `data/scripts/build-chunks.js` ✅ (đã có)
 
 - Tự động ưu tiên file enriched nếu tồn tại (không thì dùng file gốc):
-  `node tools/build-chunks.js` hoặc `--src <file>`.
+  `node data/scripts/cli.js chunks` hoặc `--src <file>`.
 - Row: `[word, pos, def, example, syn[4], ant[4], vi, ipa]` — **8 cột**.
   Thiếu vi/ipa → vẫn 6 cột (tương thích ngược, app cũ không vỡ).
 - Kích thước dự kiến bản giàu: ~30–35MB tổng, mỗi chunk ~300–380KB — vẫn on-demand.
@@ -81,7 +81,7 @@ python tools/enrich-vi-ipa.py --inplace         # ghi đè gốc (mặc định:
 
 ```
 enriched.jsonl (có vi+ipa+freq)
-  → tools/build-lessons.js (chế độ enriched: xếp theo freq, 20 từ/bài, không gọi API)
+  → data/scripts/build-lessons.js (chế độ enriched: xếp theo freq, 20 từ/bài, không gọi API)
   → js/lessons/manifest.js + lesson-NNN.js
   → app: pickLesson → ensureLessonInCourse → auto-merge 20 từ vào entries
 ```

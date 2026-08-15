@@ -1,8 +1,7 @@
-# Data Pipelines — `tools/` (5 tool sinh dữ liệu)
+# Data Pipelines — `data/scripts/` (5 tool sinh dữ liệu + CLI chung)
 
 > Nguồn duy nhất: `data/raw/english-dictionary.jsonl` (207.272 entry — git-ignored).
-> Mỗi tool đọc jsonl (hoặc API) → sinh ra dữ liệu cho app. Sẽ di dời thành
-> `data/scripts` với CLI chung ở GĐ 4.
+> Mọi lệnh gọi qua CLI chung: `node data/scripts/cli.js <lệnh>` (hoặc npm run data:*).
 
 | Tool | Làm gì | Lợi ích | Đầu ra |
 |---|---|---|---|
@@ -18,26 +17,26 @@ API dùng: `dictionaryapi.dev` (IPA + senses) và `translate.googleapis.com/...?
 ## 1. build-from-jsonl.js
 
 ```bash
-node tools/build-from-jsonl.js --words "gratitude brave polite"
-node tools/build-from-jsonl.js --file list.txt          # 'từ, chủ đề' / @chủ đề
-node tools/build-from-jsonl.js --limit 100 --tag "đời sống"
-node tools/build-from-jsonl.js ... --apply              # chèn thẳng vào seed-data.js
-node tools/build-from-jsonl.js ... --allow-no-ipa --phrases --max-senses 6
+node data/scripts/cli.js build --words "gratitude brave polite"
+node data/scripts/cli.js build --file list.txt          # 'từ, chủ đề' / @chủ đề
+node data/scripts/cli.js build --limit 100 --tag "đời sống"
+node data/scripts/cli.js build ... --apply              # chèn thẳng vào seed-data.js
+node data/scripts/cli.js build ... --allow-no-ipa --phrases --max-senses 6
 ```
 
 - Mặc định: chỉ TỪ ĐƠN + bắt buộc có IPA + bỏ qua từ đã có trong kho.
 - Sense chính: loại từ nhiều nhất (hòa → verb > noun > adj…), nghĩa ngắn nhất.
-- Đầu ra xem trước: `tools/out/jsonl-rows.js` (+ jsonl-rows.json).
+- Đầu ra xem trước: `data/scripts/out/jsonl-rows.js` (+ jsonl-rows.json).
 
 ## 2. build-lessons.js
 
 ```bash
-node tools/build-lessons.js --file tools/lesson-words.txt   # 20 từ/bài (nguồn jsonl + API)
-node tools/build-lessons.js --size 10 --words "a b c"       # tùy chỉnh
+node data/scripts/cli.js lessons --file data/scripts/lesson-words.txt   # 20 từ/bài (nguồn jsonl + API)
+node data/scripts/cli.js lessons --size 10 --words "a b c"       # tùy chỉnh
 ```
 
 - Nhóm theo thứ tự danh sách → mỗi bài 20 từ, tiêu đề "Bài N · chủ đề".
-- **Cache API**: `tools/out/lesson-cache.json` — chạy lại nhanh, không tốn request.
+- **Cache API**: `data/scripts/out/lesson-cache.json` — chạy lại nhanh, không tốn request.
 - Đầu ra: `js/lessons/manifest.js` + `lesson-001.js…` (format: docs/DATA-MODEL.md §3).
 - App chỉ tải đúng bài người chọn (lesson-loader.js).
 
@@ -49,15 +48,15 @@ dụng trước) → chia bài 20 từ. Một từ nhiều nghĩa → nghĩa ch�
 definition ngắn nhất) + tối đa 4 nghĩa bổ sung `{p,i,e,v,x,s,a}`.
 
 ```bash
-node tools/build-lessons.js                              # enriched, theo tần suất
-node tools/build-lessons.js --source raw                 # ép dùng jsonl gốc + API
-node tools/build-lessons.js --src <file>                 # file enriched khác
-node tools/build-lessons.js --limit 1000                 # chỉ 1000 từ thông dụng nhất
-node tools/build-lessons.js --from 1000 --limit 1000     # lô tiếp theo (bài 51+)
-node tools/build-lessons.js --order alpha                # xếp a→z thay vì tần suất
-node tools/build-lessons.js --include-seed               # giữ cả từ đã có trong seed
-node tools/build-lessons.js --keep-existing              # THÊM bài mới, giữ bài cũ
-node tools/build-lessons.js --out-dir /tmp/lessons       # ghi ra thư mục khác (test)
+node data/scripts/cli.js lessons                              # enriched, theo tần suất
+node data/scripts/cli.js lessons --source raw                 # ép dùng jsonl gốc + API
+node data/scripts/cli.js lessons --src <file>                 # file enriched khác
+node data/scripts/cli.js lessons --limit 1000                 # chỉ 1000 từ thông dụng nhất
+node data/scripts/cli.js lessons --from 1000 --limit 1000     # lô tiếp theo (bài 51+)
+node data/scripts/cli.js lessons --order alpha                # xếp a→z thay vì tần suất
+node data/scripts/cli.js lessons --include-seed               # giữ cả từ đã có trong seed
+node data/scripts/cli.js lessons --keep-existing              # THÊM bài mới, giữ bài cũ
+node data/scripts/cli.js lessons --out-dir /tmp/lessons       # ghi ra thư mục khác (test)
 ```
 
 - Chỉ giữ từ HỌC ĐƯỢC (có nghĩa Việt), bỏ từ đã có trong seed (trừ `--include-seed`).
@@ -67,9 +66,9 @@ node tools/build-lessons.js --out-dir /tmp/lessons       # ghi ra thư mục kh�
 ## 3. build-chunks.js
 
 ```bash
-node tools/build-chunks.js            # toàn bộ jsonl → 104 chunk
-node tools/build-chunks.js --size 3000
-node tools/build-chunks.js --src data/raw/english-dictionary.enriched.jsonl
+node data/scripts/cli.js chunks            # toàn bộ jsonl → 104 chunk
+node data/scripts/cli.js chunks --size 3000
+node data/scripts/cli.js chunks --src data/raw/english-dictionary.enriched.jsonl
 ```
 
 - 2 lượt đọc: đếm tổng → `N = ceil(total/size)` → bucket `hashFNV(word) % N`.
@@ -81,28 +80,28 @@ node tools/build-chunks.js --src data/raw/english-dictionary.enriched.jsonl
 ## 4. fetch-vocab.js
 
 ```bash
-node tools/fetch-vocab.js --words "x y z" --apply
-node tools/fetch-vocab.js --enrich --words "x y"    # thêm nghĩa bổ sung cho từ đã có
-node tools/fetch-vocab.js --fixpos                  # chỉ vá loại từ (POS_OVERRIDE)
+node data/scripts/cli.js fetch --words "x y z" --apply
+node data/scripts/cli.js fetch --enrich --words "x y"    # thêm nghĩa bổ sung cho từ đã có
+node data/scripts/cli.js fetch --fixpos                  # chỉ vá loại từ (POS_OVERRIDE)
 ```
 
-- Nguồn: `tools/new-words.txt` (hỗ trợ `@tag`) hoặc `--words`.
+- Nguồn: `data/scripts/new-words.txt` (hỗ trợ `@tag`) hoặc `--words`.
 - `--enrich`: CHỈ THÊM sense, không ghi đè dữ liệu người dùng; idempotent.
 - POS chuẩn hóa + bảng `POS_OVERRIDE` (~30 từ) vì API hay trả noun trước.
 
 ## 5. enrich-vi-ipa.py
 
 > Tool Python làm giàu TOÀN BỘ jsonl (207k từ) — nền tảng cho chiến thuật
-> học toàn bộ từ vựng (docs/VOCABULARY-STRATEGY.md). Chạy: `python tools/enrich-vi-ipa.py`
+> học toàn bộ từ vựng (docs/VOCABULARY-STRATEGY.md). Chạy: `python data/scripts/enrich-vi-ipa.py`
 
 ```bash
-python tools/enrich-vi-ipa.py --limit 10000         # chạy từng bước
-python tools/enrich-vi-ipa.py --words "brave gratitude"
-python tools/enrich-vi-ipa.py --file list.txt       # 1 từ mỗi dòng
-python tools/enrich-vi-ipa.py --workers 4 --delay 0.2   # tăng tốc (coi chừng chặn)
-python tools/enrich-vi-ipa.py --skip-ipa            # chỉ dịch nghĩa
-python tools/enrich-vi-ipa.py --freq                # thêm cột freq (pip install wordfreq)
-python tools/enrich-vi-ipa.py --dry-run --inplace --out <file>
+python data/scripts/enrich-vi-ipa.py --limit 10000         # chạy từng bước
+python data/scripts/enrich-vi-ipa.py --words "brave gratitude"
+python data/scripts/enrich-vi-ipa.py --file list.txt       # 1 từ mỗi dòng
+python data/scripts/enrich-vi-ipa.py --workers 4 --delay 0.2   # tăng tốc (coi chừng chặn)
+python data/scripts/enrich-vi-ipa.py --skip-ipa            # chỉ dịch nghĩa
+python data/scripts/enrich-vi-ipa.py --freq                # thêm cột freq (pip install wordfreq)
+python data/scripts/enrich-vi-ipa.py --dry-run --inplace --out <file>
 ```
 
 - Thêm `vi` (Google Translate) + `ipa` (dictionaryapi.dev, chỉ từ đơn) + `freq` (wordfreq).
