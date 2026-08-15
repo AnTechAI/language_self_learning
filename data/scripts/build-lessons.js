@@ -46,6 +46,8 @@ const ENRICHED_FILE = path.join(ROOT, 'data', 'raw', 'english-dictionary.enriche
 const OUT_DIR = path.join(ROOT, 'apps', 'web', 'public', 'legacy', 'js', 'lessons');
 const TOOL_OUT = path.join(__dirname, 'out');
 const CACHE_FILE = path.join(TOOL_OUT, 'lesson-cache.json');
+// Sidecar lưu từ đã vào bài — để `--keep-existing` KHÔNG dựng lại từ trùng
+const LESSONED_FILE = path.join(TOOL_OUT, 'lessoned-words.json');
 
 const API_DICT = (w) => `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(w)}`;
 const API_TRANS = (q) => `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=vi&dt=t&q=${encodeURIComponent(q)}`;
@@ -288,6 +290,13 @@ async function buildLessonsFromEnriched(opt) {
 
   // --- Chỉ giữ từ HỌC ĐƯỢC (có nghĩa Việt); loại trùng nghĩa ---
   const existing = opt.includeSeed ? new Set() : existingSeedWords();
+  if (opt.keepExisting && fs.existsSync(LESSONED_FILE)) {
+    try {
+      const prev = JSON.parse(fs.readFileSync(LESSONED_FILE, 'utf-8'));
+      for (const w of prev) existing.add(String(w).toLowerCase());
+      console.log(`   (đã loại ${prev.length} từ đã vào bài trước — chống trùng)`);
+    } catch { /* file hỏng → bỏ */ }
+  }
   const wordList = [];
   for (const [w, senses] of byWord) {
     const seen = new Set();
@@ -378,6 +387,19 @@ async function buildLessonsFromEnriched(opt) {
   fs.writeFileSync(path.join(outDir, 'manifest.js'),
     '/* Bài học — sinh bởi data/scripts/build-lessons.js (' + stamp + ') · nguồn: ' + path.basename(srcFile) + ' */\n' +
     'window.VocabApp.lessonsInit(' + JSON.stringify(allMeta) + ');\n', 'utf-8');
+
+  // Cập nhật sidecar từ đã vào bài (gồm bài cũ + bài mới) — chống trùng khi chạy tiếp
+  if (opt.keepExisting) {
+    try {
+      const prev = fs.existsSync(LESSONED_FILE) ? JSON.parse(fs.readFileSync(LESSONED_FILE, 'utf-8')) : [];
+      const set = new Set(prev.map((w) => String(w).toLowerCase()));
+      for (const l of lessons) for (const row of l.words) {
+        const w = (Array.isArray(row) ? String(row[0] || '') : '').toLowerCase();
+        if (w) set.add(w);
+      }
+      fs.writeFileSync(LESSONED_FILE, JSON.stringify([...set]), 'utf-8');
+    } catch { /* bỏ */ }
+  }
 
   console.log(`\n📚 Xong: ${lessons.length} bài học (mỗi bài ${opt.size} từ) tại ${outDir}.`);
   lessons.slice(0, 8).forEach((l) => console.log(`   ${l.id} — ${l.title} (${l.words.length} từ)`));

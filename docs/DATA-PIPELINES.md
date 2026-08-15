@@ -10,6 +10,7 @@
 | [build-chunks.js](#3-build-chunksjs) | Chia toàn bộ jsonl thành **chunk nhỏ** | Từ điển offline 207k từ, tải đúng 1 chunk | `js/bank/` (104 chunk + manifest) |
 | [fetch-vocab.js](#4-fetch-vocabjs) | Fetch từ API Free Dictionary + Google Translate | Bổ sung từ mới + sửa POS | dòng nén seed |
 | [enrich-vi-ipa.py](#5-enrich-vi-ipapy) | Làm giàu **toàn bộ** jsonl: nghĩa Việt + IPA (+ freq) | Nền tảng học 207k từ (xem VOCABULARY-STRATEGY.md) | `english-dictionary.enriched.jsonl` |
+| [make-popular-list.py](#6-make-popular-listpy) | Tạo danh sách TỪ NỘI DUNG ĐƠN theo tần suất (wordfreq) | Enrich/bài theo thứ tự đáng học + sinh slice chạy đêm | `out/popular-words.txt`, `out/slices/` |
 
 API dùng: `dictionaryapi.dev` (IPA + senses) và `translate.googleapis.com/...?client=gtx`
 (dịch Việt, miễn phí). Có **retry/backoff** khi 429.
@@ -61,7 +62,11 @@ node data/scripts/cli.js lessons --out-dir /tmp/lessons       # ghi ra thư mụ
 
 - Chỉ giữ từ HỌC ĐƯỢC (có nghĩa Việt), bỏ từ đã có trong seed (trừ `--include-seed`).
 - `--keep-existing` đọc manifest cũ (hỗ trợ key có/không nháy) → tiếp số bài, không xóa.
-- Luồng chuẩn: enrich → chia bài → `--limit` theo lô (mỗi lô ~50 bài) → `--keep-existing` để cộng dồn.
+- **Chống trùng khi `--keep-existing`**: sidecar `data/scripts/out/lessoned-words.json`
+  lưu từ đã vào bài — build lần sau **loại** các từ đó (không dựng lại bài trùng).
+  Nếu file này mất, tool chỉ biết bỏ seed → thêm bài trùng (lần đầu build mới dọn tay).
+- Luồng chuẩn: `make-popular-list.py --slice-size 800` → `enrich --file slices/*` →
+  `build-lessons --keep-existing` để cộng dồn bài mới từ toàn bộ file giàu (0 trùng).
 
 ## 3. build-chunks.js
 
@@ -92,7 +97,12 @@ node data/scripts/cli.js fetch --fixpos                  # chỉ vá loại từ
 ## 5. enrich-vi-ipa.py
 
 > Tool Python làm giàu TOÀN BỘ jsonl (207k từ) — nền tảng cho chiến thuật
-> học toàn bộ từ vựng (docs/VOCABULARY-STRATEGY.md). Chạy: `python data/scripts/enrich-vi-ipa.py`
+> học toàn bộ từ vựng (docs/VOCABULARY-STRATEGY.md).
+> **Xử lý theo TẦN SUẤT** (từ đáng học trước) thay vì a→z: chạy
+> `python data/scripts/make-popular-list.py --slice-size 800` để sinh
+> `data/scripts/out/slices/slice-NNN.txt`, rồi chạy `--file` từng slice
+> (~800 từ/lần ≈ 30–40 phút, resume an toàn theo dòng) — nối tiếp nhau về đêm.
+> Chạy đơn: `python data/scripts/enrich-vi-ipa.py`
 
 ```bash
 python data/scripts/enrich-vi-ipa.py --limit 10000         # chạy từng bước
@@ -115,3 +125,18 @@ python data/scripts/enrich-vi-ipa.py --dry-run --inplace --out <file>
 - **Định dạng dòng nén phải 1 dòng 1 từ** — parser dựa trên dòng (docs/DATA-MODEL.md §2).
 - Sau khi `--apply` luôn chạy `node --check` (tool tự chạy).
 - Sau khi sinh lessons/bank, chạy `node _e2e.js` để xác nhận không vỡ.
+
+## 6. make-popular-list.py
+
+> Sinh danh sách **từ nội dung đơn theo tần suất** (wordfreq — offline, không API) —
+> xử lý enrich/trái bài theo mức "đáng học" thay vì thứ tự a→z của jsonl gốc.
+
+```bash
+python data/scripts/make-popular-list.py                   # ghi out/popular-words.txt
+python data/scripts/make-popular-list.py --slice-size 800  # + sinh slices/slice-001..NNN.txt
+```
+
+- Lọc: từ đơn (không dấu cách) + POS nội dung (noun/verb/adjective/adverb) +
+  bỏ ~250 rank đầu wordfreq (hàm chức năng) + bỏ token rác (không nguyên âm, số, ≤1 ký tự).
+- `slices/` chia danh sách CHƯA giàu thành các lô ~800 từ → chạy nhiều đêm
+  `enrich-vi-ipa.py --file slices/slice-NNN.txt` (mỗi lô ~30–40 phút, resume an toàn).

@@ -88,12 +88,15 @@ enriched.jsonl (có vi+ipa+freq)
 
 - Cơ chế hiện tại đã đủ: bài = 20 từ, chơi scoped theo `lessonId`, merge idempotent.
 - Khác biệt duy nhất: nguồn từ = enriched (không phải danh sách tay `lesson-words.txt`).
-- `--keep-existing` để CỘNG DỒN bài mới vào bài cũ (không xóa).
-- Đã chạy thật: **300 từ thông dụng nhất → 15 bài "Từ phổ biến"** (Bài 8–22),
-  giữ nguyên 7 bài chủ đề (đời sống/ẩm thực/sức khỏe/công nghệ/cảm xúc).
-  Bài 8 mở đầu: week, case, nothing, person, today… (20 từ/bài, vi + ipa đầy đủ).
-- Mở rộng toàn bộ 207k từ: `--limit 1000 --keep-existing` chạy nhiều lô (mỗi lô
-  ~50 bài), hoặc `--from N --limit 1000` cho lô tiếp theo.
+- `--keep-existing` để CỘNG DỒN bài mới vào bài cũ (không xóa); **chống trùng** qua
+  sidecar `data/scripts/out/lessoned-words.json` (loại từ đã vào bài khi build tiếp).
+- Đã chạy thật: làm giàu **1.516 từ** (vi 100%, ipa ~96%, freq 100%) → **75 bài**
+  = 7 bài chủ đề + 68 bài "Từ phổ biến", **1.470 từ duy nhất — 0 trùng** (73 bài đủ 20 từ,
+  2 bài đuôi ít hơn cạn vốn). Bài 8 mở đầu: week, case, nothing, person, today…
+- Mở rộng tiếp (theo tần suất): `python data/scripts/make-popular-list.py --slice-size 800`
+  sinh `out/slices/slice-NNN.txt` → `python data/scripts/enrich-vi-ipa.py --file out/slices/slice-NNN.txt`
+  (từng slice ~30–40 phút, resume an toàn) → `node data/scripts/cli.js lessons --keep-existing`
+  để cộng dồn. Còn ~21k từ nội dung đơn (≈ 14–15h) để đầy 207k.
 
 ### 4.3 "Thêm vào kho học" từ từ điển — cơ chế học từ KHÔNG có trong bài
 
