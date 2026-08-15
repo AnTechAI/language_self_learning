@@ -835,3 +835,94 @@ select.input {
   color: var(--ink-3);
   font-size: 13px;
 }
+
+/* ============ Modal (GĐ 5) — tài khoản & đồng bộ ============ */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(23, 35, 61, 0.45);
+  backdrop-filter: blur(2px);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 9vh 16px 16px;
+}
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 18px 48px rgba(23, 35, 61, 0.18);
+  width: 100%;
+  max-width: 400px;
+  padding: 18px 20px 16px;
+}
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.modal-head h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.modal-x {
+  border: 0;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 15px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+.modal-x:hover {
+  background: var(--surface-2);
+}
+.error {
+  color: #dc2626;
+  font-size: 13px;
+  margin: 6px 0 0;
+}
+.account-form label {
+  display: block;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.account-form input {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+.account-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+.account-info p {
+  margin: 4px 0;
+}
+.sync-status {
+  font-size: 13px;
+  color: var(--ink-2);
+  padding: 6px 0;
+}
+.sync-synced {
+  color: #0ea5e9;
+  font-weight: 600;
+}
+.sync-syncing {
+  color: var(--brand);
+  font-weight: 600;
+}
+.sync-error {
+  color: #dc2626;
+  font-weight: 600;
+}

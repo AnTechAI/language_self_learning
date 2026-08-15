@@ -13,10 +13,17 @@ không mất khi đổi máy. Ngoài ra: proxy Free Dictionary API (chống rate
 - **API chuẩn REST** — FastAPI tự sinh OpenAPI docs tại `/docs` (thân thiện tác giả).
 - Tách frontend/backend → có thể phát triển app mobile sau này dùng chung API.
 
-## 3. Hiện trạng (GĐ 0)
+## 3. Hiện trạng (GĐ 5 — ĐÃ LÀM ✅)
 
-- `main.py` — app FastAPI, endpoint `GET /health` → `{"status":"ok",...}`.
-- Chạy: `npm run api` (uvicorn, port 8000).
+- `apps/api/` — FastAPI đầy đủ: auth + sync + proxy từ điển (xem §4).
+  - Chạy: `npm run api` (uvicorn, port 8000) · docs tại `/docs`.
+  - Test: `python -m pytest apps/api/test_api.py -q` (13 test: auth + merge LWW + soft-delete + proxy).
+- `apps/web/` — nút **⚙️ Tài khoản & đồng bộ** trên header (AccountModal):
+  đăng ký/đăng nhập, đồng bộ ngay, tự push 2s sau mỗi thay đổi khi đã đăng nhập.
+  Logic thuần + 6 vitest ở `src/lib/sync.ts` (buildPushBody/mergePull).
+
+> Ghi chú: sync áp dụng cho **khóa học đang mở** (mỗi dòng có `course_id`);
+> client không cần đổi máy là xong — pull về gộp theo `updated_at` rồi push tiếp.
 
 ## 4. Thiết kế đích (GĐ 5)
 
@@ -48,11 +55,16 @@ Nguyên tắc:
 - Client vẫn chạy offline hoàn toàn; sync chạy nền khi có mạng.
 - `deleted` đánh dấu xóa (soft delete) để đồng bộ được.
 - Xung đột cùng lúc sửa: bản `updatedAt` lớn hơn thắng + giữ bản cũ ở `entries.history`.
+- **Lưu ý đồng hồ thiết bị:** LWW dùng timestamp ISO utc — nếu máy bạn để giờ sai, dữ
+  liệu local có thể bị xem là cũ. Đủ dùng cho nhóm bạn bè; khi cần chặt chẽ mới đổi
+  sang sequence server (serverCursor).
+- **DB nằm ở `data/api.db`** (git-ignored, backup riêng; đổi bằng env `API_DB`).
 
 ### 4.3 Auth
 
-- JWT (hoặc token dạng `user_id:random` lưu hashed) — đủ cho nhóm bạn bè.
-- Mật khẩu hash bằng `bcrypt`/`argon2` — KHÔNG lưu plaintext.
+- **JS:** pbkdf2_hmac (sha256, 210k vòng — stdlib, không cần bcrypt).
+- **Token:** `secrets.token_hex(24)` trả client; lưu **SHA-256** của token (DB lộ không lấy lại được token). Header `Authorization: Bearer <token>`.
+- **Cảnh báo:** invalidaToken khi logout — nếu DB bị đọc lén, token hash vô dụng.
 - `HTTPS` bắt buộc khi deploy thật.
 
 ### 4.4 Định dạng payload (types đã có ở packages/shared)

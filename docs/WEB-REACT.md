@@ -78,6 +78,24 @@ apps/web/
 - **Dev**: plugin tắt SW (mặc định) — `npm run dev` không bị ảnh hưởng; chỉ
   bản build/preview có SW. Sau khi build mới, trình duyệt autoUpdate tự nạp lại.
 
+### Đồng bộ (GĐ 5) — `src/lib/sync.ts` + AccountModal
+
+- **Local-first**: app vẫn chạy offline 100%; sync chỉ chạy khi NGƯỜI DÙNG đăng nhập
+  (nút ⚙️ tài khoản trên header). Không bao giờ gọi fetch khi chưa có token →
+  test/smoke không đụng mạng.
+- **2 phần tách nhau**: `ApiClient` (gọi REST thuần fetch) + hàm thuần
+  `buildPushBody`/`mergePull` (dễ test, 6 vitest). Merge **LWW theo updatedAt**
+  (muộn hơn thắng), lọc theo `courseId` đang mở, soft-delete qua `deleted`.
+- **updatedAt của entry** không nằm trong WordEntry (tránh migrate IDB schema) —
+  lưu map riêng ở meta key `sync/updatedAt` (`${courseId}␟${id}` → ISO).
+- **Push tự động**: `saveEntries/saveDaily/saveHistory` gọi `markDirty()` →
+  debounce 2s (module timer) → `pushLocal()`. Chỉ khi đã login.
+- **`syncNow()`** (nút "Đồng bộ ngay"): pull từ cursor (`sync/cursor` meta) →
+  `mergePull` → ghi IDB → push tiếp local mới hơn. Status: off/idle/syncing/synced/error.
+- **Token** lưu localStorage (`el_sync_account`) — không lưu mật khẩu; deviceId riêng
+  (`el_sync_device`). Base URL: `VITE_API_URL` (mặc định `http://localhost:8000`).
+- **Lưu ý:** chỉ sync khóa đang mở; payload per-entry nên tự động hòa khi mở khóa khác.
+
 ### Lưu ý khác (dữ liệu & smoke test)
 
 - **`runTx` trả mảng kết quả** → 1 request phải destructure: `const [x] = await runTx(...)`.

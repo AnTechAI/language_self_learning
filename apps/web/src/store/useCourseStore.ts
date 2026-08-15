@@ -27,11 +27,28 @@ import {
   type GameType,
 } from '../lib/games';
 import { normalize, uid } from '../lib/format';
+import {
+  ApiClient,
+  buildPushBody,
+  emptyUpdatedAtMap,
+  historyKey,
+  loadAccount,
+  mergePull,
+  newDeviceId,
+  saveAccount,
+  syncNowIso,
+  type UpdatedAtMap,
+} from '../lib/sync';
+import type { Account } from '@english/shared';
 
 export type Tab = 'home' | 'vocab' | 'games' | 'stats';
 
 const repo = createRepo();
 let toastTimer = 0;
+let pushTimer = 0;
+const api = new ApiClient();
+const UPDATED_AT_KEY = 'sync/updatedAt';
+const SYNC_CURSOR_KEY = 'sync/cursor';
 
 interface CourseStore {
   /* ---- dữ liệu ---- */
@@ -52,6 +69,16 @@ interface CourseStore {
   session: GameSession | null;
   toast: string | null;
   lessonManifestReady: boolean;
+
+  /* ---- tài khoản & đồng bộ (GĐ 5) ---- */
+  account: Account | null;
+  syncStatus: 'off' | 'idle' | 'syncing' | 'synced' | 'error';
+  syncError: string | null;
+  lastSyncAt: string | null;
+  login(email: string, password: string): Promise<void>;
+  register(email: string, password: string): Promise<void>;
+  logout(): Promise<void>;
+  syncNow(): Promise<void>;
 
   /* ---- hành động ---- */
   boot(): Promise<void>;
@@ -101,6 +128,57 @@ export const useCourseStore = create<CourseStore>()((set, get) => {
     set((s) => ({ session: s.session ? { ...s.session } : null }));
   };
 
+  /* ================= đồng bộ (GĐ 5) ================= */
+
+  const touchUpdatedAt = async (mutate: (m: UpdatedAtMap) => void): Promise<void> => {
+    const cur =
+      ((await repo.meta.get(UPDATED_AT_KEY)) as UpdatedAtMap | undefined) ?? emptyUpdatedAtMap();
+    mutate(cur);
+    await repo.meta.set(UPDATED_AT_KEY, cur);
+  };
+
+  const markDirty = (): void => {
+    if (!get().account) return;
+    clearTimeout(pushTimer);
+    pushTimer = window.setTimeout(() => {
+      void pushLocal();
+    }, 2000);
+  };
+
+  /** Push toàn bộ dữ liệu khóa học đang mở lên server (LWW theo updatedAt). */
+  const pushLocal = async (): Promise<void> => {
+    const { account, course } = get();
+    if (!account || !course) return;
+    try {
+      const map =
+        ((await repo.meta.get(UPDATED_AT_KEY)) as UpdatedAtMap | undefined) ?? emptyUpdatedAtMap();
+      const now = syncNowIso();
+      const body = buildPushBody(
+        account.deviceId,
+        '',
+        course.id,
+        get().entries,
+        get().daily,
+        get().history,
+        map,
+        now,
+      );
+      const key = (a: string, b: string) => `${a}\u0000${b}`;
+      for (const e of body.entries) map.entries[key(e.courseId, e.word)] = now;
+      for (const d of body.daily) map.daily[key(d.courseId, d.date)] = now;
+      for (const h of body.history)
+        map.history[
+          historyKey(h.courseId, { ts: h.ts, game: h.game, wordId: h.word, correct: h.correct })
+        ] = now;
+      const res = await api.push(body);
+      await repo.meta.set(UPDATED_AT_KEY, map);
+      if (res.serverCursor) await repo.meta.set(SYNC_CURSOR_KEY, res.serverCursor);
+      set({ syncStatus: 'synced', lastSyncAt: new Date().toISOString() });
+    } catch (e) {
+      set({ syncStatus: 'error', syncError: e instanceof Error ? e.message : 'Đồng bộ lỗi' });
+    }
+  };
+
   return {
     booted: false,
     course: null,
@@ -117,13 +195,19 @@ export const useCourseStore = create<CourseStore>()((set, get) => {
     session: null,
     toast: null,
     lessonManifestReady: false,
+    account: null,
+    syncStatus: 'off',
+    syncError: null,
+    lastSyncAt: null,
 
     /* ================= boot / course ================= */
 
     boot: async () => {
       await migrateIfNeeded().catch(() => {}); // GĐ 2: localStorage → IDB (1 lần)
       const settings = await repo.settings.get();
-      set({ settings, booted: true });
+      const account = loadAccount();
+      if (account) api.token = account.token;
+      set({ settings, booted: true, account, syncStatus: account ? 'idle' : 'off' });
       if (settings.courseId && courseById(settings.courseId)) {
         await get().enterCourse(settings.courseId);
       }
@@ -214,19 +298,39 @@ export const useCourseStore = create<CourseStore>()((set, get) => {
 
     saveEntries: async () => {
       const { course, entries } = get();
-      if (course) await repo.entries.replaceAll(course.id, entries);
+      if (course) {
+        await repo.entries.replaceAll(course.id, entries);
+        await touchUpdatedAt((m) => {
+          const now = syncNowIso();
+          for (const e of entries) m.entries[`${course.id}\u0000${e.id}`] = now;
+        });
+        markDirty();
+      }
     },
     saveDaily: async () => {
       const { course, daily } = get();
-      if (course) await repo.daily.replaceAll(course.id, daily);
+      if (course) {
+        await repo.daily.replaceAll(course.id, daily);
+        await touchUpdatedAt((m) => {
+          const now = syncNowIso();
+          for (const day of Object.keys(daily)) m.daily[`${course.id}\u0000${day}`] = now;
+        });
+        markDirty();
+      }
     },
     saveHistory: async () => {
       const { course, history } = get();
-      if (course)
+      if (course) {
         await repo.history.replaceAll(
           course.id,
           history.map((h) => ({ id: uid(), ...h })),
         );
+        await touchUpdatedAt((m) => {
+          const now = syncNowIso();
+          for (const h of history) m.history[historyKey(course.id, h)] = now;
+        });
+        markDirty();
+      }
     },
 
     saveSettings: async () => {
@@ -425,6 +529,94 @@ export const useCourseStore = create<CourseStore>()((set, get) => {
     replayGame: () => {
       const s = get().session;
       if (s) get().startGame(s.type);
+    },
+
+    /* ================= tài khoản & đồng bộ (GĐ 5) ================= */
+
+    login: async (email, password) => {
+      set({ syncStatus: 'syncing', syncError: null });
+      try {
+        const res = await api.login(email.trim(), password);
+        const account: Account = { email: res.email, token: res.token, deviceId: newDeviceId() };
+        api.token = account.token;
+        saveAccount(account);
+        set({ account, syncStatus: 'idle' });
+        await get().syncNow();
+      } catch (e) {
+        set({ syncStatus: 'error', syncError: e instanceof Error ? e.message : 'Đăng nhập lỗi' });
+        throw e;
+      }
+    },
+
+    register: async (email, password) => {
+      set({ syncStatus: 'syncing', syncError: null });
+      try {
+        const res = await api.register(email.trim(), password);
+        const account: Account = { email: res.email, token: res.token, deviceId: newDeviceId() };
+        api.token = account.token;
+        saveAccount(account);
+        set({ account, syncStatus: 'idle' });
+        await get().syncNow();
+      } catch (e) {
+        set({ syncStatus: 'error', syncError: e instanceof Error ? e.message : 'Đăng ký lỗi' });
+        throw e;
+      }
+    },
+
+    logout: async () => {
+      const acc = get().account;
+      if (acc) {
+        try {
+          await api.logout();
+        } catch {
+          /* mất mạng — vẫn đăng xuất cục bộ */
+        }
+      }
+      api.token = null;
+      saveAccount(null);
+      clearTimeout(pushTimer);
+      set({ account: null, syncStatus: 'off', syncError: null, lastSyncAt: null });
+    },
+
+    syncNow: async () => {
+      const { account, course } = get();
+      if (!account) return;
+      set({ syncStatus: 'syncing', syncError: null });
+      try {
+        const cursor = ((await repo.meta.get(SYNC_CURSOR_KEY)) as string | undefined) ?? '';
+        const pull = await api.pull(cursor);
+        const localMap =
+          ((await repo.meta.get(UPDATED_AT_KEY)) as UpdatedAtMap | undefined) ??
+          emptyUpdatedAtMap();
+        if (course) {
+          const merged = mergePull(
+            course.id,
+            get().entries,
+            get().daily,
+            get().history,
+            localMap,
+            pull,
+          );
+          await repo.entries.replaceAll(course.id, merged.entries);
+          await repo.daily.replaceAll(course.id, merged.daily);
+          await repo.history.replaceAll(
+            course.id,
+            merged.history.map((h) => ({ id: uid(), ...h })),
+          );
+          await repo.meta.set(UPDATED_AT_KEY, merged.map);
+          if (pull.serverCursor) await repo.meta.set(SYNC_CURSOR_KEY, pull.serverCursor);
+          set({ entries: merged.entries, daily: merged.daily, history: merged.history });
+        }
+        // Push tiếp dữ liệu local mới hơn server (sau khi đã merge pull)
+        // — pushLocal tự set syncStatus (synced / error)
+        if (course) {
+          await pushLocal();
+        } else {
+          set({ syncStatus: 'synced', lastSyncAt: new Date().toISOString() });
+        }
+      } catch (e) {
+        set({ syncStatus: 'error', syncError: e instanceof Error ? e.message : 'Đồng bộ lỗi' });
+      }
     },
   };
 });

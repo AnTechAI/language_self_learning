@@ -41,3 +41,5 @@ jobs:
       - name: Kiểm tra app import + health
         run: |
           python -c "import sys; sys.path.insert(0,'apps'); from api.main import app; assert app.title; print('FastAPI OK:', app.title)"
+      - name: Test API (auth + sync + dictionary proxy)
+        run: python -m pytest apps/api/test_api.py -q

@@ -41,7 +41,7 @@ data/scripts ────────────────── 5 tool sinh 
 | **2** | localStorage → IndexedDB (migration tự động, repo pattern — `apps/web/src/db/`, 12 test) | ✅ XONG |
 | **3** | Port từng màn hình sang React (Picker → Home/Lessons → Games → Vocab → Stats) — zustand + design system mới + smoke test | ✅ XONG (xem docs/DESIGN.md) |
 | **4** | PWA offline (vite-plugin-pwa: manifest + icon + SW precache asset build + legacy, runtime cache bank/lessons — dùng được khi mất mạng, cài đặt như app) | ✅ XONG (đã di dời tools → data/scripts + CLI chung) |
-| **5** | Backend FastAPI: tài khoản + sync đa người dùng + proxy từ điển | ⏳ |
+| **5** | Backend FastAPI: tài khoản + sync đa người dùng + proxy từ điển | ✅ XONG (xem docs/API-SYNC.md) |
 
 ## 4. Quyết định kỹ thuật
 

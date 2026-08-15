@@ -9,10 +9,14 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+.pytest_cache/
 
 # ===== Dữ liệu thô & sinh ra (KHÔNG commit) =====
 # 41MB từ điển gốc — giữ ngoài git
 data/raw/
+# DB API (sqlite) — giữ ngoài git (backup riêng)
+data/*.db*
+data/*.sqlite*
 # 25MB từ điển offline chunk + bài học — sinh lại bằng data/scripts (xem docs/DATA-PIPELINES.md)
 apps/web/public/legacy/js/bank/
 apps/web/public/legacy/js/lessons/

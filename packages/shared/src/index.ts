@@ -162,3 +162,57 @@ export interface SyncPayload {
   updatedAt: string; // ISO
   schemaVersion: number;
 }
+
+/* ============ GĐ 5 — API sync (payload per-course, merge theo updatedAt) ============ */
+
+/** Một entry trên server (word = entry.id — khóa ổn định trong khóa học) */
+export interface SyncEntry {
+  courseId: string;
+  word: string;
+  dataJson: string;
+  updatedAt: string; // ISO (micro giây) — muộn hơn thắng
+  deleted?: boolean;
+}
+
+/** Một dòng daily (ngày học) */
+export interface SyncDaily {
+  courseId: string;
+  date: string; // 'YYYY-MM-DD'
+  entryIds: string[];
+  updatedAt: string;
+}
+
+/** Một dòng lịch sử game */
+export interface SyncHistory {
+  courseId: string;
+  ts: string;
+  game: string;
+  word: string; // entry id
+  correct: boolean;
+  updatedAt: string;
+}
+
+/** Payload push lên server */
+export interface SyncPushBody {
+  clientId: string;
+  deviceName?: string;
+  entries: SyncEntry[];
+  daily: SyncDaily[];
+  history: SyncHistory[];
+  updatedAt: string;
+}
+
+/** Delta pull về từ server (history có id server để tránh trùng lặp local) */
+export interface SyncPullResult {
+  entries: SyncEntry[];
+  daily: SyncDaily[];
+  history: (SyncHistory & { id: number })[];
+  serverCursor: string;
+}
+
+/** Tài khoản đã đăng nhập (lưu localStorage — token, không lưu mật khẩu) */
+export interface Account {
+  email: string;
+  token: string;
+  deviceId: string;
+}

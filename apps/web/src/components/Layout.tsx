@@ -1,7 +1,9 @@
 /**
  * Layout.tsx — Khung app: header (brand + streak) + main + bottom nav.
  */
+import { useState } from 'react';
 import type { ReactNode } from 'react';
+import { AccountModal } from '../features/account/AccountModal';
 import { computeStreak } from '../lib/learning';
 import { todayStr } from '../lib/format';
 import { useCourseStore, type Tab } from '../store/useCourseStore';
@@ -20,6 +22,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const exitCourse = useCourseStore((s) => s.exitCourse);
   const daily = useCourseStore((s) => s.daily);
   const streak = computeStreak(daily, todayStr());
+  const [showAccount, setShowAccount] = useState(false);
 
   return (
     <div className="app">
@@ -33,6 +36,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           {course?.icon || '🎓'} <span>English Learning</span>
         </button>
         <div className="spacer" />
+        <button
+          className="chip"
+          style={{ fontWeight: 700 }}
+          onClick={() => setShowAccount(true)}
+          title="Tài khoản & đồng bộ"
+        >
+          ⚙️
+        </button>
         {streak > 0 ? (
           <span className="stat" title="Số ngày học liên tiếp">
             🔥 <b>{streak}</b>
@@ -50,6 +61,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         ) : null}
       </header>
       <main className="app-main">{children}</main>
+      {showAccount ? <AccountModal onClose={() => setShowAccount(false)} /> : null}
       {course ? (
         <nav className="app-nav">
           {TABS.map((t) => (
