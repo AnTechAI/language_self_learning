@@ -34,14 +34,14 @@ export function Button({
 }: {
   children: ReactNode;
   variant?: 'primary' | 'soft' | 'ghost' | 'danger';
-  size?: 'sm';
+  size?: 'sm' | 'lg';
   onClick?: () => void;
   disabled?: boolean;
   className?: string;
   title?: string;
   style?: CSSProperties;
 }) {
-  const cls = ['btn', variant !== 'primary' ? variant : '', size ? 'sm' : '', className]
+  const cls = ['btn', variant !== 'primary' ? variant : '', size ? size : '', className]
     .filter(Boolean)
     .join(' ');
   return (
@@ -71,6 +71,55 @@ export function ProgressBar({ pct }: { pct: number }) {
   return (
     <div className="progress-track">
       <div className="progress-fill" style={{ width: `${Math.min(100, Math.max(0, pct))}%` }} />
+    </div>
+  );
+}
+
+/** Vòng tiến độ (SVG) — hiệu ứng đếm nhẹ, dùng cho hero/hoàn tất */
+export function ProgressRing({
+  pct,
+  size = 84,
+  stroke = 9,
+  children,
+}: {
+  pct: number;
+  size?: number;
+  stroke?: number;
+  children?: ReactNode;
+}) {
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const p = Math.min(100, Math.max(0, pct));
+  return (
+    <div
+      className="ring-wrap"
+      style={{ width: size, height: size }}
+      role="img"
+      aria-label={`${p}%`}
+    >
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <circle
+          className="ring-track"
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          strokeWidth={stroke}
+        />
+        <circle
+          className="ring-fill"
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          strokeWidth={stroke}
+          strokeDasharray={c}
+          strokeDashoffset={c - (c * p) / 100}
+          strokeLinecap="round"
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </svg>
+      <div className="ring-label">{children}</div>
     </div>
   );
 }

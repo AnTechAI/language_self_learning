@@ -1,7 +1,16 @@
 :root {
   color-scheme: light;
 }
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
 body {
   margin: 0;
-  background: #f6f8fa;
+  background: var(--bg);
+}
+::selection {
+  background: color-mix(in srgb, var(--brand) 28%, transparent);
 }

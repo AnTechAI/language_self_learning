@@ -23,6 +23,12 @@ export function PickerScreen() {
           <span className="chev">›</span>
         </button>
       ))}
+      <div className="picker-features">
+        <span className="ft">📚 Bài học theo chủ đề</span>
+        <span className="ft">🎮 Trò chơi ôn tập</span>
+        <span className="ft">📖 Từ điển 207k từ</span>
+        <span className="ft">📴 Học ngoại tuyến</span>
+      </div>
     </div>
   );
 }

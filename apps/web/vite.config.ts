@@ -16,7 +16,7 @@ export default defineConfig({
       manifest: false, // dùng public/manifest.webmanifest tĩnh
       injectRegister: 'auto',
       workbox: {
-        globPatterns: ['**/*.{js,css,html,png,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,png,webmanifest,woff2}'],
         // KHÔNG precache bank 25MB + lessons on-demand (chỉ runtime cache)
         globIgnores: ['**/legacy/js/bank/**', '**/legacy/js/lessons/**'],
         navigateFallback: '/index.html',
