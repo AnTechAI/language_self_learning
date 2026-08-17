@@ -204,3 +204,34 @@ Dark mode giữ cấu trúc token (đêm mực), chỉ dịch hue cho hợp gi�
   'Kho từ vựng').
 - Mỗi màn hình vẫn là 1 file, lazy tải dữ liệu đúng nhu cầu (hsk.json chỉ load
   khi mở tab từ điển zh).
+
+---
+
+# Tách 2 giao diện (English v3 / Chinese v4) — 2025
+
+> Sau khi trải nghiệm cả hai look, quyết định: **KHÔNG dùng chung shell nữa**.
+> Mỗi khóa có giao diện riêng hoàn toàn, mở ở cấp route:
+
+- **Tiếng Anh** → `AppShell` (Design v3 "Từ điển giấy": giấy ấm, nav dưới,
+  max-width 720, Lora + Be Vietnam Pro). Đã hoàn trả nguyên trạng.
+- **Tiếng Trung** → `features/zh/ZhRoot.tsx` (Design v4 theo `chinese-app-ui.jsx`:
+  rail trái 5 tab **Từ điển · Flashcard · Luyện viết · Ôn tập · Tiến độ**,
+  nền trắng, ấn đỏ con dấu viền, ngọc jade, Hán tự serif hệ thống). Không có
+  trang "Hôm Nay": mở khóa là thẳng vào Từ điển.
+  - **Từ vựng theo HSK**: mỗi cấp HSK 1–6 chia **单字 (từ đơn)** và
+    **词语 (từ ghép)**; mỗi phần chia **bài học 20 mục**. Số liệu thật từ
+    `hsk.json`: từ đơn 1.050 (212/176/154/154/170/184), từ ghép 4.313.
+  - Dữ liệu tính ngay tại client từ hsk.json — không sinh thêm file.
+  - Không SM-2 streak 🔥; SRS vẫn dùng (Ôn tập tab), lịch sử theo daily.
+
+## Tách giao diện thế nào (kỹ thuật)
+
+- `App.tsx`: `if (course?.seed === 'zh') return <ZhRoot/>` — nằm TRƯỚC mọi
+  routing của shell tiếng Anh. Picker chọn khóa là điểm rẽ chung.
+- CSS zh hoàn toàn **scoped trong `.zh-app`** (biến `--seal`/`--jade`/... khai
+  báo trên nút gốc) → không cần đụng sheet tiếng Anh, không rò rỉ class.
+- Tab cũ `zhView`/các màn zh cũ (`ZhDictScreen`, `ReviewScreen`,
+  `WritingScreen`, `ToneQuizScreen`, `GrammarScreen`) giữ nguyên trong repo
+  nhưng không còn được route — bản zh mới tự dựng view riêng trong `ZhRoot`.
+- Smoke test e2e không đổi: nhận diện khóa Tiếng Anh qua shell cũ (v3) — zh
+  là nhánh riêng, không ảnh hưởng.

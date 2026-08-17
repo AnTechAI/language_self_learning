@@ -120,6 +120,7 @@ Bốn module riêng của khóa tiếng Trung (en không bị ảnh hưởng —
 | Màn hình | File | Chức năng | Dữ liệu (lazy) |
 |---|---|---|---|
 | Từ vựng → **Từ điển** | `ZhDictScreen.tsx` | Tra Hán tự / pinyin (có hoặc không dấu) / Việt / Anh / bộ thủ; lọc cấp; chi tiết từ (phồn thể, bộ thủ, số nét từng chữ, TTS, bookmark ⭐ vào kho) | `zh-dict/hsk.json` (5.363 từ) |
+| ~~Từ vựng → Từ điển~~ | ~~`ZhDictScreen.tsx`~~ | ~~(Đã thay thế — bản cũ của giao diện zh trước khi tách UI)~~ | — |
 | Ôn tập → **Ôn tập hôm nay** | `ReviewScreen.tsx` | **SRS SM-2** (Lại/Khó/Tốt/Dễ) — hàng đợi = từ đến hạn + từ mới; đánh giá cập nhật lịch ôn qua `applySrs` | `entries` (kho) |
 | Ôn tập → **Luyện viết** | `WritingScreen.tsx` | **Hanzi Writer** (thư viện SVG) — xem animation thứ tự nét + vẽ theo, chấm đúng/sai từng nét | `zh-dict/zh-strokes.json` (1.799 chữ) |
 | Ôn tập → **Nghe & thanh điệu** | `ToneQuizScreen.tsx` | TTS đọc từ → chọn thanh điệu của chữ được hỏi (đường cong 5 thanh); ghi lịch sử game `tone` | `entries` |

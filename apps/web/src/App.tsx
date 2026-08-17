@@ -9,9 +9,8 @@ import { HomeScreen } from './features/home/HomeScreen';
 import { LessonStudyScreen } from './features/study/LessonStudyScreen';
 import { PickerScreen } from './features/picker/PickerScreen';
 import { StatsScreen } from './features/stats/StatsScreen';
-import { GrammarScreen } from './features/zh/GrammarScreen';
-import { ZhDictScreen } from './features/zh/ZhDictScreen';
-import { VocabScreen } from './features/vocab/VocabScreen';
+import { ZhRoot } from './features/zh/ZhRoot';
+import { VocabScreen, WordDetail } from './features/vocab/VocabScreen';
 import { useCourseStore } from './store/useCourseStore';
 
 export default function App() {
@@ -20,17 +19,40 @@ export default function App() {
   const course = useCourseStore((s) => s.course);
   const tab = useCourseStore((s) => s.tab);
   const study = useCourseStore((s) => s.study);
+  const detailId = useCourseStore((s) => s.detailId);
   const toast = useCourseStore((s) => s.toast);
 
   useEffect(() => {
     if (!booted) void boot();
   }, [booted, boot]);
 
+  // ===== GIAO DIỆN RIÊNG CHO TIẾNG TRUNG (Design v4 — chinese-app-ui.jsx) =====
+  // Tách hoàn toàn khỏi shell tiếng Anh: shell riêng + 5 tab riêng
+  if (course?.seed === 'zh') {
+    return (
+      <>
+        <ZhRoot />
+        <Toast msg={toast} />
+      </>
+    );
+  }
+
+  // ===== GIAO DIỆN TIẾNG ANH (Design v3 — giấy ấm) =====
+
   // Các PAGE toàn màn hình — hiện đè trước mọi tab
   if (study)
     return (
       <>
         <LessonStudyScreen />
+        <Toast msg={toast} />
+      </>
+    );
+  if (detailId)
+    return (
+      <>
+        <div className="detail-page">
+          <WordDetail id={detailId} />
+        </div>
         <Toast msg={toast} />
       </>
     );
@@ -41,11 +63,9 @@ export default function App() {
   } else if (tab === 'home') {
     screen = <HomeScreen />;
   } else if (tab === 'vocab') {
-    screen = course.seed === 'zh' ? <ZhDictScreen /> : <VocabScreen />;
+    screen = <VocabScreen />;
   } else if (tab === 'games') {
     screen = <GamesScreen />;
-  } else if (tab === 'grammar') {
-    screen = course.seed === 'zh' ? <GrammarScreen /> : <HomeScreen />;
   } else if (tab === 'stats') {
     screen = <StatsScreen />;
   }
