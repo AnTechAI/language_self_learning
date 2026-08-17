@@ -6,8 +6,9 @@ import { useEffect, useState } from 'react';
 import { ensureLessonsManifest, type LessonMeta } from '../../data/lessons';
 import { useCourseStore } from '../../store/useCourseStore';
 
-/** Tải danh sách bài học (en) — tự refresh khi manifest sẵn sàng */
+/** Tải danh sách bài học theo KHÓA — tự refresh khi manifest sẵn sàng */
 export function useLessons(): LessonMeta[] {
+  const course = useCourseStore((s) => s.course);
   const ready = useCourseStore((s) => s.lessonManifestReady);
   const refresh = useCourseStore((s) => s.refreshLessonsManifest);
   const [list, setList] = useState<LessonMeta[]>([]);
@@ -17,10 +18,10 @@ export function useLessons(): LessonMeta[] {
       void refresh();
       return;
     }
-    ensureLessonsManifest()
+    ensureLessonsManifest(course ? course.seed : undefined)
       .then(setList)
       .catch(() => setList([]));
-  }, [ready, refresh]);
+  }, [ready, refresh, course]);
 
   return list;
 }

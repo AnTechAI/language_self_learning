@@ -5,7 +5,8 @@
  */
 import { useEffect, useState } from 'react';
 import { Button, Card, Chip, PosChips } from '../../components/ui';
-import { countRevealable, maskText } from '../../lib/format';
+import { countRevealable, maskText, normalize } from '../../lib/format';
+import { stableSense } from '../../lib/games';
 import type { LessonMeta } from '../../data/lessons';
 import { useCourseStore } from '../../store/useCourseStore';
 import { useLessons } from '../home/useLessons';
@@ -33,9 +34,21 @@ export function GamesScreen() {
         }
         return;
       }
-      if ((s.type === 'synonym' || s.type === 'antonym') && s.current) {
-        const i = ['1', '2', '3', '4'].indexOf(e.key);
-        if (i >= 0 && i < s.current.options.length) st.answerChoice(s.current.options[i]);
+      if (s.type === 'synonym' || s.type === 'antonym') {
+        if (s.current) {
+          const i = ['1', '2', '3', '4'].indexOf(e.key);
+          if (i >= 0 && i < s.current.options.length) st.answerChoice(s.current.options[i]);
+        }
+        return;
+      }
+      // Dịch nghĩa: sau khi trả lời, Enter → câu tiếp theo.
+      // Bỏ qua Enter xuất phát từ INPUT (Enter = Kiểm tra) và BUTTON (Enter = click nút).
+      if (s.type === 'translate-en' || s.type === 'translate-vi') {
+        const t = e.target as HTMLElement;
+        if (s.answered && e.key === 'Enter' && t.tagName !== 'INPUT' && t.tagName !== 'BUTTON') {
+          e.preventDefault();
+          st.advanceTranslate();
+        }
       }
     };
     document.addEventListener('keydown', onKey);
@@ -46,7 +59,7 @@ export function GamesScreen() {
   if (!session) return <GameMenu />;
 
   if (session.type === 'flashcard') return <FlashcardGame />;
-  if (session.type === 'translate') return <TranslateGame />;
+  if (session.type === 'translate-en' || session.type === 'translate-vi') return <TranslateGame />;
   return <ChoiceGame />;
 }
 
@@ -63,12 +76,13 @@ function GameMenu() {
   if (!course) return null;
 
   const games: {
-    id: 'flashcard' | 'translate' | 'synonym' | 'antonym';
+    id: 'flashcard' | 'translate-en' | 'translate-vi' | 'synonym' | 'antonym';
     ico: string;
     title: string;
     desc: string;
     disabled?: boolean;
     badge?: string;
+    full?: boolean;
   }[] = [
     {
       id: 'flashcard',
@@ -77,16 +91,26 @@ function GameMenu() {
       desc: 'Nhìn mặt trước, đoán mặt sau. Tự lật để kiểm tra.',
     },
     {
-      id: 'translate',
+      id: 'translate-vi',
       ico: '✍️',
-      title: 'Dịch nghĩa',
+      title: 'Dịch nghĩa ' + course.source.label + '–' + course.target.label,
       desc:
-        'Dịch qua lại ' +
-        course.source.label +
-        ' ↔ ' +
-        course.target.label +
+        'Xem từ ' +
+        course.source.label.toLowerCase() +
+        ', gõ nghĩa ' +
+        course.target.label.toLowerCase() +
         '. Gợi ý dần từng chữ.',
     },
+    ...(course.source.code === 'en'
+      ? [
+          {
+            id: 'translate-en' as const,
+            ico: '📖',
+            title: 'Dịch nghĩa Anh–Anh',
+            desc: 'Xem định nghĩa tiếng Anh, gõ từ vựng tương ứng.',
+          },
+        ]
+      : []),
     {
       id: 'synonym',
       ico: '🔁',
@@ -117,7 +141,7 @@ function GameMenu() {
       <Card>
         <h3 style={{ margin: '0 0 8px' }}>Cài đặt phiên ôn tập</h3>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-          {course.seed === 'en' && lessons.length > 0 ? (
+          {lessons.length > 0 ? (
             <>
               <select
                 className="input"
@@ -154,7 +178,7 @@ function GameMenu() {
       <div className="game-grid">
         {games.map((g) => (
           <Card key={g.id} className={g.disabled ? 'disabled' : ''}>
-            <div style={{ fontSize: 34 }}>{g.ico}</div>
+            <div className="gi">{g.ico}</div>
             <h3 style={{ margin: '8px 0 4px' }}>{g.title}</h3>
             <p className="help" style={{ fontSize: 13, margin: 0 }}>
               {g.desc}
@@ -217,7 +241,7 @@ function FlashcardGame() {
   if (session.idx >= session.queue.length) return <Summary />;
 
   const entry = session.queue[session.idx];
-  const s0 = entry.senses?.[0];
+  const s0 = stableSense(entry, session);
   const m = s0?.meaning || {};
 
   return (
@@ -286,7 +310,7 @@ function FlashcardGame() {
   );
 }
 
-/* ================= Dịch nghĩa ================= */
+/* ================= Dịch nghĩa (2 game: nguồn→Anh / nguồn→Việt) ================= */
 
 function TranslateGame() {
   const store = useCourseStore();
@@ -298,14 +322,15 @@ function TranslateGame() {
   if (session.idx >= session.queue.length) return <Summary />;
 
   const entry = session.queue[session.idx];
-  const s0 = entry.senses?.[0];
+  const isEn = session.type === 'translate-en';
+  const s0 = stableSense(entry, session);
   const m = s0?.meaning || {};
-  const dir = session.dir || 't2s';
-  const target = dir === 't2s' ? entry.word : m[course.target.code] || '';
-  const prompt =
-    dir === 't2s'
-      ? m[course.target.code] || ''
-      : `${entry.word}${s0?.pronunciation ? ' · ' + s0.pronunciation : ''}`;
+  /* translate-en: HIỆN định nghĩa tiếng Anh → gõ TỪ VỰNG.
+     translate-vi: HIỆN từ (+IPA) → gõ nghĩa tiếng Việt. */
+  const target = isEn ? entry.word : m[course.target.code] || '';
+  const prompt = isEn
+    ? m['en'] || ''
+    : `${entry.word}${s0?.pronunciation ? ' · ' + s0.pronunciation : ''}`;
 
   const totalChars = countRevealable(target);
   const allRevealed = (session.hints || 0) >= totalChars;
@@ -323,7 +348,14 @@ function TranslateGame() {
 
   return (
     <>
-      <GameHeader title="Dịch nghĩa" ico="✍️" />
+      <GameHeader
+        title={
+          isEn
+            ? 'Dịch nghĩa Anh–Anh'
+            : 'Dịch nghĩa ' + course.source.label + '–' + course.target.label
+        }
+        ico={isEn ? '📖' : '✍️'}
+      />
       <Card>
         <div
           style={{
@@ -335,18 +367,27 @@ function TranslateGame() {
           }}
         >
           <small className="badge">
-            {dir === 't2s'
-              ? `${course.target.label} → ${course.source.label}`
-              : `${course.source.label} → ${course.target.label}`}
+            {isEn
+              ? 'Định nghĩa ' + course.source.label.toLowerCase() + ' → Từ'
+              : course.source.label + ' → ' + course.target.label}
           </small>
         </div>
-        <div style={{ textAlign: 'center', fontSize: 20, fontWeight: 700, margin: '10px 0' }}>
+        <div
+          style={{
+            textAlign: 'center',
+            fontSize: isEn ? 17 : 20,
+            fontWeight: isEn ? 500 : 700,
+            fontStyle: isEn ? 'italic' : 'normal',
+            lineHeight: 1.5,
+            margin: '10px 0',
+          }}
+        >
           {prompt}
         </div>
         <PosChips entry={entry} />
         <div style={{ textAlign: 'center', margin: '16px 0 4px' }}>
           <span className="masked">{masked}</span>
-          {dir === 't2s' && !allRevealed ? (
+          {!allRevealed ? (
             <Button
               variant="ghost"
               size="sm"
@@ -362,6 +403,11 @@ function TranslateGame() {
             💡 Đã hiện hết đáp án!
           </div>
         ) : null}
+        {isEn && !session.answered ? (
+          <small className="help" style={{ display: 'block', textAlign: 'center', marginTop: 8 }}>
+            Đọc định nghĩa rồi gõ từ phù hợp — nhấn <b>Enter</b> kiểm tra.
+          </small>
+        ) : null}
 
         {!session.answered ? (
           <div className="row" style={{ marginTop: 14 }}>
@@ -369,9 +415,7 @@ function TranslateGame() {
               autoFocus
               className="input-answer"
               placeholder={
-                dir === 't2s'
-                  ? 'Gõ từ ' + course.source.label.toLowerCase() + '…'
-                  : 'Gõ nghĩa tiếng Việt…'
+                isEn ? 'Gõ từ tiếng Anh…' : 'Gõ nghĩa ' + course.target.label.toLowerCase() + '…'
               }
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
@@ -383,8 +427,8 @@ function TranslateGame() {
           </div>
         ) : (
           <ResultCard
-            word={entry.word}
-            correctWord={target}
+            word={session.lastAnswer?.word || entry.word}
+            correctWord={session.lastAnswer?.correctWord || target}
             last={session.lastAnswer}
             onNext={next}
           />
@@ -422,16 +466,25 @@ function ChoiceGame() {
           </p>
         </div>
         <div className="options">
-          {cur.options.map((o, i) => (
-            <button
-              key={o}
-              className="option"
-              disabled={session.answered}
-              onClick={() => store.answerChoice(o)}
-            >
-              <span className="opt-key">{i + 1}</span> {o}
-            </button>
-          ))}
+          {cur.options.map((o, i) => {
+            const isRight = session.answered && normalize(o) === normalize(cur.correctWord);
+            const isWrong =
+              session.answered &&
+              !isRight &&
+              normalize(o) === normalize(session.lastAnswer?.chosen || '');
+            return (
+              <button
+                key={o}
+                className={'option' + (isRight ? ' right' : '') + (isWrong ? ' wrong' : '')}
+                disabled={session.answered}
+                onClick={() => store.answerChoice(o)}
+              >
+                <span className="opt-key">{i + 1}</span> {o}
+                {isRight ? <span className="opt-check">✓</span> : null}
+                {isWrong ? <span className="opt-check">✗</span> : null}
+              </button>
+            );
+          })}
         </div>
         {session.answered ? (
           <ResultCard

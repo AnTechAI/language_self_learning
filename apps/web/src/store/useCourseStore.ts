@@ -20,9 +20,14 @@ import {
   buildChoice,
   buildPool,
   checkTranslate,
+  markMissed,
   recordAnswer,
+  requeueIfWrong,
+  stableSense,
   startChoiceSession,
   startSimpleSession,
+  translateTargetCode,
+  unmarkMissed,
   type GameSession,
   type GameType,
 } from '../lib/games';
@@ -42,6 +47,14 @@ import {
 import type { Account } from '@english/shared';
 
 export type Tab = 'home' | 'vocab' | 'games' | 'stats';
+
+/** Phiên học bài: tua từng từ của bài, cuối bài mở màn hoàn tất */
+export interface StudySession {
+  lessonId: string;
+  words: WordEntry[];
+  idx: number;
+  done: boolean;
+}
 
 const repo = createRepo();
 let toastTimer = 0;
@@ -69,6 +82,12 @@ interface CourseStore {
   session: GameSession | null;
   toast: string | null;
   lessonManifestReady: boolean;
+
+  /* ---- Học bài (GĐ 4 — guided walkthrough từng từ) ---- */
+  study: StudySession | null;
+  startLessonStudy(lessonId: string): Promise<void>;
+  nextStudyWord(): void;
+  closeStudy(): void;
 
   /* ---- tài khoản & đồng bộ (GĐ 5) ---- */
   account: Account | null;
@@ -195,6 +214,7 @@ export const useCourseStore = create<CourseStore>()((set, get) => {
     session: null,
     toast: null,
     lessonManifestReady: false,
+    study: null,
     account: null,
     syncStatus: 'off',
     syncError: null,
@@ -252,6 +272,7 @@ export const useCourseStore = create<CourseStore>()((set, get) => {
         lessonFocus: null,
         gameScreen: 'menu',
         session: null,
+        lessonManifestReady: false,
       });
       document.body.dataset.course = id;
       document.body.classList.remove('picker');
@@ -371,7 +392,10 @@ export const useCourseStore = create<CourseStore>()((set, get) => {
     /* ================= lessons ================= */
 
     refreshLessonsManifest: async () => {
-      const manifest = await ensureLessonsManifest().catch(() => []);
+      const course = get().course;
+      const manifest = await ensureLessonsManifest(course ? course.seed : undefined).catch(
+        () => [],
+      );
       set({ lessonManifestReady: manifest.length > 0 });
     },
 
@@ -386,6 +410,27 @@ export const useCourseStore = create<CourseStore>()((set, get) => {
       else if (meta) get().showToast('📘 Bài "' + meta.title + '" đã có sẵn trong kho');
       return added;
     },
+
+    /* ================= Học bài (guided walkthrough) ================= */
+
+    startLessonStudy: async (lessonId) => {
+      await get().pickLesson(lessonId); // gộp từ bài vào kho (idempotent)
+      const words = get().entries.filter((e) => e.lessonId === lessonId);
+      if (!words.length) {
+        get().showToast('Bài học không có từ nào');
+        return;
+      }
+      set({ study: { lessonId, words, idx: 0, done: false } });
+    },
+
+    nextStudyWord: () => {
+      const s = get().study;
+      if (!s) return;
+      if (s.idx < s.words.length - 1) set({ study: { ...s, idx: s.idx + 1 } });
+      else set({ study: { ...s, done: true } });
+    },
+
+    closeStudy: () => set({ study: null }),
 
     /* ================= games ================= */
 
@@ -412,7 +457,19 @@ export const useCourseStore = create<CourseStore>()((set, get) => {
         get().showToast('Chưa có từ nào để ôn');
         return;
       }
-      const session = startSimpleSession(type, pool, qty);
+      // translate-en chỉ giữ từ có định nghĩa tiếng Anh (meaning.en) trên sense hiển thị
+      let usable = pool;
+      if (type === 'translate-en') {
+        usable = pool.filter((e) =>
+          (e.senses || []).some((s) => s.meaning?.en && String(s.meaning.en).trim()),
+        );
+        if (!usable.length) {
+          get().showToast('Chưa có từ nào có định nghĩa tiếng Anh để chơi');
+          return;
+        }
+      }
+      const targetCode = type === 'translate-en' ? 'en' : course.target.code;
+      const session = startSimpleSession(type, usable, qty, targetCode);
       set({ gameScreen: type, session });
     },
 
@@ -424,7 +481,7 @@ export const useCourseStore = create<CourseStore>()((set, get) => {
         get().showToast('Không có từ nào để ôn');
         return;
       }
-      const session = startSimpleSession('flashcard', pool, 0);
+      const session = startSimpleSession('flashcard', pool, 0, course.target.code);
       set({ tab: 'games', gameScreen: 'flashcard', session });
     },
 
@@ -468,7 +525,8 @@ export const useCourseStore = create<CourseStore>()((set, get) => {
         const s = get().session;
         if (!s) return;
         if (s.idx >= s.queue.length) return;
-        buildChoice(s, get().entries);
+        // Nguồn nhiễu = pool của phiên (giữ phạm vi bài học); thiếu thì dùng toàn bộ kho
+        buildChoice(s, get().entries, s.pool || undefined);
       });
     },
 
@@ -493,11 +551,28 @@ export const useCourseStore = create<CourseStore>()((set, get) => {
       if (!entry || s.answered) return;
       const isCorrect = checkTranslate(course, s, entry, userAnswer);
       void get().registerResult(entry.id, isCorrect);
-      void get().recordHistory('translate', entry.id, isCorrect);
+      void get().recordHistory(s.type, entry.id, isCorrect);
+      const sense = stableSense(entry, s);
+      const code = translateTargetCode(course, s.type);
+      // translate-en: đáp án là TỪ VỰNG; translate-vi: nghĩa tiếng Việt
+      const correctWord =
+        s.type === 'translate-en'
+          ? entry.word
+          : (sense?.meaning?.[code] as string | undefined) || '';
       touch(() => {
         s.answered = true;
-        s.lastAnswer = { chosen: userAnswer, correctWord: entry.word, isCorrect };
-        recordAnswer(s, entry, isCorrect);
+        s.lastAnswer = { chosen: userAnswer, correctWord, word: entry.word, isCorrect };
+        // KHÔNG tăng idx tại đây — giữ nguyên câu đang hỏi để màn feedback
+        // hiển thị đúng câu vừa trả lời (prompt + masked + chips); "next" mới tăng.
+        s.total = (s.total || 0) + 1;
+        s.streakNow = isCorrect ? (s.streakNow || 0) + 1 : 0;
+        if (isCorrect) {
+          s.correct = (s.correct || 0) + 1;
+          unmarkMissed(s, entry.id);
+        } else {
+          markMissed(s, entry.id);
+          requeueIfWrong(s, entry);
+        }
       });
     },
 
@@ -512,11 +587,13 @@ export const useCourseStore = create<CourseStore>()((set, get) => {
     advanceTranslate: () => {
       touch(() => {
         const s = get().session;
-        if (!s) return;
+        if (!s || s.idx >= s.queue.length) return;
         s.answered = false;
         s.lastAnswer = undefined;
-        s.dir = Math.random() < 0.5 ? 't2s' : 's2t';
         s.hints = 0;
+        if (s.idx >= s.queue.length - 1)
+          s.idx = s.queue.length; // hết bài → Summary
+        else s.idx++;
       });
     },
 

@@ -4,7 +4,7 @@
 import { useMemo } from 'react';
 import { Card, EmptyState, ProgressBar, Stat } from '../../components/ui';
 import { todayStr } from '../../lib/format';
-import { computeStreak, learnedToday } from '../../lib/learning';
+import { computeStreak, learnedToday, type DailyMap } from '../../lib/learning';
 import { useCourseStore } from '../../store/useCourseStore';
 
 export function StatsScreen() {
@@ -39,7 +39,8 @@ export function StatsScreen() {
   if (!course) return null;
   const gameName: Record<string, string> = {
     flashcard: '🃏 Flashcard',
-    translate: '✍️ Dịch nghĩa',
+    'translate-en': '📖 Dịch nghĩa Anh–Anh',
+    'translate-vi': '✍️ Dịch nghĩa → ' + course.target.label,
     synonym: '🔁 Đồng nghĩa',
     antonym: '↔️ Trái nghĩa',
   };
@@ -61,6 +62,12 @@ export function StatsScreen() {
           </Stat>
         </div>
       </div>
+
+      <Card>
+        <h3 style={{ margin: '0 0 4px' }}>Hoạt động 7 ngày</h3>
+        <small className="help">Số từ đã học mỗi ngày</small>
+        <WeekBars daily={daily} />
+      </Card>
 
       <Card>
         <h3 style={{ margin: '0 0 10px' }}>Kho từ vựng</h3>
@@ -106,5 +113,40 @@ export function StatsScreen() {
         )}
       </Card>
     </>
+  );
+}
+
+/** Biểu đồ hoạt động 7 ngày gần nhất (số từ học mỗi ngày) */
+function WeekBars({ daily }: { daily: DailyMap }) {
+  const days = useMemo(() => {
+    const out: { label: string; n: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = todayStr(d);
+      const label =
+        i === 0 ? 'Nay' : d.toLocaleDateString('vi-VN', { weekday: 'narrow' }).replace('.', '');
+      out.push({ label, n: (daily[key] || []).length });
+    }
+    return out;
+  }, [daily]);
+
+  const max = Math.max(1, ...days.map((d) => d.n));
+  return (
+    <div className="mini-bars">
+      {days.map((d, i) => (
+        <div
+          key={i}
+          className={'bar-col' + (i === 6 ? ' today' : '')}
+          title={`${d.label}: ${d.n} từ`}
+        >
+          <div
+            className={'bar' + (d.n ? '' : ' zero')}
+            style={{ height: `${(d.n / max) * 100}%` }}
+          />
+          <span className="bar-label">{d.label}</span>
+        </div>
+      ))}
+    </div>
   );
 }

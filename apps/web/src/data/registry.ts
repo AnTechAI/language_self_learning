@@ -49,7 +49,8 @@ export type ExtraSeedRow = [
 interface Registry {
   bankManifest: string[];
   bankChunks: Map<string, BankRow[]>;
-  lessonManifest: LessonMeta[];
+  lessonManifest: LessonMeta[]; // khóa TIẾNG ANH
+  zhLessonManifest: LessonMeta[]; // khóa TIẾNG TRUNG (HSK)
   lessons: Map<string, LessonData>;
 }
 
@@ -57,6 +58,7 @@ const reg: Registry = {
   bankManifest: [],
   bankChunks: new Map(),
   lessonManifest: [],
+  zhLessonManifest: [],
   lessons: new Map(),
 };
 
@@ -79,6 +81,9 @@ export function initShim(): Registry {
     },
     lessonsInit: (list: LessonMeta[]) => {
       reg.lessonManifest = Array.isArray(list) ? list : [];
+    },
+    zhLessonsInit: (list: LessonMeta[]) => {
+      reg.zhLessonManifest = Array.isArray(list) ? list : [];
     },
     lessonsRegister: (file: string, data: LessonData) => {
       reg.lessons.set(file, data || { tag: '', words: [] });

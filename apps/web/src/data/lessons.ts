@@ -1,6 +1,10 @@
 /**
  * lessons.ts — Bài học theo nhu cầu (port từ legacy lesson-loader.js).
  * Tải ĐÚNG file bài người dùng chọn; gộp từ vào kho (idempotent, gắn lessonId + tag).
+ *
+ * Hai khóa học, mỗi khóa 1 manifest + 1 dãy file bài riêng:
+ *   en → manifest.js + lesson-NNN.js (shim: lessonsInit)
+ *   zh → manifest-zh.js + lesson-zh-NNN.js (shim: zhLessonsInit, nguồn HSK)
  */
 import type { WordEntry } from '@english/shared';
 import { initShim, loadScript, once, reg, LEGACY_JS_BASE, type ExtraSeedRow, type LessonMeta } from './registry';
@@ -8,26 +12,31 @@ import { toEntry } from './seed';
 
 const pending = new Map<string, Promise<void>>();
 
-/** Tải manifest bài học (nếu chưa có) — trả danh sách bài */
-export async function ensureLessonsManifest(): Promise<LessonMeta[]> {
+/** Tải manifest bài học của KHÓA (nếu chưa có) — trả danh sách bài */
+export async function ensureLessonsManifest(courseSeed?: string): Promise<LessonMeta[]> {
   initShim();
-  if (!reg.lessonManifest.length) {
-    await once(pending, 'manifest', () =>
-      loadScript(LEGACY_JS_BASE + 'lessons/manifest.js').catch(() => {}),
+  const zh = courseSeed === 'zh';
+  const key = zh ? 'manifest-zh' : 'manifest';
+  if (zh ? !reg.zhLessonManifest.length : !reg.lessonManifest.length) {
+    await once(pending, key, () =>
+      loadScript(LEGACY_JS_BASE + (zh ? 'lessons/manifest-zh.js' : 'lessons/manifest.js')).catch(() => {}),
     );
   }
-  return reg.lessonManifest;
+  return zh ? reg.zhLessonManifest : reg.lessonManifest;
 }
 
 export function lessonById(id: string | null | undefined): LessonMeta | undefined {
-  return (reg.lessonManifest || []).find((l) => l.id === id);
+  return (
+    (reg.lessonManifest || []).find((l) => l.id === id) ||
+    (reg.zhLessonManifest || []).find((l) => l.id === id)
+  );
 }
 
 export type { LessonMeta };
 
 /** Tải file 1 bài — trả {tag, words} (dòng nén) */
 export async function loadLesson(id: string): Promise<(LessonMeta & { words: ExtraSeedRow[] }) | null> {
-  await ensureLessonsManifest();
+  await ensureLessonsManifest(id && id.startsWith('lesson-zh-') ? 'zh' : 'en');
   const meta = lessonById(id);
   if (!meta) return null;
   if (!reg.lessons.has(meta.file)) {

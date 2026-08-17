@@ -2,10 +2,10 @@
  * games.ts — Logic game THUẦN (port từ legacy ui-games.js).
  * Tách phần biến đổi dữ liệu khỏi phần render → test được, UI (React) chỉ render.
  */
-import type { Course, WordEntry } from '@english/shared';
+import type { Course, Sense, WordEntry } from '@english/shared';
 import { hasTarget, normalize, shuffle } from './format';
 
-export type GameType = 'flashcard' | 'translate' | 'synonym' | 'antonym';
+export type GameType = 'flashcard' | 'translate-en' | 'translate-vi' | 'synonym' | 'antonym';
 
 export interface GameSession {
   type: GameType;
@@ -16,19 +16,22 @@ export interface GameSession {
   repeated: Record<string, number>;
   missed: string[];
   queue: WordEntry[];
+  /** Nguồn từ vựng cho game chọn (đồng/trái nghĩa) — giữ phạm vi bài học */
+  pool?: WordEntry[];
   key?: 'synonyms' | 'antonyms';
+  /** Sense CỐ ĐỊNH cho từng từ trong cả phiên (flashcard/translate) */
+  senseIdx?: Record<string, number>;
   // flashcard
   revealed?: boolean;
   seenOnce?: boolean;
-  // translate
-  dir?: 't2s' | 's2t';
+  // translate: 2 game riêng (translate-en / translate-vi) — không còn dir qua-lại
   hints?: number;
   tempAnswer?: string;
   // choice game (synonym/antonym)
   current?: { entry: WordEntry; correctWord: string; options: string[] };
   // kết quả câu vừa trả lời (choice/translate) để render feedback
   answered?: boolean;
-  lastAnswer?: { chosen: string; correctWord: string; isCorrect: boolean };
+  lastAnswer?: { chosen: string; correctWord: string; isCorrect: boolean; word?: string };
 }
 
 export interface AnswerOutcome {
@@ -52,14 +55,25 @@ export function buildPool(
   );
 }
 
-/** Tạo session ban đầu cho game loại thường (flashcard/translate) */
+/** Tạo session ban đầu cho game loại thường (flashcard/translate).
+ *  Khóa sense cố định cho từng từ (ưu tiên sense có nghĩa đích nếu có targetCode)
+ *  → hiển thị + validate dùng ĐÚNG 1 sense, không đổi giữa chừng. */
 export function startSimpleSession(
-  type: 'flashcard' | 'translate',
+  type: 'flashcard' | 'translate-en' | 'translate-vi',
   pool: WordEntry[],
   qty: number,
+  targetCode?: string,
 ): GameSession {
   let q = shuffle(pool);
   if (qty > 0 && q.length > qty) q = q.slice(0, qty);
+  const senseIdx: Record<string, number> = {};
+  q.forEach((e) => {
+    const arr = e.senses || [];
+    const withTarget = targetCode ? arr.filter((s) => s.meaning?.[targetCode]) : arr;
+    const cands = withTarget.length ? withTarget : arr;
+    const pick = cands[Math.floor(Math.random() * cands.length)];
+    senseIdx[e.id] = pick ? arr.indexOf(pick) : 0;
+  });
   return {
     type,
     idx: 0,
@@ -68,13 +82,22 @@ export function startSimpleSession(
     streakNow: 0,
     repeated: {},
     missed: [],
+    senseIdx,
     queue: q,
     revealed: false,
     seenOnce: false,
-    dir: 't2s',
     hints: 0,
     tempAnswer: '',
   };
+}
+
+/** Sense CỐ ĐỊNH của từ trong phiên (không đổi khi re-render). */
+export function stableSense(entry: WordEntry, s: GameSession): Sense | undefined {
+  const arr = entry.senses || [];
+  if (!arr.length) return undefined;
+  const i = s.senseIdx?.[entry.id];
+  if (typeof i === 'number' && arr[i]) return arr[i];
+  return arr[0];
 }
 
 /** Tạo session cho game chọn (synonym/antonym) — 4 đáp án */
@@ -84,7 +107,8 @@ export function startChoiceSession(
   qty: number,
 ): GameSession {
   const key = type === 'synonym' ? 'synonyms' : 'antonyms';
-  const eligible = pool.filter((e) => (e[key] || []).length > 0);
+  // Chỉ giữ từ có ÍT NHẤT 1 đáp án không rỗng
+  const eligible = pool.filter((e) => (e[key] || []).some((w) => w && w.trim()));
   let q = shuffle(eligible);
   if (qty > 0 && q.length > qty) q = q.slice(0, qty);
   return {
@@ -96,6 +120,7 @@ export function startChoiceSession(
     repeated: {},
     missed: [],
     key,
+    pool: pool.slice(),
     queue: q,
   };
 }
@@ -144,12 +169,24 @@ export function recordAnswer(
 export function buildChoice(
   session: GameSession,
   entries: WordEntry[],
+  distractorSource?: WordEntry[],
 ): { entry: WordEntry; correctWord: string; options: string[] } {
   const entry = session.queue[session.idx];
   const key = session.key || 'synonyms';
-  const correctWord = shuffle(entry[key] || [])[0];
+  const cands = (entry[key] || []).filter((w) => w && w.trim());
+  const correctWord = shuffle(cands)[0] || '';
   const entryPos = entry.senses?.[0]?.partOfSpeech || '';
-  const others = entries.filter(
+  // Dùng nguồn nhiễu của bài học khi nó đủ từ khác (≥3) — giữ phạm vi bài
+  let src = entries;
+  if (distractorSource) {
+    const othersInScope = distractorSource.filter(
+      (e) =>
+        e.word.toLowerCase() !== entry.word.toLowerCase() &&
+        e.word.toLowerCase() !== correctWord.toLowerCase(),
+    );
+    if (othersInScope.length >= 3) src = distractorSource;
+  }
+  const others = src.filter(
     (e) =>
       e.word.toLowerCase() !== entry.word.toLowerCase() &&
       e.word.toLowerCase() !== correctWord.toLowerCase(),
@@ -165,56 +202,34 @@ export function buildChoice(
   return session.current;
 }
 
-/** Chuẩn hóa đáp án dịch nghĩa (so khớp từ nguồn / các nghĩa đích / pinyin) */
+/** Mã ngôn ngữ đích của game dịch: translate-en → từ vựng (không cần mã),
+ *  translate-vi → nghĩa tiếng Việt (course.target.code). */
+export function translateTargetCode(course: Course, type: GameType): string {
+  return type === 'translate-en' ? 'en' : course.target.code;
+}
+
+/** Kiểm tra đáp án game dịch — validate ĐÚNG sense đang hiển thị (stableSense).
+ *  Luôn theo nội dung game: translate-en HIỆN định nghĩa tiếng Anh → người chơi
+ *  GÕ TỪ VỰNG; translate-vi HIỆN từ → gõ nghĩa tiếng Việt.
+ *  Nghĩa: chấp nhận nguyên cả nghĩa HOẶC 1 phần tách , ; ，、 (vd "làm, thực hiện"). */
 export function checkTranslate(
   course: Course,
   session: GameSession,
   entry: WordEntry,
   userAnswer: string,
 ): boolean {
-  const dir = session.dir;
-  if (dir === 't2s') {
-    const okWord = normalize(userAnswer) === normalize(entry.word);
-    const okPinyin =
-      dir === 't2s' &&
-      course.usesPinyin &&
-      normPinyinLocal(userAnswer) === normPinyinLocal(entry.senses?.[0]?.pronunciation || '');
-    return okWord || okPinyin;
+  const norm = normalize(userAnswer);
+  if (!norm) return false;
+  if (session.type === 'translate-en') {
+    // Đáp án là TỪ VỰNG (không phân biệt hoa thường)
+    return norm === normalize(entry.word);
   }
-  const targets = entry.senses.map((s) => s.meaning?.[course.target.code] || '');
-  return targets.some((a) => normalize(userAnswer) === normalize(a));
-}
-
-function normPinyinLocal(str: string): string {
-  const TONE: Record<string, string> = {
-    ā: 'a',
-    á: 'a',
-    ǎ: 'a',
-    à: 'a',
-    ē: 'e',
-    é: 'e',
-    ě: 'e',
-    è: 'e',
-    ī: 'i',
-    í: 'i',
-    ǐ: 'i',
-    ì: 'i',
-    ō: 'o',
-    ó: 'o',
-    ǒ: 'o',
-    ò: 'o',
-    ū: 'u',
-    ú: 'u',
-    ǔ: 'u',
-    ù: 'u',
-    ǖ: 'u',
-    ǘ: 'u',
-    ǚ: 'u',
-    ǜ: 'u',
-    ü: 'u',
-  };
-  return String(str || '')
-    .toLowerCase()
-    .replace(/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜü]/g, (ch) => TONE[ch] || ch)
-    .replace(/[^a-z]/g, '');
+  const sense = stableSense(entry, session);
+  if (!sense) return false;
+  const code = translateTargetCode(course, session.type);
+  const target = sense.meaning?.[code] || '';
+  if (normalize(target) === norm) return true;
+  return String(target)
+    .split(/[,;，、]/)
+    .some((part) => normalize(part) === norm);
 }
