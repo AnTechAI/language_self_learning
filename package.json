@@ -24,6 +24,10 @@
     "data:icons": "node data/scripts/cli.js icons",
     "data:enrich": "node data/scripts/cli.js enrich",
     "data:fetch": "node data/scripts/cli.js fetch",
+    "data:hsk": "node data/scripts/cli.js hsk",
+    "data:hsk30": "node data/scripts/cli.js hsk30",
+    "data:zh-dict": "node data/scripts/cli.js zh-dict",
+    "data:zh-grammar": "node data/scripts/cli.js zh-grammar",
     "data:build": "node data/scripts/cli.js build"
   },
   "devDependencies": {
@@ -31,6 +35,8 @@
     "eslint": "^10.8.1",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.4",
+    "hanzi-writer": "^3.7.3",
+    "hanzi-writer-data": "^2.0.1",
     "prettier": "^3.9.6",
     "typescript-eslint": "^8.67.0"
   }

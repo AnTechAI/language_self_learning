@@ -28,6 +28,9 @@ Danh sách lệnh: `cli.js` chạy không đối số → in hướng dẫn.
 | `enrich` | `enrich-vi-ipa.py` | Làm giàu jsonl: **nghĩa Việt + IPA + freq** | `english-dictionary.enriched.jsonl` / `hsk-dictionary.enriched.jsonl` |
 | `fetch` | `fetch-vocab.js` | Tự động **tải từ mới** từ Internet (API, en) | dòng nén seed (js/seed-data.js) |
 | `hsk` | `fetch-hsk.js` | Tải **từ điển tiếng Trung HSK 1–6** (GitHub) | `data/raw/hsk-dictionary.jsonl` |
+| `hsk30` | `fetch-hsk30.js` | Tải **từ điển HSK 3.0** (5.363 từ, pinyin_numeric/bộ thủ/lượng từ) | `data/raw/hsk30-dictionary.jsonl` |
+| `zh-dict` | `build-hsk30.js` | Gom nghĩa + trích nét chữ → **từ điển zh + dữ liệu nét** | `legacy/js/zh-dict/hsk.json`, `zh-strokes.json` |
+| `zh-grammar` | `fetch-hsk30-grammar.js` | Tải **422 điểm ngữ pháp HSK 3.0** (kèm ví dụ câu) | `legacy/js/zh-dict/zh-grammar.json` |
 | `build` | `build-from-jsonl.js` | Dựng từ vựng từ jsonl (gom nghĩa + dịch) | dòng nén seed |
 
 Các script Python chạy qua `cli.js` bằng lệnh `python` (đã cài wordfreq để dùng `--freq`/`--add-freq`).

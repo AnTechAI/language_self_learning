@@ -26,6 +26,9 @@ const CMDS = {
   enrich: 'enrich-vi-ipa.py',        // làm giàu jsonl (vi + ipa + freq) — Python
   fetch: 'fetch-vocab.js',           // thêm từ mới từ API (en)
   hsk: 'fetch-hsk.js',               // tải từ điển TIẾNG TRUNG HSK 1–6 → hsk-dictionary.jsonl
+  hsk30: 'fetch-hsk30.js',           // tải từ điển HSK 3.0 (5.363 từ) → hsk30-dictionary.jsonl
+  'zh-dict': 'build-hsk30.js',       // gom nghĩa + trích nét → hsk.json + zh-strokes.json
+  'zh-grammar': 'fetch-hsk30-grammar.js', // 422 điểm ngữ pháp HSK 3.0 → zh-grammar.json
   build: 'build-from-jsonl.js',      // dựng từ từ jsonl + API
 };
 

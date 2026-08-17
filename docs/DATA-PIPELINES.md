@@ -11,6 +11,9 @@
 | [fetch-vocab.js](#4-fetch-vocabjs) | Fetch từ API Free Dictionary + Google Translate | Bổ sung từ mới + sửa POS | dòng nén seed |
 | [enrich-vi-ipa.py](#5-enrich-vi-ipapy) | Làm giàu **toàn bộ** jsonl: nghĩa Việt + IPA (+ freq) | Nền tảng học 207k từ (xem VOCABULARY-STRATEGY.md) | `english-dictionary.enriched.jsonl` |
 | [make-popular-list.py](#6-make-popular-listpy) | Tạo danh sách TỪ NỘI DUNG ĐƠN theo tần suất (wordfreq) | Enrich/bài theo thứ tự đáng học + sinh slice chạy đêm | `out/popular-words.txt`, `out/slices/` |
+| [fetch-hsk30.js](#8-tiếng-trung-hsk-30--từ-điển--ngữ-pháp--luyện-viết) | Tải từ điển **HSK 3.0** (5.363 từ) | Khóa zh theo syllabus mới | `data/raw/hsk30-dictionary.jsonl` |
+| [build-hsk30.js](#8-tiếng-trung-hsk-30--từ-điển--ngữ-pháp--luyện-viết) | Gom nghĩa + trích nét chữ | Từ điển zh + Luyện viết | `legacy/js/zh-dict/hsk.json`, `zh-strokes.json` |
+| [fetch-hsk30-grammar.js](#8-tiếng-trung-hsk-30--từ-điển--ngữ-pháp--luyện-viết) | Tải **422 điểm ngữ pháp** HSK 3.0 | Trang Ngữ pháp theo cấp | `legacy/js/zh-dict/zh-grammar.json` |
 
 API dùng: `dictionaryapi.dev` (IPA + senses) và `translate.googleapis.com/...?client=gtx`
 (dịch Việt, miễn phí). Có **retry/backoff** khi 429.
@@ -205,3 +208,87 @@ node data/scripts/cli.js lessons --src data/raw/hsk-dictionary.enriched.jsonl \
   → học viên TRUNG cũng có panel bài học HSK, chọn bài trong trò chơi, chip lọc kho.
 
 ---
+
+
+---
+
+## 8. TIẾNG TRUNG HSK 3.0 — từ điển + ngữ pháp + luyện viết
+
+Toàn bộ từ điển của app khóa zh theo **syllabus HSK 3.0** (5.363 từ) + dữ liệu
+luyện viết + ngữ pháp chính thức. Dữ liệu sinh nằm ở `apps/web/public/legacy/js/zh-dict/`
+(3 file tĩnh, tải nhu cầu; PWA runtime-cache `CacheFirst`).
+
+### `fetch-hsk30.js` — tải HSK 3.0 → jsonl enriched-chuẩn
+
+- Nguồn: `drkameleon/complete-hsk-vocabulary` — thư mục **`new/`** (HSK 3.0):
+  `1..6.json` cumulative → dedupe giữ từ ở cấp đầu → **5.363 từ unique**
+  (506/750/953/972/1059/1123 theo cấp 1→6).
+- Entry đầy đủ: `simplified`, `traditional`, `radical` (bộ thủ), `frequency`
+  (SUBTLEX-CH), `classifier` (lượng từ), `pinyin` + `pinyin_numeric` (thanh điệu
+  số hóa — phục vụ quiz thanh điệu), `meanings[]` tiếng Anh.
+- Ghi `data/raw/hsk30-dictionary.jsonl` — schema enriched chuẩn kèm riêng:
+  `ipa`(=pinyin có dấu), `pinyin_numeric`, `traditional`, `radical`, `classifier`,
+  `level`, `freq`. 1 nghĩa = 1 dòng (14.953 dòng); `vi` để trống.
+
+```bash
+node data/scripts/fetch-hsk30.js
+```
+
+### Làm giàu nghĩa Việt
+
+```bash
+python data/scripts/enrich-vi-ipa.py --sl auto --skip-ipa   --in data/raw/hsk30-dictionary.jsonl --out data/raw/hsk30-dictionary.enriched.jsonl   --workers 8 --delay 0.12
+```
+
+→ 14.953 dòng / 5.363 từ đầy đủ `vi` (~15–20 phút; `--skip-ipa` giữ pinyin có sẵn).
+Nghĩa máy dịch — có từ chưa chuẩn (vd. "Erhua variant" → "biến thể đàn nhị");
+nhiệm vụ v2: chỉnh thủ công các từ sai.
+
+### `build-hsk30.js` — sinh 2 file chạy ở app
+
+```bash
+node data/scripts/build-hsk30.js
+```
+
+- Gom nghĩa theo từ → **`zh-dict/hsk.json`** (schema `docs/chinese_design.md` §3):
+  `id hsk30_XXXXXX`, simplified/traditional/pinyin/pinyin_numeric/hsk_level/pos/
+  meaning_en/meaning_vi/radical/classifier/frequency_rank/strokes (số nét từng chữ,
+  lấy `hanzi-writer-data`)/senses[]/example_sentences[] (rỗng — v2). 2,9 MB.
+- Trích nét + đường vẽ từ `node_modules/hanzi-writer-data/{char}.json`
+  (**1799 chữ duy nhất của HSK**) → **`zh-dict/zh-strokes.json`** `{chữ:{s:[SVG],m:[medians]}}` —
+  đủ 100% chữ (4,4 MB), dùng cho Luyện viết (Hanzi Writer).
+  `hanzi-writer-data` là devDependency gốc; `hanzi-writer` là runtime dep của `@english/web`.
+
+### `fetch-hsk30-grammar.js` — ngữ pháp chính thức
+
+```bash
+node data/scripts/fetch-hsk30-grammar.js
+```
+
+- Nguồn: `krmanik/HSK-3.0` GitHub — `New HSK (2021)/HSK Grammar/HSK {1..6}.txt`
+  (văn bản syllabus chính thức; mục `A.1…`, điểm `【一01】` kèm ví dụ câu).
+- Ghi **`zh-dict/zh-grammar.json`** — 422 điểm (48/81/81/75/71/66 theo cấp),
+  mỗi điểm: code, title, note, examples[]; 100% có ví dụ.
+
+### Sinh lại bài học zh (thay HSK 2.0)
+
+```bash
+node data/scripts/build-lessons.js --course zh --order level   --src data/raw/hsk30-dictionary.enriched.jsonl
+```
+
+→ **269 bài HSK 3.0** (HSK1 26 · HSK2 37 · HSK3 48 · HSK4 49 · HSK5 52 · HSK6 57),
+tiêu đề `HSK {cấp} · Bài {k}` (level từ `--order level`), mỗi bài 20 từ
+(bài cuối 3 từ). Wipe sạch `lesson-zh-*` cũ (HSK 2.0) — en không bị đụng.
+
+### App (React) — từ điển & luyện tập zh
+
+- `data/zhDict.ts`: 3 loader tải nhu cầu (hsk.json / zh-strokes.json / zh-grammar.json)
+  + `zhWordToEntry()` (bookmark từ điển → entry chuẩn, tag `HSK n`, `level`, senses).
+- `lib/zh.ts`: pinyin (stripTones / numericFromMarked / charTones — thanh điệu số hóa),
+  **SM-2 SRS** (`sm2`, `dueIn`), `levelFromLessonTitle`, shuffle.
+- `store`: `bookmarkZhWord` (idempotent theo word), `applySrs(id, grade 0–3)`, `zhView`
+  (hub/luyện viết/thanh điệu/SRS — tab Ôn tập zh), tab `grammar`.
+- Tab 'Từ vựng' của zh = **Từ điển** (tra Hán tự/pinyin/vi/en/bộ thủ, lọc cấp độ,
+  chi tiết từ + bookmark). Tab 'Ngữ pháp' theo cấp. Ôn tập: Ôn hôm nay (SRS),
+  Luyện viết (Hanzi Writer — xem nét/vẽ theo), Thanh điệu (TTS + chọn thanh).
+  Không hiện streak 🔥 ở khóa zh (thiết kế).
