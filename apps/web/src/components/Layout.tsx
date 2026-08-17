@@ -15,6 +15,13 @@ const TABS: { id: Tab; ico: string; label: string }[] = [
   { id: 'stats', ico: '📊', label: 'Thống kê' },
 ];
 
+/** Tab riêng của khóa TIẾNG TRUNG (ngữ pháp theo cấp) */
+const ZH_TABS: (typeof TABS)[number][] = [
+  ...TABS.slice(0, 3),
+  { id: 'grammar', ico: '📘', label: 'Ngữ pháp' },
+  TABS[3],
+];
+
 function currentTheme(): 'light' | 'dark' {
   return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
 }
@@ -51,7 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           {course?.icon || '🎓'} <span>English Learning</span>
         </button>
         <div className="spacer" />
-        {streak > 0 ? (
+        {streak > 0 && course?.seed !== 'zh' ? (
           <span className="stat" title="Số ngày học liên tiếp">
             🔥 <b>{streak}</b>
           </span>
@@ -89,7 +96,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {showAccount ? <AccountModal onClose={() => setShowAccount(false)} /> : null}
       {course ? (
         <nav className="app-nav">
-          {TABS.map((t) => (
+          {(course?.seed === 'zh' ? ZH_TABS : TABS).map((t) => (
             <button
               key={t.id}
               className={`nav-btn ${tab === t.id ? 'active' : ''}`}

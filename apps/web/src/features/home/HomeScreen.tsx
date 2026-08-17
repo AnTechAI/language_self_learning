@@ -117,6 +117,7 @@ export function HomeScreen() {
 function QuickActions() {
   const store = useCourseStore();
   const lessons = useLessons();
+  const isZh = store.course?.seed === 'zh';
 
   const startNextLesson = () => {
     // Bài kế tiếp chưa học hết (theo thứ tự manifest)
@@ -137,19 +138,40 @@ function QuickActions() {
         </span>
         <span className="chev">›</span>
       </button>
-      <button className="quick-card" onClick={() => store.setTab('games')}>
-        <span className="qc-ico">🎮</span>
-        <span className="qc-body">
-          <b>Ôn tập</b>
-          <small>Flashcard · dịch · đồng/trái nghĩa</small>
-        </span>
-        <span className="chev">›</span>
-      </button>
+      {isZh ? (
+        <>
+          <button className="quick-card" onClick={() => void store.setZhView('srs')}>
+            <span className="qc-ico">⭐</span>
+            <span className="qc-body">
+              <b>Ôn tập hôm nay</b>
+              <small>Thẻ nhớ SRS · Lại/Khó/Tốt/Dễ</small>
+            </span>
+            <span className="chev">›</span>
+          </button>
+          <button className="quick-card" onClick={() => store.setTab('grammar')}>
+            <span className="qc-ico">📘</span>
+            <span className="qc-body">
+              <b>Ngữ pháp HSK</b>
+              <small>422 điểm theo từng cấp</small>
+            </span>
+            <span className="chev">›</span>
+          </button>
+        </>
+      ) : (
+        <button className="quick-card" onClick={() => store.setTab('games')}>
+          <span className="qc-ico">🎮</span>
+          <span className="qc-body">
+            <b>Ôn tập</b>
+            <small>Flashcard · dịch · đồng/trái nghĩa</small>
+          </span>
+          <span className="chev">›</span>
+        </button>
+      )}
       <button className="quick-card" onClick={() => store.setTab('vocab')}>
         <span className="qc-ico">📚</span>
         <span className="qc-body">
-          <b>Kho từ vựng</b>
-          <small>Tìm kiếm &amp; xem chi tiết từ</small>
+          <b>{isZh ? 'Từ điển ' + store.course?.name : 'Kho từ vựng'}</b>
+          <small>{isZh ? 'HSK 3.0 · tra theo Hán tự/pinyin' : 'Tìm kiếm & xem chi tiết từ'}</small>
         </span>
         <span className="chev">›</span>
       </button>
@@ -157,7 +179,7 @@ function QuickActions() {
         <span className="qc-ico">📊</span>
         <span className="qc-body">
           <b>Thống kê</b>
-          <small>Chuỗi ngày · biểu đồ 7 ngày</small>
+          <small>Tiến độ theo cấp · 7 ngày gần nhất{isZh ? '' : ' · streak 🔥'}</small>
         </span>
         <span className="chev">›</span>
       </button>

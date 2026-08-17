@@ -9,6 +9,8 @@ import { createRepo, migrateIfNeeded } from '../db';
 import { courseById } from '../data/courses';
 import { applySeedUpgrade, mergeSeeds, SEED_VERSION } from '../data/seed';
 import { ensureLessonInCourse, ensureLessonsManifest, lessonById } from '../data/lessons';
+import { zhWordToEntry, type ZhWord } from '../data/zhDict';
+import { dueIn, sm2 } from '../lib/zh';
 import {
   applyMarkLearned,
   applyResult,
@@ -31,7 +33,7 @@ import {
   type GameSession,
   type GameType,
 } from '../lib/games';
-import { normalize, uid } from '../lib/format';
+import { normalize, todayStr, uid } from '../lib/format';
 import {
   ApiClient,
   buildPushBody,
@@ -46,7 +48,7 @@ import {
 } from '../lib/sync';
 import type { Account } from '@english/shared';
 
-export type Tab = 'home' | 'vocab' | 'games' | 'stats';
+export type Tab = 'home' | 'vocab' | 'games' | 'stats' | 'grammar';
 
 /** Phiên học bài: tua từng từ của bài, cuối bài mở màn hoàn tất */
 export interface StudySession {
@@ -80,6 +82,9 @@ interface CourseStore {
   lessonFocus: string | null;
   gameScreen: 'menu' | GameType;
   session: GameSession | null;
+  /** Chế độ con trong tab Ôn tập (khóa zh): hub / luyện viết / thanh điệu / SRS */
+  zhView: 'hub' | 'writing' | 'tone' | 'srs';
+  setZhView(v: 'hub' | 'writing' | 'tone' | 'srs'): void;
   toast: string | null;
   lessonManifestReady: boolean;
 
@@ -123,6 +128,10 @@ interface CourseStore {
   /* ---- bài học ---- */
   refreshLessonsManifest(): Promise<void>;
   pickLesson(id: string): Promise<number>;
+  /** Bookmark từ điển zh → kho (idempotent theo word) */
+  bookmarkZhWord(w: ZhWord): Promise<void>;
+  /** Đánh giá SRS (0=Again 1=Hard 2=Good 3=Easy) */
+  applySrs(id: string, grade: 0 | 1 | 2 | 3): Promise<void>;
 
   /* ---- game ---- */
   startGame(type: GameType, onlyIds?: string[]): void;
@@ -211,6 +220,7 @@ export const useCourseStore = create<CourseStore>()((set, get) => {
     gameLessonId: null,
     lessonFocus: null,
     gameScreen: 'menu',
+    zhView: 'hub',
     session: null,
     toast: null,
     lessonManifestReady: false,
@@ -271,6 +281,7 @@ export const useCourseStore = create<CourseStore>()((set, get) => {
         gameLessonId: null,
         lessonFocus: null,
         gameScreen: 'menu',
+        zhView: 'hub',
         session: null,
         lessonManifestReady: false,
       });
@@ -291,6 +302,7 @@ export const useCourseStore = create<CourseStore>()((set, get) => {
         tab: 'home',
         detailId: null,
         gameScreen: 'menu',
+        zhView: 'hub',
         session: null,
       });
       delete document.body.dataset.course;
@@ -299,7 +311,8 @@ export const useCourseStore = create<CourseStore>()((set, get) => {
 
     /* ================= UI ================= */
 
-    setTab: (tab) => set({ tab, detailId: null, gameScreen: 'menu', session: null }),
+    setTab: (tab) => set({ tab, detailId: null, gameScreen: 'menu', session: null, zhView: 'hub' }),
+    setZhView: (zhView) => set({ zhView, tab: 'games', gameScreen: 'menu', session: null }),
     openDetail: (id) => set({ detailId: id }),
     closeDetail: () => set({ detailId: null }),
     setVocabLesson: (id) => set({ vocabLessonId: id }),
@@ -409,6 +422,34 @@ export const useCourseStore = create<CourseStore>()((set, get) => {
         get().showToast('✓ Đã thêm ' + added + ' từ của bài "' + (meta ? meta.title : '') + '"');
       else if (meta) get().showToast('📘 Bài "' + meta.title + '" đã có sẵn trong kho');
       return added;
+    },
+
+    /** Bookmark từ trong TỪ ĐIỂN zh → gộp vào kho (idempotent theo word) */
+    bookmarkZhWord: async (w) => {
+      const course = get().course;
+      if (!course || course.seed !== 'zh') return;
+      const existing = new Set(get().entries.map((e) => e.word));
+      if (existing.has(w.simplified)) {
+        get().showToast('⭐ "' + w.simplified + '" đã có trong kho');
+        return;
+      }
+      const e = zhWordToEntry(w);
+      const entries = [...get().entries, e];
+      set({ entries });
+      await get().saveEntries();
+      get().showToast('✓ Đã thêm "' + w.simplified + '" vào kho');
+    },
+
+    /** Đánh giá ôn tập SRS (grade 0–3) — cập nhật lịch ôn (khóa zh) */
+    applySrs: async (id, grade) => {
+      const entries = get().entries.map((e) => {
+        if (e.id !== id) return e;
+        const next = sm2(grade, e.srs);
+        const due = grade === 0 ? dueIn(0) : dueIn(Math.max(1, next.interval));
+        return { ...e, srs: { ...next, due }, lastReviewDay: todayStr() };
+      });
+      set({ entries });
+      await get().saveEntries();
     },
 
     /* ================= Học bài (guided walkthrough) ================= */

@@ -27,6 +27,14 @@ export interface Sense {
 
 export type LearningStatus = 'new' | 'learning' | 'mastered';
 
+/** Trạng thái SRS (SM-2 đơn giản — docs/chinese_design.md §4.7) */
+export interface SrsState {
+  due: string; // 'YYYY-MM-DD' — ngày đến hạn ôn
+  ease: number; // hệ số dễ (khởi tạo 2.5)
+  interval: number; // khoảng cách (ngày)
+  reps: number; // số lần đã ôn
+}
+
 /** Một TỪ trong kho từ vựng của khóa học */
 /** Nghĩa gốc từ (root) — 1 số từ có gốc là object (ExtraSense-like) thay vì string */
 export type RootSense = Partial<ExtraSense>;
@@ -45,6 +53,10 @@ export interface WordEntry {
   /** Bài học sở hữu từ này (nếu có — hệ thống Lesson) */
   lessonId?: string;
   lastReviewDay?: string; // 'YYYY-MM-DD'
+  /** Cấp độ (HSK 1–6 — khóa zh); lấy từ bài học hoặc bookmark */
+  level?: number;
+  /** Trạng thái ôn tập ngắt quãng (SRS — khóa zh) */
+  srs?: SrsState;
 }
 
 /** Một KHÓA HỌC (en / zh…) — định nghĩa tĩnh trong config */

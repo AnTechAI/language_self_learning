@@ -104,13 +104,38 @@ Hai khóa học, mỗi khóa **1 manifest + 1 dãy file bài riêng** (tải đ�
 | Khóa | Manifest | File bài | Shim | Nguồn |
 |---|---|---|---|---|
 | en 🇬🇧 | `lessons/manifest.js` | `lesson-NNN.js` | `lessonsInit` | english-dictionary.enriched.jsonl |
-| zh 🇨🇳 | `lessons/manifest-zh.js` | `lesson-zh-NNN.js` | `zhLessonsInit` | hsk-dictionary.enriched.jsonl (HSK 1–6) |
+| zh 🇨🇳 | `lessons/manifest-zh.js` | `lesson-zh-NNN.js` | `zhLessonsInit` | **hsk30-dictionary.enriched.jsonl (HSK 3.0 — 269 bài)** |
 
 - `ensureLessonsManifest(courseSeed)` tải đúng manifest theo khóa; `lessonById` tìm cả 2 mảng.
 - `useLessons` đọc `course.seed`; `enterCourse` reset `lessonManifestReady: false`
   → chuyển khóa tự tải manifest mới (không hiện nhầm bài khóa kia).
 - Bài tiếng Trung: 20 từ/bài, tiêu đề `HSK {cấp} · Bài {k}`, tag `HSK {cấp}` —
   đủ dùng cho Home panel, chọn bài trong Games, chip lọc Vocab (đã bỏ cổng `seed === 'en'`).
+  Nguồn hiện tại: **HSK 3.0** (5.363 từ / 269 bài) — phân cấp 1→6.
+
+### Khóa TRUNG nâng cao (HSK 3.0 — từ điển & luyện tập) — `features/zh/*`
+
+Bốn module riêng của khóa tiếng Trung (en không bị ảnh hưởng — smoke test giữ nguyên):
+
+| Màn hình | File | Chức năng | Dữ liệu (lazy) |
+|---|---|---|---|
+| Từ vựng → **Từ điển** | `ZhDictScreen.tsx` | Tra Hán tự / pinyin (có hoặc không dấu) / Việt / Anh / bộ thủ; lọc cấp; chi tiết từ (phồn thể, bộ thủ, số nét từng chữ, TTS, bookmark ⭐ vào kho) | `zh-dict/hsk.json` (5.363 từ) |
+| Ôn tập → **Ôn tập hôm nay** | `ReviewScreen.tsx` | **SRS SM-2** (Lại/Khó/Tốt/Dễ) — hàng đợi = từ đến hạn + từ mới; đánh giá cập nhật lịch ôn qua `applySrs` | `entries` (kho) |
+| Ôn tập → **Luyện viết** | `WritingScreen.tsx` | **Hanzi Writer** (thư viện SVG) — xem animation thứ tự nét + vẽ theo, chấm đúng/sai từng nét | `zh-dict/zh-strokes.json` (1.799 chữ) |
+| Ôn tập → **Nghe & thanh điệu** | `ToneQuizScreen.tsx` | TTS đọc từ → chọn thanh điệu của chữ được hỏi (đường cong 5 thanh); ghi lịch sử game `tone` | `entries` |
+| Tab **Ngữ pháp** | `GrammarScreen.tsx` | 422 điểm ngữ pháp chính thức theo cấp, mở rộng ví dụ câu | `zh-dict/zh-grammar.json` |
+
+- **Nav/Home/Stats khác nhau theo khóa**: tab 'Ngữ pháp' + thẻ QuickActions riêng
+  (Ôn tập hôm nay, Ngữ pháp) chỉ xuất hiện khi `course.seed === 'zh'`; **không hiện
+  streak 🔥** ở zh (header + stats + Home) — theo yêu cầu thiết kế; Stats zh thay
+  bằng **tiến độ theo cấp HSK** (số từ đã thuộc / từ đã thêm theo `entry.level`).
+- **Bookmark từ điển → kho**: `store.bookmarkZhWord(w)` gộp theo `word` (idempotent),
+  entry có `level` + tag `HSK n` + senses từ `hsk.json` → luyện viết / thanh điệu /
+  SRS dùng đúng những từ người dùng chọn. `zhWordToEntry()` ở `data/zhDict.ts`.
+- **Pinyin số hóa**: `lib/zh.ts` `numericFromMarked` (nǐ hǎo → ni3 hao3) — thanh điệu
+  từ pinyin có dấu của bài học; `charTones` ghép chữ↔âm tiết.
+- **SRS**: `wordEntry.srs` (due/ease/interval/reps, SM-2) + `wordEntry.level`;
+  sync (GĐ 5) tự mang các field này (payload per-entry).
 
 ### Trang học bài (GĐ 4) — `features/study/LessonStudyScreen.tsx`
 

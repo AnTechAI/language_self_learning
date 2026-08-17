@@ -9,6 +9,8 @@ import { HomeScreen } from './features/home/HomeScreen';
 import { LessonStudyScreen } from './features/study/LessonStudyScreen';
 import { PickerScreen } from './features/picker/PickerScreen';
 import { StatsScreen } from './features/stats/StatsScreen';
+import { GrammarScreen } from './features/zh/GrammarScreen';
+import { ZhDictScreen } from './features/zh/ZhDictScreen';
 import { VocabScreen, WordDetail } from './features/vocab/VocabScreen';
 import { useCourseStore } from './store/useCourseStore';
 
@@ -49,9 +51,11 @@ export default function App() {
   } else if (tab === 'home') {
     screen = <HomeScreen />;
   } else if (tab === 'vocab') {
-    screen = <VocabScreen />;
+    screen = course.seed === 'zh' ? <ZhDictScreen /> : <VocabScreen />;
   } else if (tab === 'games') {
     screen = <GamesScreen />;
+  } else if (tab === 'grammar') {
+    screen = course.seed === 'zh' ? <GrammarScreen /> : <HomeScreen />;
   } else if (tab === 'stats') {
     screen = <StatsScreen />;
   }

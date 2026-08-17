@@ -5,15 +5,20 @@
  */
 import { useEffect, useState } from 'react';
 import { Button, Card, Chip, PosChips } from '../../components/ui';
-import { countRevealable, maskText, normalize } from '../../lib/format';
+import { countRevealable, maskText, normalize, todayStr } from '../../lib/format';
 import { stableSense } from '../../lib/games';
 import type { LessonMeta } from '../../data/lessons';
+import { ReviewScreen } from '../zh/ReviewScreen';
+import { ToneQuizScreen } from '../zh/ToneQuizScreen';
+import { WritingScreen } from '../zh/WritingScreen';
 import { useCourseStore } from '../../store/useCourseStore';
 import { useLessons } from '../home/useLessons';
 
 export function GamesScreen() {
   const gameScreen = useCourseStore((s) => s.gameScreen);
   const session = useCourseStore((s) => s.session);
+  const course = useCourseStore((s) => s.course);
+  const zhView = useCourseStore((s) => s.zhView);
 
   // keyboard shortcuts — dùng getState() để luôn thấy session mới nhất
   useEffect(() => {
@@ -55,6 +60,14 @@ export function GamesScreen() {
     return () => document.removeEventListener('keydown', onKey);
   }, []);
 
+  // Khóa tiếng Trung: các chế độ ngay trong tab Ôn tập
+  if (course?.seed === 'zh' && zhView !== 'hub' && !session) {
+    const back = () => useCourseStore.getState().setZhView('hub');
+    if (zhView === 'writing') return <WritingScreen onBack={back} />;
+    if (zhView === 'tone') return <ToneQuizScreen onBack={back} />;
+    if (zhView === 'srs') return <ReviewScreen onBack={back} />;
+  }
+
   if (gameScreen === 'menu') return <GameMenu />;
   if (!session) return <GameMenu />;
 
@@ -65,6 +78,35 @@ export function GamesScreen() {
 
 /* ================= Menu ================= */
 
+/** Thẻ chế độ tiếng Trung trong tab Ôn tập */
+function ZhModeCard({
+  ico,
+  title,
+  desc,
+  badge,
+  onClick,
+}: {
+  ico: string;
+  title: string;
+  desc: string;
+  badge?: string;
+  onClick: () => void;
+}) {
+  return (
+    <Card>
+      <div className="gi">{ico}</div>
+      <h3 style={{ margin: '8px 0 4px' }}>{title}</h3>
+      <p className="help" style={{ fontSize: 13, margin: 0 }}>
+        {desc}
+      </p>
+      {badge ? <small className="badge">{badge}</small> : null}
+      <Button size="sm" onClick={onClick} style={{ marginTop: 10 }}>
+        Mở →
+      </Button>
+    </Card>
+  );
+}
+
 function GameMenu() {
   const store = useCourseStore();
   const course = store.course;
@@ -72,6 +114,8 @@ function GameMenu() {
   const entries = store.entries;
   const synCount = entries.filter((e) => (e.synonyms || []).length > 0).length;
   const antCount = entries.filter((e) => (e.antonyms || []).length > 0).length;
+  const dueToday = entries.filter((e) => !e.srs || (e.srs.due ?? '') <= todayStr()).length;
+  const writeCount = new Set(entries.flatMap((e) => [...(e.word || '')])).size;
 
   if (!course) return null;
 
@@ -174,6 +218,32 @@ function GameMenu() {
           💡 Chọn bài học sẽ chỉ ôn trong phạm vi bài đó (từ chưa có sẽ tự thêm).
         </small>
       </Card>
+
+      {course.seed === 'zh' ? (
+        <div className="game-grid" style={{ marginBottom: 4 }}>
+          <ZhModeCard
+            ico="⭐"
+            title="Ôn tập hôm nay"
+            desc="Ôn theo lịch SM-2: thẻ nhớ → đánh giá Lại / Khó / Tốt / Dễ."
+            badge={`${dueToday} từ đến hạn`}
+            onClick={() => void store.setZhView('srs')}
+          />
+          <ZhModeCard
+            ico="✍️"
+            title="Luyện viết chữ"
+            desc="Xem thứ tự nét của từng chữ rồi vẽ theo — chấm điểm từng nét."
+            badge={`${writeCount} chữ có nét`}
+            onClick={() => void store.setZhView('writing')}
+          />
+          <ZhModeCard
+            ico="🎵"
+            title="Nghe & thanh điệu"
+            desc="Nghe phát âm → chọn đúng thanh điệu của từng chữ."
+            badge="TTS tiếng Trung"
+            onClick={() => void store.setZhView('tone')}
+          />
+        </div>
+      ) : null}
 
       <div className="game-grid">
         {games.map((g) => (

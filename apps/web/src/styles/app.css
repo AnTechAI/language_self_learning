@@ -1719,3 +1719,179 @@ select.input {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ============ TIẾNG TRUNG (khóa zh — từ điển, luyện viết, thanh điệu, ngữ pháp) ============ */
+
+.zh-w {
+  font-size: 22px;
+  line-height: 1.2;
+  min-width: 44px;
+  text-align: center;
+}
+.zh-hero {
+  font-family: var(--font-display);
+  font-size: 52px;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  margin: 8px 0;
+}
+.lev-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--zh-tint, color-mix(in srgb, var(--brand) 12%, transparent));
+  color: var(--brand);
+  white-space: nowrap;
+}
+.pos-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--line);
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.zh-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.zh-row .meta {
+  flex: 1;
+  min-width: 0;
+}
+.zh-row .ipa {
+  font-size: 13px;
+}
+.zh-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.zh-detail-side {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.zh-detail-side .ipa {
+  font-size: 17px;
+}
+.zh-stroke-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  align-items: center;
+}
+.zh-stroke-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px dashed var(--line-strong);
+  border-radius: 10px;
+  padding: 6px 10px;
+  min-width: 48px;
+}
+.zh-stroke-cell b {
+  font-size: 22px;
+  font-family: var(--font-display);
+}
+.zh-stroke-cell small {
+  font-size: 11px;
+  color: var(--ink-3);
+}
+.zh-ex {
+  font-size: 14px;
+  margin: 8px 0;
+  border-left: 3px solid var(--line-strong);
+  padding-left: 10px;
+}
+
+/* Luyện viết */
+.writer-box {
+  margin: 10px auto 0;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.writer-box svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Thanh điệu */
+.tone-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 10px 6px 8px;
+  cursor: pointer;
+  transition: border-color 0.18s var(--ease-out), transform 0.18s var(--ease-out);
+}
+.tone-btn:hover:not(:disabled) {
+  border-color: var(--brand);
+  transform: translateY(-1px);
+}
+.tone-btn:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.tone-btn.ok {
+  border-color: var(--ok, #16a34a);
+  background: color-mix(in srgb, var(--ok, #16a34a) 10%, var(--surface));
+  opacity: 1;
+}
+.tone-btn.bad {
+  border-color: var(--bad, #dc2626);
+  background: color-mix(in srgb, var(--bad, #dc2626) 10%, var(--surface));
+  opacity: 1;
+}
+.tone-btn.dim {
+  opacity: 0.35;
+}
+.tone-btn b {
+  font-size: 14px;
+}
+.tone-btn small {
+  font-size: 10px;
+  color: var(--ink-3);
+}
+.def.ok {
+  color: var(--ok, #16a34a);
+  font-weight: 700;
+}
+.def.bad {
+  color: var(--bad, #dc2626);
+  font-weight: 700;
+}
+
+/* Ngữ pháp */
+.grammar-card {
+  padding: 8px 14px;
+}
+.grammar-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+}
+.grammar-title {
+  flex: 1;
+  font-weight: 700;
+  font-size: 14px;
+}
+.grammar-head .cue {
+  color: var(--ink-3);
+  font-size: 12px;
+  white-space: nowrap;
+}

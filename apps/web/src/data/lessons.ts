@@ -9,6 +9,7 @@
 import type { WordEntry } from '@english/shared';
 import { initShim, loadScript, once, reg, LEGACY_JS_BASE, type ExtraSeedRow, type LessonMeta } from './registry';
 import { toEntry } from './seed';
+import { levelFromLessonTitle } from '../lib/zh';
 
 const pending = new Map<string, Promise<void>>();
 
@@ -86,6 +87,8 @@ export async function ensureLessonInCourse(
     const e = toEntry(row);
     e.tags = [lesson.tag];
     e.lessonId = lesson.id;
+    const lv = levelFromLessonTitle(lesson.title);
+    if (lv) e.level = lv;
     entries.push(e);
     existing.add(w);
     added++;

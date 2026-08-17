@@ -43,7 +43,17 @@ export function StatsScreen() {
     'translate-vi': '✍️ Dịch nghĩa → ' + course.target.label,
     synonym: '🔁 Đồng nghĩa',
     antonym: '↔️ Trái nghĩa',
+    tone: '🎵 Thanh điệu',
+    srs: '⭐ Ôn tập hôm nay',
   };
+
+  const zh = course.seed === 'zh';
+  // Tiến độ theo cấp HSK (khóa zh): từ đã trong kho / tổng từ điển mỗi cấp (số gần đúng từ bài+bookmark)
+  const byLevel = [1, 2, 3, 4, 5, 6].map((lv) => {
+    const have = entries.filter((e) => e.level === lv).length;
+    const done = entries.filter((e) => e.level === lv && e.learningStatus === 'mastered').length;
+    return { lv, have, done };
+  });
 
   return (
     <>
@@ -51,9 +61,11 @@ export function StatsScreen() {
         <h2>📊 Thống kê</h2>
         <p>Theo dõi tiến độ học {course.name.toLowerCase()} của bạn.</p>
         <div className="stats">
-          <Stat>
-            🔥 <b>{streak}</b> ngày liên tiếp
-          </Stat>
+          {!zh ? (
+            <Stat>
+              🔥 <b>{streak}</b> ngày liên tiếp
+            </Stat>
+          ) : null}
           <Stat>
             📖 Hôm nay <b>{learned.length}</b> từ
           </Stat>
@@ -62,6 +74,32 @@ export function StatsScreen() {
           </Stat>
         </div>
       </div>
+
+      {zh ? (
+        <Card>
+          <h3 style={{ margin: '0 0 4px' }}>Tiến độ theo cấp HSK</h3>
+          <small className="help">Từ đã bổ sung vào kho / đã thuộc — theo cấp độ của bài học</small>
+          <div
+            className="stats"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit,minmax(120px,1fr))',
+              gap: 8,
+              marginTop: 10,
+            }}
+          >
+            {byLevel.map(({ lv, have, done }) => (
+              <Stat key={lv}>
+                <b>HSK {lv}</b>
+                <br />
+                <span style={{ fontSize: 13 }}>
+                  {done}/{have} đã thuộc
+                </span>
+              </Stat>
+            ))}
+          </div>
+        </Card>
+      ) : null}
 
       <Card>
         <h3 style={{ margin: '0 0 4px' }}>Hoạt động 7 ngày</h3>
