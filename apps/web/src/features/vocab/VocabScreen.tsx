@@ -13,9 +13,7 @@ export function VocabScreen() {
   const store = useCourseStore();
   const course = store.course;
   const lessons = useLessons();
-  const detailId = store.detailId;
 
-  if (detailId) return <WordDetail id={detailId} />;
   if (!course) return null;
 
   return (
@@ -32,7 +30,6 @@ export function VocabScreen() {
 
 function ChipsRow({ lessons }: { lessons: LessonMeta[] }) {
   const store = useCourseStore();
-  const course = store.course;
   const items = [
     <Chip key="all" active={!store.vocabLessonId} onClick={() => store.setVocabLesson(null)}>
       Tất cả từ ({store.entries.length})
@@ -43,7 +40,7 @@ function ChipsRow({ lessons }: { lessons: LessonMeta[] }) {
         active={store.vocabLessonId === l.id}
         onClick={() => {
           store.setVocabLesson(l.id);
-          if (course?.seed === 'en') void store.pickLesson(l.id);
+          void store.pickLesson(l.id);
         }}
       >
         📘 {l.title}
@@ -146,14 +143,21 @@ function AllWords({ lessons }: { lessons: LessonMeta[] }) {
 
   return (
     <Card>
-      <input
-        className="input-answer"
-        style={{ textAlign: 'left' }}
-        placeholder={`🔍 Tìm từ ${course.wordFieldPh} hoặc nghĩa…`}
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-      />
-      <div className="chip-row" style={{ marginTop: 8 }}>
+      <div className="search-bar">
+        <span style={{ opacity: 0.5 }}>🔍</span>
+        <input
+          placeholder={`Tìm từ ${course.wordFieldPh} hoặc nghĩa…`}
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          aria-label="Tìm từ"
+        />
+        {q ? (
+          <button className="search-clear" onClick={() => setQ('')} aria-label="Xóa tìm kiếm">
+            ✕
+          </button>
+        ) : null}
+      </div>
+      <div className="chip-row" style={{ marginTop: 10 }}>
         {statuses.map((s) => (
           <Chip key={s.id} active={status === s.id} onClick={() => setStatus(s.id)}>
             {s.label}
@@ -211,23 +215,18 @@ export function WordDetail({ id }: { id: string }) {
 
   return (
     <>
-      <Card>
+      <Card className="detail-hero">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Button variant="ghost" size="sm" onClick={() => store.closeDetail()}>
-            ← Kho từ
+            ← Quay lại
           </Button>
           <div className="spacer" style={{ flex: 1 }} />
           <span className={`status-dot ${entry.learningStatus}`} />
         </div>
-        <div style={{ textAlign: 'center', margin: '10px 0 4px' }}>
+        <div style={{ textAlign: 'center', margin: '12px 0 4px' }}>
           <div
-            style={{
-              fontSize: 30,
-              fontWeight: 800,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-            }}
+            className="detail-word"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}
           >
             {entry.word}
             <Speak text={entry.word} lang={course.source.code} />
