@@ -4,12 +4,12 @@
  *   - Quick actions: 4 thẻ nhanh (học từ mới / ôn tập / kho từ / thống kê) — click → chuyển trang.
  *   - Bài học từ vựng: lưới card, "Học bài này" → trang học bài.
  */
-import { useMemo } from 'react';
-import { Button, Card, ProgressRing } from '../../components/ui';
+import { useMemo, useState } from 'react';
+import { Button, Card, Chip, ProgressBar, ProgressRing } from '../../components/ui';
 import { DAILY_QUOTA } from '../../data/courses';
 import { type LessonMeta } from '../../data/lessons';
 import { useLessons } from './useLessons';
-import { todayStr } from '../../lib/format';
+import { normalize, todayStr } from '../../lib/format';
 import { computeStreak, learnedToday } from '../../lib/learning';
 import { useCourseStore } from '../../store/useCourseStore';
 
@@ -187,65 +187,160 @@ function QuickActions() {
   );
 }
 
-/** Panel chọn bài học (en) — "Học bài này" mở trang học bài (tua từng từ) */
+/** Số thứ tự bài từ id 'lesson-zh-012' → 12, 'lesson-003' → 3 */
+function lessonNum(id: string): string {
+  const m = String(id || '').match(/(\d+)\s*$/);
+  return m ? m[1] : '';
+}
+
+/** Panel chọn bài học — lọc theo nhóm, tìm kiếm, xem tiến độ từng bài */
 function LessonPanel({ lessons }: { lessons: LessonMeta[] }) {
   const store = useCourseStore();
+  const [tag, setTag] = useState('all');
+  const [q, setQ] = useState('');
+
+  const tags = useMemo(() => {
+    const m = new Map<string, number>();
+    lessons.forEach((l) => m.set(l.tag, (m.get(l.tag) || 0) + 1));
+    return [...m.entries()].sort((a, b) => b[1] - a[1]);
+  }, [lessons]);
+
+  const filtered = useMemo(() => {
+    const nq = q.trim() ? normalize(q) : '';
+    return lessons.filter((l) => {
+      if (tag !== 'all' && l.tag !== tag) return false;
+      if (!nq) return true;
+      return normalize(l.title).includes(nq) || normalize(l.tag).includes(nq);
+    });
+  }, [lessons, tag, q]);
+
+  const statsById = useMemo(() => {
+    const m = new Map<string, { added: number; mastered: number; done: boolean }>();
+    lessons.forEach((l) => {
+      const owned = store.entries.filter((e) => e.lessonId === l.id);
+      const added = owned.length;
+      const mastered = owned.filter((e) => e.learningStatus === 'mastered').length;
+      m.set(l.id, { added, mastered, done: added >= l.count });
+    });
+    return m;
+  }, [lessons, store.entries]);
+
+  const doneCount = lessons.filter((l) => statsById.get(l.id)?.done).length;
+  const addedWords = lessons.reduce((a, l) => a + (statsById.get(l.id)?.added ?? 0), 0);
+  const totalWords = lessons.reduce((a, l) => a + l.count, 0);
+  const overall = totalWords ? Math.round((addedWords / totalWords) * 100) : 0;
 
   return (
-    <Card>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 10,
-        }}
-      >
-        <h3 style={{ margin: 0 }}>📚 Bài học từ vựng</h3>
-        {lessons.length > 6 ? (
-          <small className="help lesson-scroll-hint" style={{ whiteSpace: 'nowrap' }}>
-            cuộn để xem thêm ↓
+    <Card className="lesson-panel">
+      <div className="lp-head">
+        <div className="lp-title">
+          <h3 style={{ margin: 0 }}>📚 Bài học từ vựng</h3>
+          <small className="help">
+            {lessons.length} bài · {totalWords} từ · đã mở <b>{addedWords}</b> từ
           </small>
-        ) : null}
-      </div>
-      <div className="lesson-scroll">
-        <div className="lesson-grid">
-          {lessons.map((l) => {
-            const inCourse = l.id ? store.entries.filter((e) => e.lessonId === l.id).length : 0;
-            return (
-              <div key={l.id} className="lesson-card">
-                <div className="lt">{l.title}</div>
-                <div className="lm">
-                  🏷️ {l.tag} · {l.count} từ
-                  {inCourse > 0 ? ` · đã thêm ${inCourse}` : ''}
-                </div>
-                <Button
-                  size="sm"
-                  style={{ width: '100%', marginTop: 10 }}
-                  onClick={() => void store.startLessonStudy(l.id)}
-                >
-                  Học bài này →
-                </Button>
-                {inCourse > 0 ? (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    style={{ width: '100%', marginTop: 6 }}
-                    onClick={() => {
-                      store.setGameLesson(l.id);
-                      store.setTab('games');
-                    }}
-                  >
-                    🎮 Ôn bài này
-                  </Button>
-                ) : null}
-              </div>
-            );
-          })}
+        </div>
+        <div className="lp-sum">
+          <span className="stat" title="Bài đã mở đủ số từ vào kho">
+            ✅{' '}
+            <b>
+              {doneCount}/{lessons.length}
+            </b>{' '}
+            bài xong
+          </span>
         </div>
       </div>
+      <ProgressBar pct={overall} />
+
+      {/* Thanh lọc — dính trên đầu khi cuộn danh sách dài */}
+      <div className="lesson-toolbar">
+        <div className="chip-row">
+          <Chip active={tag === 'all'} onClick={() => setTag('all')}>
+            Tất cả ({lessons.length})
+          </Chip>
+          {tags.map(([t, n]) => (
+            <Chip key={t} active={tag === t} onClick={() => setTag(t)}>
+              {t} ({n})
+            </Chip>
+          ))}
+        </div>
+        <input
+          className="input"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="🔍 Tìm bài…"
+          style={{ marginTop: 8 }}
+        />
+      </div>
+
+      <div className="lesson-scroll">
+        {filtered.length === 0 ? (
+          <p className="help" style={{ padding: '14px 4px' }}>
+            Không có bài phù hợp — đổi bộ lọc hoặc từ khoá nhé.
+          </p>
+        ) : (
+          <div className="lesson-grid">
+            {filtered.map((l) => {
+              const s = statsById.get(l.id) || { added: 0, mastered: 0, done: false };
+              const pct = l.count ? Math.min(100, Math.round((s.added / l.count) * 100)) : 0;
+              return (
+                <div key={l.id} className={'lesson-card' + (s.done ? ' lc-done' : '')}>
+                  <div className="lc-top">
+                    <span className="lev-badge">{l.tag}</span>
+                    {lessonNum(l.id) ? <span className="lc-num">#{lessonNum(l.id)}</span> : null}
+                  </div>
+                  <div className="lt">{l.title}</div>
+                  <div className="lm">
+                    {l.count} từ
+                    {s.added > 0 ? ` · mở ${s.added}` : ''}
+                    {s.mastered > 0 ? ` · 🎓 ${s.mastered}` : ''}
+                  </div>
+                  {s.added > 0 && !s.done ? (
+                    <div className="lesson-progress" title={`${pct}% từ đã mở`}>
+                      <span className="lp-bar" style={{ width: pct + '%' }} />
+                    </div>
+                  ) : null}
+                  {s.done ? <span className="lesson-stamp">✓ ĐÃ HỌC</span> : null}
+                  <div className="lc-actions">
+                    {s.done ? (
+                      <Button
+                        size="sm"
+                        style={{ width: '100%' }}
+                        onClick={() => {
+                          store.setGameLesson(l.id);
+                          store.setTab('games');
+                        }}
+                      >
+                        🎮 Ôn bài này
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        style={{ width: '100%' }}
+                        onClick={() => void store.startLessonStudy(l.id)}
+                      >
+                        {s.added === 0 ? 'Học bài này →' : 'Học tiếp →'}
+                      </Button>
+                    )}
+                    {s.done ? (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        style={{ width: '100%', marginTop: 6 }}
+                        onClick={() => void store.startLessonStudy(l.id)}
+                      >
+                        Học lại
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
       <small className="help" style={{ marginTop: 10, display: 'block' }}>
-        💡 Bấm "Học bài này" để mở trang học từng từ của bài (từ cũng được thêm vào kho).
+        💡 "Học bài này" mở trang học từng từ của bài — từ được thêm vào kho để ôn lại sau. Tem{' '}
+        <b>✓ ĐÃ HỌC</b> xuất hiện khi đã mở đủ số từ của bài.
       </small>
     </Card>
   );
