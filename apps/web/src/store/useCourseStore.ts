@@ -85,6 +85,9 @@ interface CourseStore {
   /** Chế độ con trong tab Ôn tập (khóa zh): hub / luyện viết / thanh điệu / SRS */
   zhView: 'hub' | 'writing' | 'tone' | 'srs';
   setZhView(v: 'hub' | 'writing' | 'tone' | 'srs'): void;
+  /** Từ chỉ định cho Luyện viết (mở từ chi tiết → viết đúng chữ đó) */
+  zhWriteTarget: { word: string; pinyin: string } | null;
+  setZhWriteTarget(w: { word: string; pinyin: string } | null): void;
   toast: string | null;
   lessonManifestReady: boolean;
 
@@ -221,6 +224,7 @@ export const useCourseStore = create<CourseStore>()((set, get) => {
     lessonFocus: null,
     gameScreen: 'menu',
     zhView: 'hub',
+    zhWriteTarget: null,
     session: null,
     toast: null,
     lessonManifestReady: false,
@@ -313,7 +317,8 @@ export const useCourseStore = create<CourseStore>()((set, get) => {
 
     setTab: (tab) => set({ tab, detailId: null, gameScreen: 'menu', session: null, zhView: 'hub' }),
     setZhView: (zhView) => set({ zhView, tab: 'games', gameScreen: 'menu', session: null }),
-    openDetail: (id) => set({ detailId: id }),
+    setZhWriteTarget: (zhWriteTarget) => set({ zhWriteTarget }),
+    openDetail: (id) => set({ detailId: id, tab: 'vocab' }),
     closeDetail: () => set({ detailId: null }),
     setVocabLesson: (id) => set({ vocabLessonId: id }),
     setGameLesson: async (id) => {

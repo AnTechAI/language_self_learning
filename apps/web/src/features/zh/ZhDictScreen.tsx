@@ -1,17 +1,58 @@
 /**
  * ZhDictScreen — TỪ ĐIỂN TIẾNG TRUNG (khóa zh — tab 'Từ vựng').
- * Tra/browse HSK 3.0 đầy đủ (hsk.json tải nhu cầu): tìm theo Hán tự / pinyin
- * (có dấu hoặc không) / nghĩa Việt-Anh / bộ thủ, lọc theo cấp độ, xem chi tiết
- * từ (bộ thủ, số nét, phồn thể, TTS) + bookmark vào kho (để luyện viết/ôn tập).
- * Thiết kế: docs/chinese_design.md §4.1.
+ * Thiết kế theo chinese-app-ui.jsx: tìm kiếm + chip HSK ở topbar, thân gồm
+ * 2 pane — danh sách từ (trái) + chi tiết từ (phải). Tải hsk.json nhu cầu.
  */
 import { useEffect, useMemo, useState } from 'react';
-import { Button, Card, Chip, EmptyState, Speak } from '../../components/ui';
+import { Button, Speak } from '../../components/ui';
 import { loadZhDict, type ZhWord } from '../../data/zhDict';
-import { stripTones } from '../../lib/zh';
+import { charTones, stripTones, TONE_CURVES } from '../../lib/zh';
 import { useCourseStore } from '../../store/useCourseStore';
 
 const LEVELS = [1, 2, 3, 4, 5, 6];
+
+/** Đường cong thanh điệu nhỏ (tham chiếu thiết kế) */
+function ToneCurve({ tone, active }: { tone: string; active?: boolean }) {
+  const c = TONE_CURVES[tone] || TONE_CURVES['0'];
+  return (
+    <svg
+      width="34"
+      height="18"
+      viewBox="0 0 120 120"
+      fill="none"
+      aria-hidden="true"
+      style={{ flexShrink: 0 }}
+    >
+      {[28, 60, 92].map((y) => (
+        <line
+          key={y}
+          x1={6}
+          y1={y}
+          x2={118}
+          y2={y}
+          stroke={active ? '#d8d1c5' : '#e9e4dc'}
+          strokeWidth={1}
+        />
+      ))}
+      <path
+        d={c.path}
+        stroke={active ? c.color : '#b7b0a6'}
+        strokeWidth={8}
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/** Con dấu cấp độ HSK */
+function SealBadge({ level }: { level: number }) {
+  return (
+    <div className="seal-badge" aria-label={`HSK ${level}`}>
+      <span>HSK</span>
+      <strong>{level}</strong>
+    </div>
+  );
+}
 
 export function ZhDictScreen() {
   const store = useCourseStore();
@@ -24,7 +65,11 @@ export function ZhDictScreen() {
   useEffect(() => {
     let live = true;
     loadZhDict()
-      .then((w) => live && setWords(w))
+      .then((w) => {
+        if (!live) return;
+        setWords(w);
+        setSel(w[0] || null);
+      })
       .catch(() => live && setErr('Không tải được từ điển (hsk.json)'));
     return () => {
       live = false;
@@ -55,163 +100,231 @@ export function ZhDictScreen() {
 
   if (err)
     return (
-      <EmptyState big="⚠️" title="Lỗi">
-        {err}
-      </EmptyState>
+      <div className="empty-wrap">
+        <p>⚠️ {err}</p>
+      </div>
     );
 
+  const counts = (() => {
+    const m: Record<number, number> = {};
+    words?.forEach((w) => (m[w.hsk_level] = (m[w.hsk_level] || 0) + 1));
+    return m;
+  })();
+
   return (
-    <>
-      <div className="hero">
-        <h2>📖 Từ điển tiếng Trung (HSK 3.0)</h2>
-        <p>Tìm theo Hán tự, pinyin (có/không dấu), nghĩa Việt–Anh hoặc bộ thủ.</p>
-        <input
-          className="input"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="vd: 你好 · ni hao · xin chào · 亻"
-          style={{ width: '100%', maxWidth: 420 }}
-        />
-        <div className="chip-row" style={{ marginTop: 8 }}>
-          <Chip active={!level} onClick={() => setLevel(null)}>
-            Tất cả ({words ? words.length : '…'})
-          </Chip>
-          {LEVELS.map((l) => (
-            <Chip key={l} active={level === l} onClick={() => setLevel(l)}>
-              HSK {l}
-            </Chip>
-          ))}
+    <div className="dict-page">
+      {/* Topbar — tìm kiếm + chip HSK */}
+      <div className="dict-topbar">
+        <p className="eyebrow">Zero → HSK 6</p>
+        <div className="title-row">
+          <h1 className="hanzi-title">从零开始</h1>
+          <span>Học tiếng Trung từ Zero</span>
+        </div>
+        <div className="search-row">
+          <div className="search-box">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="M20 20l-3.5-3.5" />
+            </svg>
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Tra Hán tự, pinyin hoặc nghĩa..."
+            />
+          </div>
+          <div className="chips">
+            <button className={`chip ${level === null ? 'on' : ''}`} onClick={() => setLevel(null)}>
+              Tất cả {words ? words.length : ''}
+            </button>
+            {LEVELS.map((lv) => (
+              <button
+                key={lv}
+                className={`chip ${level === lv ? 'on' : ''}`}
+                onClick={() => setLevel(lv)}
+              >
+                HSK {lv} {counts[lv] || ''}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {!words ? (
-        <Card>Tải từ điển…</Card>
-      ) : sel ? (
-        <WordDetailCard
-          w={sel}
-          inKho={inKho.has(sel.simplified)}
-          onBack={() => setSel(null)}
-          onBookmark={() => void store.bookmarkZhWord(sel)}
-        />
-      ) : filtered.length === 0 ? (
-        <EmptyState big="🔍" title="Không có kết quả">
-          Thử từ khoá khác hoặc bỏ lọc cấp độ.
-        </EmptyState>
-      ) : (
-        <div className="zh-word-list">
-          {filtered.slice(0, 120).map((w) => (
-            <Button
-              key={w.id}
-              className="word-item zh-row"
-              onClick={() => setSel(w)}
-              style={{ display: 'flex', width: '100%', textAlign: 'left' }}
-              title={w.meaning_vi || w.meaning_en}
-            >
-              <span className="w zh-w">{w.simplified}</span>
-              <span className="meta">
-                <span className="ipa">{w.pinyin}</span>
-                {w.meaning_vi ? ` · ${w.meaning_vi}` : ''}
-              </span>
-              <span className="lev-badge">HSK {w.hsk_level}</span>
-              {inKho.has(w.simplified) ? <span title="Trong kho">⭐</span> : null}
-            </Button>
-          ))}
-          {filtered.length > 120 ? (
-            <small className="help" style={{ padding: '0 4px' }}>
-              Hiện {120}/{filtered.length} — hãy gõ thêm để tra chính xác.
-            </small>
-          ) : null}
+      {/* Body — 2 pane */}
+      <div className="dict-body">
+        <div className="dict-list">
+          {!words ? (
+            <p className="dict-hint">Đang tải từ điển…</p>
+          ) : filtered.length === 0 ? (
+            <p className="dict-hint">Không tìm thấy từ nào.</p>
+          ) : (
+            filtered.map((w) => (
+              <button
+                key={w.id}
+                className={`dict-item ${sel?.id === w.id ? 'active' : ''}`}
+                onClick={() => setSel(w)}
+              >
+                <span className="dl-hanzi">{w.simplified}</span>
+                <span className="dl-meta">
+                  <span className="dl-py">{w.pinyin}</span>
+                  <span className="dl-mean">{w.meaning_vi || w.meaning_en || '…'}</span>
+                </span>
+                {inKho.has(w.simplified) ? (
+                  <span className="dot" title="Trong kho" />
+                ) : (
+                  <span className="dot dim" title="Chưa học" />
+                )}
+              </button>
+            ))
+          )}
         </div>
-      )}
-    </>
+
+        <div className="dict-detail">
+          {sel ? (
+            <WordDetail
+              w={sel}
+              inKho={inKho.has(sel.simplified)}
+              onBookmark={() => void store.bookmarkZhWord(sel)}
+              onWrite={() => {
+                store.setZhWriteTarget({ word: sel.simplified, pinyin: sel.pinyin });
+                store.setZhView('writing');
+              }}
+            />
+          ) : (
+            <p className="dict-hint">Chọn một từ để xem chi tiết.</p>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
-/** Chi tiết 1 từ — Hán tự lớn, pinyin, phồn thể, bộ thủ + số nét, nghĩa, bookmark */
-function WordDetailCard({
+function WordDetail({
   w,
   inKho,
-  onBack,
   onBookmark,
+  onWrite,
 }: {
   w: ZhWord;
   inKho: boolean;
-  onBack: () => void;
   onBookmark: () => void;
+  onWrite: () => void;
 }) {
+  const tones = charTones(w.simplified, w.pinyin_numeric);
+  const firstTone = tones[0]?.tone != null ? String(tones[0].tone) : '0';
+
   return (
-    <div className="detail-page">
-      <Card>
-        <Button size="sm" onClick={onBack} style={{ marginBottom: 12 }}>
-          ← Quay lại từ điển
-        </Button>
-        <div className="zh-detail-head">
-          <span className="zh-hero">{w.simplified}</span>
-          <span className="zh-detail-side">
-            <span className="ipa">{w.pinyin}</span>
-            {w.traditional !== w.simplified ? <small>phồn thể: {w.traditional}</small> : null}
+    <div className="dict-detail-inner">
+      <div className="hero-row">
+        <div className="hero-left">
+          <div className="hero-hanzi">{w.simplified}</div>
+          <div>
+            <div className="hero-py-row">
+              <ToneCurve tone={firstTone} active />
+              <span className="hero-py">{w.pinyin}</span>
+              <Speak text={w.simplified} lang="zh-CN" title="Nghe phát âm (TTS)" />
+            </div>
+            <div className="hero-meaning">
+              <span className="vi">{w.meaning_vi || '…'}</span>
+              {w.meaning_en ? (
+                <>
+                  {'  ·  '}
+                  <span className="en">{w.meaning_en}</span>
+                </>
+              ) : null}
+            </div>
+          </div>
+        </div>
+        <SealBadge level={w.hsk_level} />
+      </div>
+
+      <div className="section-label">Thanh điệu</div>
+      <div className="tone-row">
+        {tones.map((t, i) => (
+          <span key={i} className="tone-cell">
+            <span className="tone-char">{t.char}</span>
+            <ToneCurve tone={String(t.tone)} active />
+            <small>{t.tone}</small>
           </span>
-          <Speak text={w.simplified} lang="zh-CN" title="Nghe phát âm (TTS)" />
+        ))}
+      </div>
+
+      <div className="section-label">Bộ thủ & Lượng từ</div>
+      <div className="radical-row">
+        {w.radical ? <span className="radical-chip">{w.radical}</span> : null}
+        {w.classifier ? <span className="pos-chip">量词 {w.classifier}</span> : null}
+        {w.traditional && w.traditional !== w.simplified ? (
+          <span className="pos-chip">phồn thể {w.traditional}</span>
+        ) : null}
+        <span className="pos-chip">{w.pos || 'từ'}</span>
+        {w.frequency_rank ? (
+          <span className="pos-chip" title="Tần suất SUBTLEX-CH (thấp = phổ biến)">
+            tần suất #{w.frequency_rank}
+          </span>
+        ) : null}
+      </div>
+
+      <div className="section-label">Thứ tự nét</div>
+      <div className="stroke-row">
+        {w.strokes.map((s) => (
+          <span key={s.c} className="stroke-box" title={`${s.c} · ${s.n} nét`}>
+            <span>{s.c}</span>
+            <small>{s.n > 0 ? `${s.n} nét` : '?'}</small>
+          </span>
+        ))}
+      </div>
+
+      <div className="section-label">Nghĩa khác</div>
+      {w.senses.length > 1 ? (
+        <ul className="sense-list">
+          {w.senses.slice(1).map((s, i) => (
+            <li key={i}>
+              {s.pos ? <em>{s.pos}: </em> : null}
+              {s.vi || s.en || ''}
+              {s.en && s.vi ? <small> · {s.en}</small> : null}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="dict-hint">Từ đơn nghĩa.</p>
+      )}
+
+      <div className="section-label">Ví dụ câu</div>
+      {w.example_sentences.length ? (
+        w.example_sentences.map((x, i) => (
+          <div key={i} className="example-card">
+            <div className="ezh">{x.zh}</div>
+            <div className="epy">{x.pinyin}</div>
+            <div className="evi">{x.vi}</div>
+          </div>
+        ))
+      ) : (
+        <div className="example-card empty">
+          <p>Ví dụ câu đang được bổ sung ở phiên bản sau.</p>
         </div>
-        <div className="chip-row" style={{ margin: '8px 0' }}>
-          <span className="lev-badge">HSK {w.hsk_level}</span>
-          {w.pos ? <span className="pos-chip">{w.pos}</span> : null}
-          {w.classifier ? <span className="pos-chip">量词 {w.classifier}</span> : null}
-        </div>
+      )}
 
-        <div className="def">{w.meaning_vi || '…'}</div>
-        <div className="help">{w.meaning_en}</div>
-
-        {/* Bộ thủ + số nét từng chữ */}
-        {w.strokes.length ? (
-          <div className="zh-stroke-row">
-            {w.strokes.map((s) => (
-              <span key={s.c} className="zh-stroke-cell" title={`${s.c} · ${s.n} nét`}>
-                <b>{s.c}</b>
-                {s.n > 0 ? <small>{s.n} nét</small> : <small>?</small>}
-              </span>
-            ))}
-            {w.radical ? <span className="help">· bộ thủ {w.radical}</span> : null}
-          </div>
-        ) : null}
-
-        {w.senses.length > 1 ? (
-          <div style={{ marginTop: 12 }}>
-            <small className="help">Các nghĩa khác:</small>
-            <ul style={{ margin: '6px 0 0 18px', padding: 0 }}>
-              {w.senses.slice(1).map((s, i) => (
-                <li key={i} style={{ margin: '3px 0', fontSize: 13 }}>
-                  {s.pos ? <em>{s.pos}: </em> : null}
-                  {s.vi || s.en || ''}
-                  {s.en ? <small className="help"> · {s.en}</small> : null}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-
-        {w.example_sentences.length ? (
-          <div style={{ marginTop: 12 }}>
-            <small className="help">Ví dụ câu:</small>
-            {w.example_sentences.map((x, i) => (
-              <div key={i} className="zh-ex">
-                <b>{x.zh}</b> <span className="ipa">{x.pinyin}</span>
-                <div className="help">{x.vi}</div>
-              </div>
-            ))}
-          </div>
-        ) : null}
-
+      <div className="dict-actions">
         {inKho ? (
-          <div className="help" style={{ marginTop: 14 }}>
-            ⭐ Từ này đã có trong kho (luyện viết / ôn tập).
-          </div>
+          <Button variant="primary" disabled title="Từ này đã có trong kho">
+            ⭐ Đã thêm vào kho
+          </Button>
         ) : (
-          <Button style={{ marginTop: 14 }} onClick={onBookmark}>
-            ⭐ Thêm vào kho để học
+          <Button variant="primary" onClick={onBookmark}>
+            + Thêm vào kho để ôn tập
           </Button>
         )}
-      </Card>
+        <Button variant="ghost" onClick={onWrite}>
+          ✍️ Luyện viết chữ này
+        </Button>
+      </div>
     </div>
   );
 }

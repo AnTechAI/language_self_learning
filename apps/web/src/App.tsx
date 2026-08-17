@@ -11,7 +11,7 @@ import { PickerScreen } from './features/picker/PickerScreen';
 import { StatsScreen } from './features/stats/StatsScreen';
 import { GrammarScreen } from './features/zh/GrammarScreen';
 import { ZhDictScreen } from './features/zh/ZhDictScreen';
-import { VocabScreen, WordDetail } from './features/vocab/VocabScreen';
+import { VocabScreen } from './features/vocab/VocabScreen';
 import { useCourseStore } from './store/useCourseStore';
 
 export default function App() {
@@ -20,7 +20,6 @@ export default function App() {
   const course = useCourseStore((s) => s.course);
   const tab = useCourseStore((s) => s.tab);
   const study = useCourseStore((s) => s.study);
-  const detailId = useCourseStore((s) => s.detailId);
   const toast = useCourseStore((s) => s.toast);
 
   useEffect(() => {
@@ -32,15 +31,6 @@ export default function App() {
     return (
       <>
         <LessonStudyScreen />
-        <Toast msg={toast} />
-      </>
-    );
-  if (detailId)
-    return (
-      <>
-        <div className="detail-page">
-          <WordDetail id={detailId} />
-        </div>
         <Toast msg={toast} />
       </>
     );

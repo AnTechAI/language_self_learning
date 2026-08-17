@@ -1,5 +1,6 @@
 /**
- * Layout.tsx — Khung app: header (brand + theme + streak + account) + main + bottom nav.
+ * Layout.tsx — Khung app (Design v4 "Từ điển biên tập"): rail trái (desktop) /
+ * nav dưới (mobile) + masthead topbar + main. Tham chiếu chinese-app-ui.jsx.
  */
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -10,15 +11,15 @@ import { useCourseStore, type Tab } from '../store/useCourseStore';
 
 const TABS: { id: Tab; ico: string; label: string }[] = [
   { id: 'home', ico: '🏠', label: 'Hôm nay' },
-  { id: 'vocab', ico: '📚', label: 'Từ vựng' },
-  { id: 'games', ico: '🎮', label: 'Ôn tập' },
-  { id: 'stats', ico: '📊', label: 'Thống kê' },
+  { id: 'vocab', ico: '📖', label: 'Từ vựng' },
+  { id: 'games', ico: '🧠', label: 'Ôn tập' },
+  { id: 'stats', ico: '📈', label: 'Thống kê' },
 ];
 
 /** Tab riêng của khóa TIẾNG TRUNG (ngữ pháp theo cấp) */
 const ZH_TABS: (typeof TABS)[number][] = [
   ...TABS.slice(0, 3),
-  { id: 'grammar', ico: '📘', label: 'Ngữ pháp' },
+  { id: 'grammar', ico: '📜', label: 'Ngữ pháp' },
   TABS[3],
 ];
 
@@ -46,57 +47,20 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   }, [theme]);
 
+  const isZh = course?.seed === 'zh';
+  const tabs = course?.seed === 'zh' ? ZH_TABS : TABS;
+  const eyebrow = isZh ? 'Zero → HSK 6' : 'Personal Vocabulary';
+  const brandName = isZh ? '从零开始 · Tiếng Trung' : 'English Learning';
+  const mark = isZh ? '汉' : 'EN';
+
   return (
     <div className="app">
-      <header className="app-header">
-        <button
-          className="brand"
-          style={{ border: 0, background: 'transparent' }}
-          onClick={() => void exitCourse()}
-          title="Về màn hình chọn khóa"
-        >
-          {course?.icon || '🎓'} <span>English Learning</span>
-        </button>
-        <div className="spacer" />
-        {streak > 0 && course?.seed !== 'zh' ? (
-          <span className="stat" title="Số ngày học liên tiếp">
-            🔥 <b>{streak}</b>
-          </span>
-        ) : null}
-        <button
-          className="chip icon-chip"
-          style={{ fontWeight: 700 }}
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          title={theme === 'dark' ? 'Chuyển giao diện sáng' : 'Chuyển giao diện tối'}
-          aria-label="Đổi giao diện sáng/tối"
-        >
-          {theme === 'dark' ? '☀️' : '🌙'}
-        </button>
-        <button
-          className="chip icon-chip"
-          style={{ fontWeight: 700 }}
-          onClick={() => setShowAccount(true)}
-          title="Tài khoản & đồng bộ"
-          aria-label="Tài khoản & đồng bộ"
-        >
-          ⚙️
-        </button>
-        {course ? (
-          <button
-            className="chip"
-            style={{ fontWeight: 700 }}
-            onClick={() => void exitCourse()}
-            title="Đổi khóa học"
-          >
-            {course.icon} {course.name} ⇄
-          </button>
-        ) : null}
-      </header>
-      <main className="app-main">{children}</main>
-      {showAccount ? <AccountModal onClose={() => setShowAccount(false)} /> : null}
       {course ? (
-        <nav className="app-nav">
-          {(course?.seed === 'zh' ? ZH_TABS : TABS).map((t) => (
+        <nav className="app-nav" aria-label="Điều hướng chính">
+          <div className="rail-mark" aria-hidden="true">
+            {mark}
+          </div>
+          {tabs.map((t) => (
             <button
               key={t.id}
               className={`nav-btn ${tab === t.id ? 'active' : ''}`}
@@ -108,6 +72,58 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
       ) : null}
+
+      <div className="rail-main">
+        <header className="app-header">
+          <button
+            className="brand-block"
+            style={{ border: 0, background: 'transparent' }}
+            onClick={() => void exitCourse()}
+            title="Về màn hình chọn khóa"
+          >
+            <span className="eyebrow">{eyebrow}</span>
+            <span className="brand">
+              {course?.icon} {brandName}
+            </span>
+          </button>
+          <div className="spacer" />
+          {streak > 0 && !isZh ? (
+            <span className="stat" title="Số ngày học liên tiếp">
+              🔥 <b>{streak}</b>
+            </span>
+          ) : null}
+          <button
+            className="icon-chip"
+            style={{ fontWeight: 700 }}
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            title={theme === 'dark' ? 'Chuyển giao diện sáng' : 'Chuyển giao diện tối'}
+            aria-label="Đổi giao diện sáng/tối"
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
+          <button
+            className="icon-chip"
+            style={{ fontWeight: 700 }}
+            onClick={() => setShowAccount(true)}
+            title="Tài khoản & đồng bộ"
+            aria-label="Tài khoản & đồng bộ"
+          >
+            ⚙️
+          </button>
+          {course ? (
+            <button
+              className="chip course-chip"
+              onClick={() => void exitCourse()}
+              title="Đổi khóa học"
+            >
+              {course.icon} {course.name} ⇄
+            </button>
+          ) : null}
+        </header>
+        <main className="app-main">{children}</main>
+      </div>
+
+      {showAccount ? <AccountModal onClose={() => setShowAccount(false)} /> : null}
     </div>
   );
 }

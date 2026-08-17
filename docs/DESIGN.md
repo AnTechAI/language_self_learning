@@ -144,3 +144,63 @@ chuỗi ngày, lịch sử luyện.
 | Thẻ | card phẳng | phiếu giấy kẻ dòng, tab index |
 | Focus | box-shadow ring | outline nét đứt (bút chì) |
 | Motion | ease mặc định | easing tùy biến + reduced-motion |
+
+---
+
+# Design v4 "Từ điển biên tập" (Editorial Dictionary) — 2025
+
+> Bản thiết kế lại theo file tham chiếu `chinese-app-ui.jsx` (rail trái +
+> topbar + khung 2-pane). Áp dụng cho **cả 2 khóa** (Tiếng Anh theo cùng hệ,
+> nhấn riêng ở course theming). Không còn "giấy ấm" — chuyển sang **giấy
+> trắng, mực đậm, ấn đỏ con dấu + ngọc jade**, giọng thư viện/từ điển biên tập.
+
+## Concept
+
+Ứng dụng như một **từ điển biên tập hiện đại**: thanh điều hướng dọc (rail)
+trái cố định, masthead topbar (eyebrow + tựa), và **khung 2-pane** làm màn hình
+trung tâm — danh sách từ bên trái, chi tiết từ bên phải (không tách trang).
+Chữ Hán chạy font serif CJK hệ thống (`--font-hanzi`: Noto Serif SC → 宋体),
+từ tiếng Anh dùng serif Lora; UI dùng **Inter Variable** (bundle qua
+`@fontsource-variable/inter`, PWA precache giữ offline).
+
+## Tokens chính (light)
+
+| Token | Giá trị | Vai trò |
+| --- | --- | --- |
+| `--bg` | `#ffffff` | giấy trắng |
+| `--surface-2` | `#faf8f5` | nền danh sách / ô nhập |
+| `--ink` | `#1c1b19` | mực đậm |
+| `--ink-3` | `#7a7369` | chữ nhạt |
+| `--line` | `#e9e4dc` | hairline |
+| `--brand` | `#b8332b` | ấn đỏ con dấu (cả 2 khóa) |
+| `--jade` | `#3d6b5c` | ngọc jade — accent khóa zh (radical, ví dụ, dot) |
+| `--font-hanzi` | serif CJK hệ thống | Hán tự mọi nơi (danh sách, chi tiết, rail-mark) |
+
+Dark mode giữ cấu trúc token (đêm mực), chỉ dịch hue cho hợp giấy trắng:
+`--bg #14130f`, `--brand #e35a4e`, `--jade #7fb2a0`.
+
+## Thay đổi cấu trúc
+
+- **Shell**: `.app` = rail (desktop ≥760px, rộng 76px, sticky, có `rail-mark`
+  hình ấn Hán/EN) + `.rail-main` (masthead + main max-width 1160). Mobile:
+  rail chuyển thành nav dưới (giữ class `.app-nav`/`nav-btn` — smoke test vẫn
+  đúng). Masthead: eyebrow + tựa + streak 🔥 (en) + 🌙/☀️ + ⚙️ + chip khóa học.
+- **Từ vựng (en)** = khung 2-pane: chip bài học + tìm kiếm + lọc trạng thái +
+  danh sách (trái) / **WordDetail mở ngay trong khung** (phải). Bỏ trang chi
+  tiết tách rời; `openDetail` chuyển tab `vocab` để mở đúng chỗ từ Home/Games.
+- **Từ điển (zh)** = đúng mẫu tham chiếu: topbar tra Hán tự/pinyin/vi/en + chip
+  HSK 1–6 kèm số lượng, 2-pane list/detail. Chi tiết gồm: hero Hán tự to (88px),
+  đường cong thanh điệu từng chữ, phát âm TTS, **con dấu HSK**, bộ thủ (radical
+  chip ngọc), lượng từ/phồn thể/tần suất, thứ tự nét từng chữ, nghĩa khác, ví
+  dụ, nút **Thêm vào kho** / **Luyện viết chữ này** (mở WritingScreen đúng từ
+  qua `zhWriteTarget`).
+- **Điểm đặc sắc zh**: `ToneCurve` SVG 5 thanh thu gọn; dot ngọc xanh cạnh mỗi
+  từ chỉ "đã trong kho"; seal-badge xoay -3°; stroke-row hiện từng chữ + số nét.
+
+## Nguyên tắc giữ vững
+
+- Vẫn UI tiếng Việt, offline-first, không react-router, không bẻ smoke test
+  (`.app-nav`, `button.nav-btn`, nhãn tab, 'Tất cả từ', 'Flashcard',
+  'Kho từ vựng').
+- Mỗi màn hình vẫn là 1 file, lazy tải dữ liệu đúng nhu cầu (hsk.json chỉ load
+  khi mở tab từ điển zh).

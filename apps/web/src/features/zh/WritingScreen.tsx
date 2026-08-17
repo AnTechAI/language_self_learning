@@ -34,10 +34,20 @@ export function WritingScreen({ onBack }: { onBack: () => void }) {
     };
   }, []);
 
-  const pool = useMemo(
-    () => shuffle(entries.filter((e) => e.word && [...e.word].some((c) => strokes && strokes[c]))),
-    [entries, strokes],
-  );
+  const target = useCourseStore((s) => s.zhWriteTarget);
+
+  const pool = useMemo(() => {
+    if (target?.word) {
+      return [
+        {
+          id: 'zh-write-target',
+          word: target.word,
+          senses: [{ pronunciation: target.pinyin || '' }],
+        } as unknown as (typeof entries)[number],
+      ];
+    }
+    return shuffle(entries.filter((e) => e.word && [...e.word].some((c) => strokes && strokes[c])));
+  }, [entries, strokes, target]);
   const entry = pool[idx];
   const word = entry?.word || '';
   const chars = [...word];
