@@ -140,3 +140,68 @@ python data/scripts/make-popular-list.py --slice-size 800  # + sinh slices/slice
   bỏ ~250 rank đầu wordfreq (hàm chức năng) + bỏ token rác (không nguyên âm, số, ≤1 ký tự).
 - `slices/` chia danh sách CHƯA giàu thành các lô ~800 từ → chạy nhiều đêm
   `enrich-vi-ipa.py --file slices/slice-NNN.txt` (mỗi lô ~30–40 phút, resume an toàn).
+
+---
+
+## 7. Hạ Canh — TIẾNG TRUNG (HSK 1–6)
+
+Pipeline riêng cho khóa **Tiếng Trung 🇨🇳**, không đụng dữ liệu en:
+
+### Bước 1 — `fetch-hsk.js`: tải từ điển HSK
+
+- Nguồn: [`drkameleon/complete-hsk-vocabulary`](https://github.com/drkameleon/complete-hsk-vocabulary)
+  (GitHub, công khai) — bộ từ vựng đầy đủ cho **HSK 2.0** (`wordlists/inclusive/old/`)
+  và **HSK 3.0** (`new/newest`); dùng bộ `old` = HSK 2.0 cổ điển.
+- Mỗi entry: `simplified` (chữ giản thể) · `pos` (CC-CEDICT) · `frequency` (SUBTLEX-CH) ·
+  `forms[0].transcriptions.pinyin` · `forms[0].meanings[]` (tiếng Anh).
+- File level là **cumulative** → giữ 1 từ ở cấp ĐẦU TIÊN xuất hiện → **4.991 từ unique**
+  (150/147/298/598/1298/2500 theo cấp 1→6).
+- Ghi `data/raw/hsk-dictionary.jsonl` — schema enriched chuẩn: `word, partOfSpeech,
+  definition(en), examples, synonyms, antonyms, ipa(=PINYIN), freq, level`. 1 từ đa nghĩa
+  → nhiều dòng (mỗi dòng 1 nghĩa, `vi` để trống).
+
+```bash
+node data/scripts/cli.js hsk
+```
+
+### Bước 2 — enrich: dịch nghĩa VIỆT
+
+Thêm cờ **`--sl`** (ngôn ngữ nguồn) vào `enrich-vi-ipa.py` (mặc định `en`):
+
+```bash
+python data/scripts/enrich-vi-ipa.py --sl auto --skip-ipa \
+  --in data/raw/hsk-dictionary.jsonl --out data/raw/hsk-dictionary.enriched.jsonl \
+  --workers 8 --delay 0.12
+```
+
+- `--skip-ipa`: pinyin đã có sẵn ở cột `ipa` (enrich giữ nguyên field có sẵn).
+- `--sl auto`: Google tự nhận diện tiếng Trung (sl=en sai nghĩa với nhiều từ Hán).
+- 4.991 từ ≈ 14 phút (8 workers) — resume đứt đoạn an toàn.
+
+### Bước 3 — `build-lessons.js --course zh`: bài học theo cấp HSK
+
+Chế độ enriched mở rộng cờ **`--course zh` + `--order level`**:
+
+```bash
+node data/scripts/cli.js lessons --src data/raw/hsk-dictionary.enriched.jsonl \
+  --course zh --order level
+```
+
+- Xếp theo `level` tăng dần (HSK 1 → 6), trong cấp theo tần suất giảm dần.
+- Xuất **riêng, không đụng en**: `lesson-zh-NNN.js` + `manifest-zh.js` (gọi
+  `window.VocabApp.zhLessonsInit`); xóa/ghi CHỈ file tiền tố `lesson-zh-*`.
+- Tiêu đề bài: `HSK {cấp} · Bài {k}` (trong cấp), tag `HSK {cấp}` — người học thấy
+  rõ lộ trình cấp độ.
+- Sidecar chống trùng dùng chung `out/lessoned-words.json` (chữ Hán không bao giờ
+  trùng từ tiếng Anh — vô hại).
+
+### App (React) — bài học theo khóa
+
+- `registry.ts`: shim thêm **`zhLessonsInit`** → `reg.zhLessonManifest` (riêng en).
+- `lessons.ts`: `ensureLessonsManifest(courseSeed)` tải đúng manifest theo khóa
+  (`manifest.js` / `manifest-zh.js`); `lessonById` tìm ở cả 2 mảng.
+- `enterCourse` reset `lessonManifestReady: false` → chuyển khóa tải manifest mới;
+  `useLessons` đọc `course.seed`. Bỏ cổng `course.seed === 'en'` ở Home/Vocab/Games
+  → học viên TRUNG cũng có panel bài học HSK, chọn bài trong trò chơi, chip lọc kho.
+
+---

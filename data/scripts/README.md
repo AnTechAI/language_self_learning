@@ -21,12 +21,13 @@ Danh sách lệnh: `cli.js` chạy không đối số → in hướng dẫn.
 
 | Lệnh (`cli.js`) | Script | Làm gì | Đầu ra |
 |---|---|---|---|
-| `lessons` | `build-lessons.js` | Chia từ vựng thành **bài học 20 từ** | `apps/web/public/legacy/js/lessons/` (manifest + lesson-*) |
+| `lessons` | `build-lessons.js` | Chia từ vựng thành **bài học 20 từ** (en + zh/HSK) | `apps/web/public/legacy/js/lessons/` (manifest + lesson-*) |
 | `chunks` | `build-chunks.js` | Chia toàn bộ jsonl thành **chunk nhỏ** (từ điển offline) | `js/bank/` (manifest + chunk-*) |
 | `seed` | `export-seed.js` | Sinh `seed.generated.ts` cho app React | `apps/web/src/data/seed.generated.ts` |
 | `icons` | `make-icons.js` | Sinh **icon PWA** (PNG) | `apps/web/public/icons/icon-192.png` + `icon-512.png` |
-| `enrich` | `enrich-vi-ipa.py` | Làm giàu jsonl: **nghĩa Việt + IPA + freq** | `english-dictionary.enriched.jsonl` |
-| `fetch` | `fetch-vocab.js` | Tự động **tải từ mới** từ Internet (API) | dòng nén seed (js/seed-data.js) |
+| `enrich` | `enrich-vi-ipa.py` | Làm giàu jsonl: **nghĩa Việt + IPA + freq** | `english-dictionary.enriched.jsonl` / `hsk-dictionary.enriched.jsonl` |
+| `fetch` | `fetch-vocab.js` | Tự động **tải từ mới** từ Internet (API, en) | dòng nén seed (js/seed-data.js) |
+| `hsk` | `fetch-hsk.js` | Tải **từ điển tiếng Trung HSK 1–6** (GitHub) | `data/raw/hsk-dictionary.jsonl` |
 | `build` | `build-from-jsonl.js` | Dựng từ vựng từ jsonl (gom nghĩa + dịch) | dòng nén seed |
 
 Các script Python chạy qua `cli.js` bằng lệnh `python` (đã cài wordfreq để dùng `--freq`/`--add-freq`).
@@ -52,11 +53,36 @@ npm run data:lessons -- --include-seed            # kể cả từ đã có tron
 | Flag | Ý nghĩa |
 |---|---|
 | `--source raw` | ép dùng jsonl gốc + gọi API (thay vì file enriched) |
-| `--src <file>` / `--order freq\|alpha` | nguồn khác / thứ tự |
+| `--src <file>` / `--order freq\|alpha\|level` | nguồn khác / thứ tự (level = cấp HSK tăng dần) |
+| `--course en\|zh` | khóa học (zh → bài `lesson-zh-*` + `manifest-zh.js` + tiêu đề `HSK N · Bài k`) |
 | `--from N --limit M` | lấy lát N→N+M từ |
 | `--keep-existing` | đọc manifest cũ → tiếp số bài, không xóa |
 | `--out-dir <dir>` | xuất ra thư mục khác (test) |
 | `--size N` | mỗi bài N từ (mặc định 20) |
+
+> --course zh KHÔNG đụng bài tiếng Anh: chỉ xóa/ghi `lesson-zh-*.js` + `manifest-zh.js`.
+> Bài Hán tự giống hệt en: mỗi bài 20 từ theo cấp HSK, app tải đúng file khi cần.
+
+---
+
+## `fetch-hsk.js` — tải từ điển tiếng Trung HSK 1–6
+
+Tải bộ từ vựng **HSK 2.0 cổ điển** (150/150/300/600/1300/2500) từ kho GitHub
+[`drkameleon/complete-hsk-vocabulary`](https://github.com/drkameleon/complete-hsk-vocabulary)
+(file `wordlists/inclusive/old/{1..6}.json` — mỗi entry có chữ giản thể, pinyin,
+từ loại CC-CEDICT, nghĩa tiếng Anh, tần suất). Các file level là **cumulative** —
+script giữ 1 từ ở **cấp đầu tiên xuất hiện** → **4.991 từ unique**, ghi `data/raw/hsk-dictionary.jsonl`
+schema chuẩn enriched (cột `ipa` = **pinyin**, `level` = cấp HSK, `vi` để trống).
+
+```bash
+node data/scripts/cli.js hsk
+```
+
+**Sau đó làm giàu nghĩa Việt + dựng bài** — xem mục Luồng làm việc ở dưới.
+Nguồn thay thế: `complete.json` / `wordlists/inclusive/{new,newest}` (HSK 3.0) —
+đổi `BASE` + tên file trong `fetch-hsk.js` là dùng được.
+
+---
 
 > **Chống trùng**: `--keep-existing` lưu từ đã vào bài ở `out/lessoned-words.json`
 > và **loại** chúng ở lần chạy sau — gọi thêm nhiều lần không tạo bài trùng.
@@ -179,6 +205,16 @@ python data/scripts/make-popular-list.py --slice-size 800   # + sinh out/slices/
 python data/scripts/make-popular-list.py --slice-size 800     # 1 lần (sinh danh sách + slice)
 python data/scripts/enrich-vi-ipa.py --file out/slices/slice-001.txt   # chạy từng slice về đêm
 node data/scripts/cli.js lessons --keep-existing                      # cộng dồn bài (0 trùng)
+```
+
+**Tiếng Trung (HSK 1–6) — pipeline trọn gói:**
+```bash
+node data/scripts/cli.js hsk                                       # 1. tải từ điển HSK 1–6 (GitHub)
+python data/scripts/enrich-vi-ipa.py --sl auto --skip-ipa \
+  --in data/raw/hsk-dictionary.jsonl --out data/raw/hsk-dictionary.enriched.jsonl \
+  --workers 8 --delay 0.12                                        # 2. dịch nghĩa Việt (~14 phút)
+node data/scripts/cli.js lessons --src data/raw/hsk-dictionary.enriched.jsonl \
+  --course zh --order level                                      # 3. bài học theo cấp HSK
 ```
 
 **Thêm icon/seed/chunk sau khi sửa dữ liệu:**

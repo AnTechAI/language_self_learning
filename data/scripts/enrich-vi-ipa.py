@@ -62,7 +62,8 @@ DEFAULT_IN = os.path.join(ROOT, "data", "raw", "english-dictionary.jsonl")
 DEFAULT_OUT = os.path.join(ROOT, "data", "raw", "english-dictionary.enriched.jsonl")
 
 API_DICT = "https://api.dictionaryapi.dev/api/v2/entries/en/{w}"
-API_TRANS = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=vi&dt=t&q={q}"
+API_TRANS = "https://translate.googleapis.com/translate_a/single?client=gtx&sl={sl}&tl=vi&dt=t&q={q}"
+SL = "en"  # ngôn ngữ nguồn — đổi qua --sl (vd --sl auto cho tiếng Trung)
 UA = "Mozilla/5.0 (enrich-vi-ipa)"
 
 
@@ -96,10 +97,10 @@ def http_get(url, timeout=20, retries=3, backoff=2.0):
 
 
 def google_translate(text):
-    """Google Translate EN→VI. Trả '' nếu lỗi."""
+    """Google Translate (SL→VI) qua biến toàn cục SL — đặt bởi --sl. Trả '' nếu lỗi."""
     if not text:
         return ""
-    raw = http_get(API_TRANS.format(q=urllib.parse.quote(text)))
+    raw = http_get(API_TRANS.format(sl=SL, q=urllib.parse.quote(text)))
     if not raw:
         return ""
     try:
@@ -160,6 +161,7 @@ def build_arg_parser():
     p.add_argument("--freq", action="store_true", help="thêm cột freq qua wordfreq (pip install wordfreq)")
     p.add_argument("--add-freq", action="store_true", help="CHỈ thêm cột freq cho file đã giàu (không gọi API)")
     p.add_argument("--dry-run", action="store_true", help="chỉ đếm, không gọi API")
+    p.add_argument("--sl", default="en", help="ngôn ngữ nguồn Google Translate (en / auto / zh…)")
     return p
 
 
@@ -292,6 +294,8 @@ def process_one(line, done, vi_cache, ipa_cache, lock, opt, word_count):
 
 def main():
     args = build_arg_parser().parse_args()
+    global SL
+    SL = args.sl or "en"
     if args.inplace:
         args.outfile = args.infile
 

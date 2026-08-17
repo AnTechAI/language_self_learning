@@ -19,12 +19,13 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 
 const CMDS = {
-  lessons: 'build-lessons.js',       // chia bài học (jsonl / enriched theo tần suất)
+  lessons: 'build-lessons.js',       // chia bài học (jsonl / enriched theo tần suất / HSK theo cấp)
   chunks: 'build-chunks.js',         // từ điển offline → js/bank/
   seed: 'export-seed.js',            // seed → seed.generated.ts
   icons: 'make-icons.js',            // icon PWA
   enrich: 'enrich-vi-ipa.py',        // làm giàu jsonl (vi + ipa + freq) — Python
-  fetch: 'fetch-vocab.js',           // thêm từ mới từ API
+  fetch: 'fetch-vocab.js',           // thêm từ mới từ API (en)
+  hsk: 'fetch-hsk.js',               // tải từ điển TIẾNG TRUNG HSK 1–6 → hsk-dictionary.jsonl
   build: 'build-from-jsonl.js',      // dựng từ từ jsonl + API
 };
 

@@ -36,7 +36,7 @@ apps/web/
     │   ├── seed.generated.ts  # 524 EN + 90 ZH (sinh bởi data/scripts/export-seed.js)
     │   ├── registry.ts        # shim window.VocabApp + loadScript + once()
     │   ├── bank.ts            # từ điển offline theo chunk (FNV-1a hash)
-    │   └── lessons.ts         # bài học theo nhu cầu (manifest + merge)
+    │   └── lessons.ts         # bài học theo nhu cầu (manifest + merge; en + zh/HSK)
     ├── lib/                   # logic thuần (port từ legacy)
     │   ├── format.ts          # normalize/shuffle/uid/maskText/meaningOf…
     │   ├── learning.ts        # markLearned/applyResult/streak/history
@@ -45,6 +45,7 @@ apps/web/
     ├── store/useCourseStore.ts   # zustand — state toàn cục + phối hợp IDB
     ├── components/            # ui.tsx (design system), Layout.tsx
     └── features/              # picker/, home/ (HomeScreen + useLessons),
+                               # study/ (LessonStudyScreen — trang học bài),
                                # vocab/, games/, stats/
 ```
 
@@ -95,6 +96,80 @@ apps/web/
 - **Token** lưu localStorage (`el_sync_account`) — không lưu mật khẩu; deviceId riêng
   (`el_sync_device`). Base URL: `VITE_API_URL` (mặc định `http://localhost:8000`).
 - **Lưu ý:** chỉ sync khóa đang mở; payload per-entry nên tự động hòa khi mở khóa khác.
+
+### Bài học theo KHÓA (en + zh) — `data/lessons.ts` + `data/registry.ts`
+
+Hai khóa học, mỗi khóa **1 manifest + 1 dãy file bài riêng** (tải đúng file khi cần):
+
+| Khóa | Manifest | File bài | Shim | Nguồn |
+|---|---|---|---|---|
+| en 🇬🇧 | `lessons/manifest.js` | `lesson-NNN.js` | `lessonsInit` | english-dictionary.enriched.jsonl |
+| zh 🇨🇳 | `lessons/manifest-zh.js` | `lesson-zh-NNN.js` | `zhLessonsInit` | hsk-dictionary.enriched.jsonl (HSK 1–6) |
+
+- `ensureLessonsManifest(courseSeed)` tải đúng manifest theo khóa; `lessonById` tìm cả 2 mảng.
+- `useLessons` đọc `course.seed`; `enterCourse` reset `lessonManifestReady: false`
+  → chuyển khóa tự tải manifest mới (không hiện nhầm bài khóa kia).
+- Bài tiếng Trung: 20 từ/bài, tiêu đề `HSK {cấp} · Bài {k}`, tag `HSK {cấp}` —
+  đủ dùng cho Home panel, chọn bài trong Games, chip lọc Vocab (đã bỏ cổng `seed === 'en'`).
+
+### Trang học bài (GĐ 4) — `features/study/LessonStudyScreen.tsx`
+
+- Bấm **"Học bài này →"** trên thẻ bài (HomeScreen `LessonPanel`) gọi
+  `store.startLessonStudy(lessonId)`: gộp từ bài vào kho (`pickLesson`, idempotent)
+  rồi đặt session `study = { lessonId, words, idx, done }` — `App.tsx` thấy `study`
+  thì render trang học bài full-screen (đè mọi tab, là PAGE chứ không phải tab).
+- Trang tua **từng từ một**: từ + IPA + loại từ + nghĩa Việt + nghĩa Anh + ví dụ +
+  đồng nghĩa/trái nghĩa + nút phát âm; progress bar + "Từ i/N".
+- Nút **"Từ tiếp theo →"** → `nextStudyWord()` (idx++); từ cuối đổi thành
+  **"✓ Hoàn tất bài học"** → `done = true` → màn hoàn tất hiện **2 nút**:
+  - **"Học tiếp →"** → `startLessonStudy` bài kế trong manifest (hết bài thì
+    toast + quay về);
+  - **"🎮 Ôn tập"** → `setGameLesson(lessonId)` + tab games.
+- ✕ thoát giữa chừng: từ vẫn ở trong kho (đã merge), toast nhắc.
+- State trong store (không phải local component) để có thể tua/điều hướng qua
+  các action; CSS riêng `.study-*` trong `styles/app.css`.
+
+### Logic game (GĐ 4) — `lib/games.ts` + `features/games/GamesScreen.tsx`
+
+- **Flashcard & Dịch nghĩa dùng `stableSense(entry, session)`** — sense được
+  KHÓA cố định lúc tạo session (`senseIdx` trong `startSimpleSession`, ưu tiên
+  sense CÓ nghĩa đích khi truyền `targetCode`) → gõ chữ / lật thẻ / chuyển từ
+  không đổi nghĩa hiển thị giữa chừng. Trước đây dùng `pickSense` mỗi render →
+  nghĩa nhảy lung tung + đáp án lệch sense.
+- **Dịch nghĩa TÁCH thành 2 game một chiều** (không còn qua-lại ngẫu nhiên):
+  - `translate-vi` — "Dịch nghĩa Anh–Việt" (khóa zh: Trung–Việt): HIỆN từ +
+    phiên âm → gõ nghĩa tiếng Việt (`course.target.code`).
+  - `translate-en` — "Dịch nghĩa Anh–Anh" (chỉ khóa `en`): HIỆN định nghĩa
+    tiếng Anh (`meaning.en`, sense cố định) → GÕ TỪ VỰNG (`entry.word`).
+  - `translateTargetCode(course, type)` trả mã đích; `checkTranslate` validate
+    ĐÚNG sense đang hiển thị, nguyên nghĩa hoặc 1 phần tách `, ; ， 、`, bỏ dấu
+    VN (translate-vi), đáp án rỗng → sai. Pool: `startSimpleSession(type, pool,
+    qty, targetCode)` với targetCode = `'en'` hoặc `course.target.code`;
+    `startGame` lọc riêng translate-en chỉ giữ từ có `meaning.en`.
+- **Phím Enter** trong 2 game dịch: ô nhập Enter = Kiểm tra; sau khi có kết quả
+  Enter = chuyển câu tiếp theo (lắng nghe ở cấp `window` — vì sau khi ô nhập
+  unmount focus rơi ra body, sự kiện không bọt qua wrapper; bỏ qua khi target là
+  INPUT/BUTTON để không trùng với Enter submit hoặc click nút).
+- **Không tăng idx lúc trả lời** (`answerTranslate` dùng hạch toán thủ công thay
+  `recordAnswer`): màn feedback giữ NGUYÊN câu đang hỏi (prompt + masked + chips
+  đúng câu vừa trả lời); `advanceTranslate` mới tăng idx (`idx >= length-1` →
+  `idx = length` để hiện Summary). Trước đây idx tăng ngay → phần hỏi/đáp án của
+  CÂU TIẾP hiện sẵn trong lúc xem kết quả câu trước.
+- **Feedback translate dùng giá trị CHỐT lúc trả lời** (`lastAnswer.word` +
+  `lastAnswer.correctWord` — chốt trong `answerTranslate`) vì `recordAnswer` đã
+  tăng `idx` → trước đây màn feedback lấy `entry/queue[idx+1]` → hiện đáp án của
+  câu SAU lẫn câu trước.
+- **Đồng/trái nghĩa**: session giữ `pool` (nguồn nhiễu). `buildChoice` dùng nhiễu
+  TRONG PHẠM VI BÀI HỌC khi bài đủ ≥3 từ khác; bài quá nhỏ / "Ôn lại từ sai" thì
+  fallback toàn bộ kho. Lọc đáp án rỗng (`''`) ở cả session lẫn lúc dựng câu hỏi.
+- **Requeue** tối đa 1 lần/từ (sai → đưa cuối hàng đợi); đúng lại → gỡ khỏi
+  `missed`; `finished = idx >= queue.length` tính cả từ bị hỏi lại.
+- **Test**: `src/lib/games.test.ts` — test phủ pool/session/recordAnswer/requeue/
+  buildChoice (scope nhiễu, 4 đáp án duy nhất)/checkTranslate (translate-en,
+  translate-vi: sense cố định, nhiều nghĩa, dấu VN, danh sách phẩy, rỗng).
+- **Lesson grid responsive**: `styles/app.css` — `auto-fill minmax(170px,1fr)` (3–4
+  cột trên desktop), max-height `min(60vh,620px)`; ≤640px: 1 cột to + hiện hết bài
+  không cuộn trong khung.
 
 ### Lưu ý khác (dữ liệu & smoke test)
 

@@ -231,7 +231,7 @@ function existingSeedWords() {
 /* ================= chính ================= */
 function parseArgs() {
   const a = process.argv.slice(2);
-  const opt = { words: [], file: '', limit: 0, from: 0, tag: '', size: LESSON_SIZE, noCache: false, source: '', src: '', order: 'freq', includeSeed: false, keepExisting: false, outDir: '' };
+  const opt = { words: [], file: '', limit: 0, from: 0, tag: '', size: LESSON_SIZE, noCache: false, source: '', src: '', order: 'freq', includeSeed: false, keepExisting: false, outDir: '', course: '' };
   for (let i = 0; i < a.length; i++) {
     if (a[i] === '--no-cache') opt.noCache = true;
     else if (a[i] === '--size') { opt.size = parseInt(a[i + 1], 10) || LESSON_SIZE; i++; }
@@ -246,6 +246,7 @@ function parseArgs() {
     else if (a[i] === '--include-seed') opt.includeSeed = true;
     else if (a[i] === '--keep-existing') opt.keepExisting = true;
     else if (a[i] === '--out-dir') { opt.outDir = a[i + 1] || ''; i++; }
+    else if (a[i] === '--course') { opt.course = (a[i + 1] || 'en').toLowerCase(); i++; }
   }
   return opt;
 }
@@ -258,6 +259,12 @@ async function buildLessonsFromEnriched(opt) {
     process.exit(1);
   }
   const outDir = opt.outDir ? path.resolve(ROOT, opt.outDir) : OUT_DIR;
+
+  // Khóa học: en (mặc định) hay zh (prefix lesson-zh-, manifest-zh.js, zhLessonsInit)
+  const zh = (opt.course || 'en') === 'zh';
+  const idPrefix = zh ? 'lesson-zh-' : 'lesson-';
+  const manifestFile = zh ? 'manifest-zh.js' : 'manifest.js';
+  const shimInit = zh ? 'zhLessonsInit' : 'lessonsInit';
 
   // --- Gom mọi dòng theo từ; mỗi dòng là 1 nghĩa (đã có vi sẵn) ---
   console.log('📖 Đang đọc ' + path.basename(srcFile) + '…');
@@ -283,6 +290,7 @@ async function buildLessonsFromEnriched(opt) {
       a: cleanList(e.antonyms, w),
       i: String(e.ipa || ''),
       freq: typeof e.freq === 'number' ? e.freq : 0,
+      level: typeof e.level === 'number' ? e.level : 0,
     });
   }
   rl.close();
@@ -303,25 +311,37 @@ async function buildLessonsFromEnriched(opt) {
     const uniq = senses.filter((s) => { if (!s.v || seen.has(s.e.toLowerCase())) return false; seen.add(s.e.toLowerCase()); return true; });
     if (!uniq.length) continue;                    // không dịch được → không học được
     if (existing.has(w)) continue;                 // đã có trong kho cơ bản
-    wordList.push({ w, freq: Math.max(...uniq.map((s) => s.freq)), senses: uniq });
+    wordList.push({ w, freq: Math.max(...uniq.map((s) => s.freq)), level: Math.max(...uniq.map((s) => s.level)), senses: uniq });
   }
   console.log(`   Học được: ${wordList.length} từ (${byWord.size - wordList.length} bỏ: thiếu nghĩa Việt / trùng seed).`);
 
-  // --- Xếp thứ tự: tần suất giảm dần (mặc định) hoặc a→z ---
+  // --- Xếp thứ tự: tần suất giảm dần (mặc định) / HSK level tăng dần / a→z ---
   if (opt.order === 'freq') {
     wordList.sort((a, b) => (b.freq - a.freq) || a.w.localeCompare(b.w));
+  } else if (opt.order === 'level') {
+    wordList.sort((a, b) => (a.level - b.level) || (b.freq - a.freq) || a.w.localeCompare(b.w));
   } else {
     wordList.sort((a, b) => a.w.localeCompare(b.w));
   }
   const total = wordList.length;
   const from = Math.min(opt.from, total);
   const sliced = wordList.slice(from, opt.limit > 0 ? from + opt.limit : total);
-  console.log(`   Xếp theo ${opt.order === 'freq' ? 'TẦN SUẤT (thông dụng trước)' : 'bảng chữ cái'}: ${from + 1}–${from + sliced.length}/${total}.`);
+  const orderLabel = opt.order === 'freq' ? 'TẦN SUẤT (thông dụng trước)' : opt.order === 'level' ? 'CẤP ĐỘ HSK (1→6)' : 'bảng chữ cái';
+  console.log(`   Xếp theo ${orderLabel}: ${from + 1}–${from + sliced.length}/${total}.`);
 
   // --- Dựng từng dòng nén (định dạng SEED_WORDS, giống chế độ cũ) ---
   const rowsByWord = new Map();
   for (const it of sliced) {
     const { w, senses } = it;
+    // tiếng Trung: nghĩa ĐẦU TIÊN của nguồn là nghĩa chính (file đã xếp level→freq→thứ tự nghĩa)
+    if (zh) {
+      const primary = senses[0];
+      const extras = senses.slice(1, 5).map((x) => ({
+        p: x.p, i: x.i || primary.i || '', e: x.e, v: x.v, x: x.x, s: x.s, a: x.a,
+      }));
+      rowsByWord.set(w, [w, primary.i || '', primary.p, primary.e, primary.v, primary.x || '', '', primary.s, primary.a, '', ...extras]);
+      continue;
+    }
     const byPos = {};
     senses.forEach((s) => { byPos[s.p] = (byPos[s.p] || 0) + 1; });
     let primaryPos = 'other', best = -1;
@@ -339,25 +359,28 @@ async function buildLessonsFromEnriched(opt) {
   }
 
   // --- Gom thành BÀI HỌC (mỗi bài opt.size từ, theo thứ tự đã xếp) ---
-  const built = sliced.map((it) => it.w);
-  const tag = opt.tag || 'Từ phổ biến';
+  const tag = opt.tag || (zh ? 'HSK' : 'Từ phổ biến');
   const lessons = [];
-  for (let i = 0; i < built.length; i += opt.size) {
-    const group = built.slice(i, i + opt.size);
+  let levelNum = 0, lastLevel = -1;
+  for (let i = 0; i < sliced.length; i += opt.size) {
+    const group = sliced.slice(i, i + opt.size);
+    const lv = zh ? (group[0] ? group[0].level : 0) : 0;
+    if (zh && lv !== lastLevel) { levelNum = 0; lastLevel = lv; }
     lessons.push({
-      id: 'lesson-' + String(lessons.length + 1).padStart(3, '0'),
-      title: 'Bài ' + (lessons.length + 1) + ' · ' + tag,
-      tag,
-      words: group.map((w) => rowsByWord.get(w)),
+      id: idPrefix + String(lessons.length + 1).padStart(3, '0'),
+      title: zh ? 'HSK ' + lv + ' · Bài ' + (levelNum + 1) : 'Bài ' + (lessons.length + 1) + ' · ' + tag,
+      tag: zh ? 'HSK ' + lv : tag,
+      words: group.map((it) => rowsByWord.get(it.w)),
     });
+    if (zh) levelNum++;
   }
 
   // --- Ghi js/lessons/ (xóa bài cũ trừ khi --keep-existing) ---
   fs.mkdirSync(outDir, { recursive: true });
   let existingLessons = [];
-  if (opt.keepExisting && fs.existsSync(path.join(outDir, 'manifest.js'))) {
+  if (opt.keepExisting && fs.existsSync(path.join(outDir, manifestFile))) {
     try {
-      const src = fs.readFileSync(path.join(outDir, 'manifest.js'), 'utf-8');
+      const src = fs.readFileSync(path.join(outDir, manifestFile), 'utf-8');
       // chấp nhận cả key có nháy (JSON.stringify) lẫn key trần: {"id":…} / {id:…}
       const m = src.match(/\[\s*\{.*\}\]\s*\)/s);
       if (m) {
@@ -368,15 +391,21 @@ async function buildLessonsFromEnriched(opt) {
     } catch (err) { existingLessons = []; }
     console.log(`   Giữ ${existingLessons.length} bài cũ, thêm ${lessons.length} bài mới.`);
   } else {
-    for (const f of fs.readdirSync(outDir)) fs.unlinkSync(path.join(outDir, f));
+    // Xóa CHỈ file của khóa này (en: lesson-*/manifest.js · zh: lesson-zh-*/manifest-zh.js)
+    for (const f of fs.readdirSync(outDir)) {
+      const mine = zh
+        ? (f === 'manifest-zh.js' || /^lesson-zh-\d{3}\.js$/.test(f))
+        : (f === 'manifest.js' || /^lesson-\d{3}\.js$/.test(f));
+      if (mine) fs.unlinkSync(path.join(outDir, f));
+    }
   }
   const startNum = existingLessons.reduce((mx, l) => {
     const n = parseInt(String(l.id || '').replace(/\D/g, ''), 10);
     return Number.isFinite(n) ? Math.max(mx, n) : mx;
   }, 0);
   lessons.forEach((l, i) => {
-    l.id = 'lesson-' + String(startNum + i + 1).padStart(3, '0');
-    l.title = 'Bài ' + (startNum + i + 1) + ' · ' + tag;
+    l.id = idPrefix + String(startNum + i + 1).padStart(3, '0');
+    if (!zh) l.title = 'Bài ' + (startNum + i + 1) + ' · ' + tag;
     const body = '(function(){window.VocabApp.lessonsRegister(' + JSON.stringify(l.id + '.js') +
       ',{tag:' + JSON.stringify(l.tag) + ',words:[\n' +
       l.words.map((row) => toRow({ row })).join('\n') + '\n]});})();\n';
@@ -384,9 +413,9 @@ async function buildLessonsFromEnriched(opt) {
   });
   const stamp = new Date().toISOString().slice(0, 10);
   const allMeta = [...existingLessons, ...lessons.map((l) => ({ id: l.id, title: l.title, file: l.id + '.js', tag: l.tag, count: l.words.length }))];
-  fs.writeFileSync(path.join(outDir, 'manifest.js'),
+  fs.writeFileSync(path.join(outDir, manifestFile),
     '/* Bài học — sinh bởi data/scripts/build-lessons.js (' + stamp + ') · nguồn: ' + path.basename(srcFile) + ' */\n' +
-    'window.VocabApp.lessonsInit(' + JSON.stringify(allMeta) + ');\n', 'utf-8');
+    'window.VocabApp.' + shimInit + '(' + JSON.stringify(allMeta) + ');\n', 'utf-8');
 
   // Cập nhật sidecar từ đã vào bài (gồm bài cũ + bài mới) — chống trùng khi chạy tiếp
   if (opt.keepExisting) {
@@ -403,7 +432,7 @@ async function buildLessonsFromEnriched(opt) {
 
   console.log(`\n📚 Xong: ${lessons.length} bài học (mỗi bài ${opt.size} từ) tại ${outDir}.`);
   lessons.slice(0, 8).forEach((l) => console.log(`   ${l.id} — ${l.title} (${l.words.length} từ)`));
-  if (lessons.length > 8) console.log(`   … tổng ${lessons.length} bài (${built.length} từ).`);
+  if (lessons.length > 8) console.log(`   … tổng ${lessons.length} bài (${sliced.length} từ).`);
 }
 
 (async () => {
