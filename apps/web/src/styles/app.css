@@ -4260,3 +4260,317 @@ select.input {
     max-width: 100%;
   }
 }
+
+/* ============================================================
+   EN — TRANG HỌC BÀI (LessonStudyScreen) theo lexicon StudyView
+   ============================================================ */
+.study-page {
+  min-height: 100vh;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 18px 20px 40px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+.study-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.study-head h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.sw-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sw-title small {
+  font-size: 12px;
+  color: var(--ink-3);
+  font-family: var(--font);
+  font-weight: 500;
+}
+.sw-counter {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+/* progress bar nhỏ */
+.sw-top {
+  margin-bottom: 16px;
+}
+.sw-progress {
+  height: 5px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.sw-progress-bar {
+  height: 100%;
+  background: var(--brand);
+  border-radius: 99px;
+  transition: width 0.3s var(--ease-out);
+}
+
+/* Word card */
+.study-word {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 24px 26px;
+  box-shadow: var(--shadow-1);
+  animation: screen-in 0.22s var(--ease-out) both;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sw-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sw-word {
+  position: relative;
+  z-index: 0;
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  color: var(--ink);
+  line-height: 1.2;
+}
+.sw-word::before {
+  content: '';
+  position: absolute;
+  inset: -4px -10px;
+  z-index: -1;
+  border-radius: 12px;
+  background: linear-gradient(
+    115deg,
+    var(--brand-soft),
+    color-mix(in srgb, var(--amber-soft) 70%, var(--brand-soft))
+  );
+  transform: rotate(-1.4deg);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--brand) 12%, transparent);
+}
+.sw-speak {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.14s var(--ease-out);
+}
+.sw-speak:hover {
+  background: var(--surface-2);
+}
+.sw-flex {
+  flex: 1;
+}
+.sw-tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+.sw-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.sw-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.sw-grid .lex-field {
+  border-top: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  background: var(--surface);
+}
+.sw-grid .lex-field.lf-teal {
+  border-left: 3px solid var(--brand);
+}
+.sw-grid .lex-field.lf-amber {
+  border-left: 3px solid var(--amber);
+}
+.study-word > .lex-field.lf-rose {
+  border-top: none;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--rose);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  background: var(--surface);
+}
+.study-word .lex-field-body {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.study-word .lex-field-body em {
+  font-family: var(--font-display);
+  color: var(--ink);
+}
+.study-word .lex-field-body mark {
+  background: color-mix(in srgb, var(--brand) 14%, transparent);
+  color: var(--brand-strong);
+  border-radius: 3px;
+  padding: 0 2px;
+  font-weight: 700;
+}
+.study-word .lm-senses {
+  border-top: 1px solid var(--line);
+  padding: 6px 0 2px;
+}
+.study-word .lm-syn-row {
+  border-top: 1px solid var(--line);
+  padding: 10px 0 0;
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+/* Nút full-width tối */
+.sw-next {
+  margin-top: 18px;
+  width: 100%;
+  padding: 13px 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 14.5px;
+  font-weight: 700;
+  font-family: var(--font);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.14s var(--ease-out), transform 0.1s var(--ease-out);
+}
+.sw-next:hover {
+  opacity: 0.92;
+}
+.sw-next:active {
+  transform: scale(0.995);
+}
+.sw-next .chev {
+  font-size: 17px;
+}
+
+/* ================= LessonDone ================= */
+.ld-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 30px 10px;
+}
+.ld-badge {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, var(--brand-soft), color-mix(in srgb, var(--amber-soft) 70%, var(--brand-soft)));
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  margin-bottom: 16px;
+  transform: rotate(-3deg);
+  box-shadow: var(--shadow-1);
+}
+.ld-title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 8px;
+}
+.ld-sub {
+  font-size: 14px;
+  color: var(--ink-2);
+  margin: 0 0 26px;
+  max-width: 400px;
+  line-height: 1.55;
+}
+.study-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 300px;
+}
+.ld-btn {
+  padding: 12px 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  font-size: 14.5px;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: transform 0.1s var(--ease-out), box-shadow 0.14s var(--ease-out);
+}
+.ld-btn:hover {
+  box-shadow: var(--shadow-1);
+}
+.ld-btn:active {
+  transform: translateY(1px);
+}
+.ld-btn.primary {
+  border: 0;
+  background: var(--brand);
+  color: #fff;
+  font-weight: 700;
+}
+.ld-btn.primary:hover {
+  background: var(--brand-strong);
+}
+.ld-quit {
+  margin-top: 20px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-3);
+  font-size: 13px;
+  font-family: var(--font);
+  cursor: pointer;
+}
+.ld-quit:hover {
+  color: var(--brand);
+}
+
+@media (max-width: 600px) {
+  .sw-grid {
+    grid-template-columns: 1fr;
+  }
+  .study-word {
+    padding: 20px;
+  }
+}

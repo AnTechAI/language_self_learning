@@ -210,3 +210,47 @@ export function WordBlock({ entry }: { entry: WordEntry }) {
     </div>
   );
 }
+
+/* ============================================================
+   LEXICON helpers dùng chung (WordDetail modal + trang học bài)
+   ============================================================ */
+
+/** Highlight từ khóa (bỏ qua hoa/thường) trong câu ví dụ */
+export function HighlightEn({ text, word }: { text: string; word: string }) {
+  const idx = word ? text.toLowerCase().indexOf(word.toLowerCase()) : -1;
+  if (idx < 0) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark>{text.slice(idx, idx + word.length)}</mark>
+      {text.slice(idx + word.length)}
+    </>
+  );
+}
+
+/** Chip từ loại tô màu theo loại (giống hệ màu zh) */
+export function PosChip({ pos }: { pos: string }) {
+  return (
+    <span className="lex-pos-chip" data-pos={String(pos || '').toLowerCase()}>
+      {pos || '?'}
+    </span>
+  );
+}
+
+/** Field nghĩa: label tick + viền trái màu */
+export function Field({
+  label,
+  accent = 'teal',
+  children,
+}: {
+  label: string;
+  accent?: 'teal' | 'amber' | 'rose';
+  children: ReactNode;
+}) {
+  return (
+    <div className={`lex-field lf-${accent}`}>
+      <div className="lex-field-label">{label}</div>
+      <div className="lex-field-body">{children}</div>
+    </div>
+  );
+}

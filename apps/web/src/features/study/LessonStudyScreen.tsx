@@ -1,14 +1,19 @@
 /**
- * LessonStudyScreen — "Học bài này": PAGE tua từng từ của bài.
- *   - Từng từ hiện chi tiết (từ, IPA, loại từ, nghĩa Việt, ví dụ, đồng nghĩa/trái nghĩa) + nút "Từ tiếp theo →".
- *   - Từ cuối → nút "✓ Hoàn tất bài học".
- *   - Hoàn tất / thoát giữa chừng → hiện 2 nút "Học tiếp" (bài sau) và "Ôn tập" (games bài này).
+ * LessonStudyScreen — "Học bài này": PAGE tua từng từ của bài (theo
+ * lexicon-ui.jsx StudyView). Word card: Fraunces 36px + volume, IPA mono +
+ * chip từ loại, 3 field (Anh-Anh / Anh-Việt / Ví dụ) có highlight, đ/trái
+ * nghĩa tags, nút full-width tối. Hoàn tất → LessonDone (Bài mới/Học lại/Ôn tập).
  */
-import { Button } from '../../components/ui';
+import { Field, HighlightEn, PosChip } from '../../components/ui';
 import { speak } from '../../lib/tts';
 import { lessonById } from '../../data/lessons';
 import { useLessons } from '../home/useLessons';
 import { useCourseStore } from '../../store/useCourseStore';
+
+function lessonNum(id: string): number {
+  const m = String(id || '').match(/(\d+)\s*$/);
+  return m ? Number(m[1]) : 0;
+}
 
 export function LessonStudyScreen() {
   const store = useCourseStore();
@@ -34,6 +39,9 @@ export function LessonStudyScreen() {
     }
   };
 
+  /* ---- Học lại chính bài này ---- */
+  const restart = () => void store.startLessonStudy(lessonId);
+
   /* ---- Ôn tập → mở games của bài này ---- */
   const goReview = () => {
     store.setGameLesson(lessonId);
@@ -50,7 +58,7 @@ export function LessonStudyScreen() {
   const last = idx >= total - 1;
   const pct = total > 1 ? Math.round((Math.min(idx + 1, total) / total) * 100) : 0;
 
-  /* ================= MÀN HOÀN TẤT ================= */
+  /* ================= MÀN HOÀN TẤT (LessonDone) ================= */
   if (done) {
     return (
       <div className="study-page">
@@ -58,110 +66,151 @@ export function LessonStudyScreen() {
           <button className="modal-x" onClick={() => store.closeStudy()} aria-label="Đóng">
             ✕
           </button>
-          <h2>📚 {meta?.title || 'Bài học'}</h2>
+          <span className="sw-title">{meta?.title || 'Bài học'}</span>
         </header>
-        <div className="study-done">
-          <div className="big">🎉</div>
-          <h3>Đã xem hết {total} từ của bài</h3>
-          <p className="help">Từ của bài đã được thêm vào kho từ vựng của bạn. Hãy chọn:</p>
+        <div className="ld-wrap">
+          <div className="ld-badge">🎉</div>
+          <h3 className="ld-title">Hoàn thành bài {lessonNum(lessonId)}!</h3>
+          <p className="ld-sub">
+            Bạn đã học {total} từ trong "{meta?.title}". Từ của bài đã được thêm vào kho từ vựng.
+          </p>
           <div className="study-actions">
-            <Button variant="primary" size="lg" onClick={() => void goNextLesson()}>
-              Học tiếp →
-            </Button>
-            <Button variant="ghost" size="lg" onClick={goReview}>
+            <button className="ld-btn primary" onClick={() => void goNextLesson()}>
+              Bài mới →
+            </button>
+            <button className="ld-btn" onClick={restart}>
+              Học lại
+            </button>
+            <button className="ld-btn" onClick={goReview}>
               🎮 Ôn tập
-            </Button>
+            </button>
           </div>
-          <Button variant="ghost" style={{ marginTop: 12 }} onClick={() => store.closeStudy()}>
-            Quay lại Hôm nay
-          </Button>
+          <button className="ld-quit" onClick={() => store.closeStudy()}>
+            ← Quay lại
+          </button>
         </div>
       </div>
     );
   }
 
-  /* ================= MÀN TỪNG TỪ ================= */
+  /* ================= MÀN TỪNG TỪ (StudyWord) ================= */
   const s0 = (entry.senses || [])[0];
+  const m = s0?.meaning || {};
+  const posList = (entry.senses || [])
+    .map((s) => s.partOfSpeech)
+    .filter((p, i, a) => p && a.indexOf(p) === i);
+
   return (
     <div className="study-page">
       <header className="study-head">
         <button className="modal-x" onClick={exit} aria-label="Đóng">
           ✕
         </button>
+        <span className="sw-title">
+          {meta?.title || 'Bài học'}
+          {meta?.tag ? <small> · {meta.tag}</small> : null}
+        </span>
         <div className="spacer" style={{ flex: 1 }} />
-        <span className="help">
-          Bài {meta?.tag ? '· ' + meta.tag : ''} · Từ {idx + 1}/{total}
+        <span className="sw-counter">
+          Từ {idx + 1}/{total}
         </span>
       </header>
 
-      {/* progress */}
-      <div className="study-progress">
-        <div className="study-progress-bar" style={{ width: pct + '%' }} />
+      {/* progress — bar nhỏ bên phải (theo mẫu) */}
+      <div className="sw-top">
+        <div className="sw-progress">
+          <div className="sw-progress-bar" style={{ width: pct + '%' }} />
+        </div>
       </div>
 
       {/* chi tiết từ */}
       <div className="study-word" key={entry.id}>
-        <div className="study-word-word">
-          {entry.word}
+        <div className="sw-head">
+          <span className="sw-word">{entry.word}</span>
           <button
-            className="speak-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              speak(entry.word, course.source.code);
-            }}
+            className="sw-speak"
+            onClick={() => speak(entry.word, course.source.code)}
             title="Nghe phát âm"
+            aria-label="Nghe phát âm"
           >
             🔈
           </button>
-        </div>
-        {s0?.pronunciation ? <div className="ipa">{s0.pronunciation}</div> : null}
-        <div className="study-pos">
-          {(entry.senses || [])
-            .map((s) => s.partOfSpeech)
-            .filter((p, i, a) => p && a.indexOf(p) === i)
-            .join(' · ')}
+          <div className="sw-flex" />
+          <span className="sw-tag">Bài {lessonNum(lessonId)}</span>
         </div>
 
-        {/* nghĩa */}
-        {(entry.senses || []).map((s, i) => {
-          const m = s.meaning || {};
-          const vi = m[course.target.code];
-          const en = m[course.source.code];
-          return (
-            <div key={i} className="study-sense">
-              {s.partOfSpeech ? <span className="pos-chip">{s.partOfSpeech}</span> : null}
-              {vi ? <div className="study-vi">{vi}</div> : null}
-              {en && en !== vi ? <div className="study-en">{en}</div> : null}
-              {s.examples && s.examples[0] ? (
-                <div className="study-ex">💬 {s.examples[0]}</div>
-              ) : null}
-            </div>
-          );
-        })}
+        <div className="sw-meta">
+          {s0?.pronunciation ? <span className="lm-ipa">{s0.pronunciation}</span> : null}
+          {posList.map((p) => (
+            <PosChip key={p} pos={p} />
+          ))}
+        </div>
 
-        {/* đ/trái nghĩa */}
+        <div className="sw-grid">
+          <Field label="Anh - Anh" accent="teal">
+            {m.en || '—'}
+          </Field>
+          <Field label="Anh - Việt" accent="amber">
+            {m.vi || '—'}
+          </Field>
+        </div>
+
+        {s0?.examples?.[0] ? (
+          <Field label="Ví dụ" accent="rose">
+            <em>
+              "<HighlightEn text={s0.examples[0]} word={entry.word} />"
+            </em>
+          </Field>
+        ) : null}
+
+        {(entry.senses?.length ?? 0) > 1 ? (
+          <div className="lm-senses">
+            <div className="lex-field-label">Nghĩa khác · {entry.senses!.length - 1}</div>
+            {entry.senses!.slice(1).map((s, i) => (
+              <div className="lm-sense" key={i}>
+                <PosChip pos={s.partOfSpeech} />
+                <div className="lm-sense-txt">
+                  <span className="lm-sense-en">{s.meaning?.en || ''}</span>
+                  <span className="lm-sense-vi">{s.meaning?.vi || ''}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
         {entry.synonyms.length > 0 || entry.antonyms.length > 0 ? (
-          <div className="study-syn">
+          <div className="lm-syn-row">
             {entry.synonyms.length > 0 ? (
-              <div>🔁 Đồng nghĩa: {entry.synonyms.slice(0, 5).join(', ')}</div>
+              <div>
+                <div className="lex-field-label">Đồng nghĩa</div>
+                <div className="lex-tag-row">
+                  {entry.synonyms.slice(0, 6).map((s) => (
+                    <span key={s} className="lex-tag">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
             ) : null}
             {entry.antonyms.length > 0 ? (
-              <div>🚫 Trái nghĩa: {entry.antonyms.slice(0, 5).join(', ')}</div>
+              <div>
+                <div className="lex-field-label">Trái nghĩa</div>
+                <div className="lex-tag-row">
+                  {entry.antonyms.slice(0, 6).map((s) => (
+                    <span key={s} className="lex-tag amber">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
             ) : null}
           </div>
         ) : null}
       </div>
 
-      <div className="study-footer">
-        <Button
-          variant="primary"
-          size="lg"
-          style={{ width: '100%' }}
-          onClick={() => store.nextStudyWord()}
-        >
-          {last ? '✓ Hoàn tất bài học' : 'Từ tiếp theo →'}
-        </Button>
-      </div>
+      <button className="sw-next" onClick={() => store.nextStudyWord()}>
+        {last ? '✓ Hoàn thành bài học' : 'Từ tiếp theo'} <span className="chev">→</span>
+      </button>
     </div>
   );
 }

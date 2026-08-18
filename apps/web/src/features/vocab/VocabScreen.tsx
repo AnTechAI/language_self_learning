@@ -5,7 +5,7 @@
  */
 import { useMemo, useState } from 'react';
 import type { WordEntry } from '@english/shared';
-import { Speak } from '../../components/ui';
+import { Field, HighlightEn, PosChip, Speak } from '../../components/ui';
 import { lessonById, type LessonMeta } from '../../data/lessons';
 import { useCourseStore } from '../../store/useCourseStore';
 import { useLessons } from '../home/useLessons';
@@ -127,20 +127,6 @@ export function Tag({
   return <span className={cls}>{children}</span>;
 }
 
-/** Highlight từ khóa (bỏ qua hoa/thường) trong câu ví dụ */
-function HighlightEn({ text, word }: { text: string; word: string }) {
-  const lower = text.toLowerCase();
-  const idx = word ? lower.indexOf(word.toLowerCase()) : -1;
-  if (idx < 0) return <>{text}</>;
-  return (
-    <>
-      {text.slice(0, idx)}
-      <mark>{text.slice(idx, idx + word.length)}</mark>
-      {text.slice(idx + word.length)}
-    </>
-  );
-}
-
 /** Chi tiết từ — modal gọn 1 trang (không cuộn) + highlight theo lexicon */
 export function WordDetail({ id, onClose }: { id: string; onClose?: () => void }) {
   const store = useCourseStore();
@@ -232,32 +218,6 @@ export function WordDetail({ id, onClose }: { id: string; onClose?: () => void }
       <button className="lm-close" onClick={() => onClose?.()}>
         Đóng
       </button>
-    </div>
-  );
-}
-
-/** Chip từ loại tô màu theo loại (giống hệ màu zh) */
-function PosChip({ pos }: { pos: string }) {
-  return (
-    <span className="lex-pos-chip" data-pos={String(pos || '').toLowerCase()}>
-      {pos || '?'}
-    </span>
-  );
-}
-
-function Field({
-  label,
-  accent = 'teal',
-  children,
-}: {
-  label: string;
-  accent?: 'teal' | 'amber' | 'rose';
-  children: React.ReactNode;
-}) {
-  return (
-    <div className={`lex-field lf-${accent}`}>
-      <div className="lex-field-label">{label}</div>
-      <div className="lex-field-body">{children}</div>
     </div>
   );
 }
