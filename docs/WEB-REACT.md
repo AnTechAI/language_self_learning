@@ -43,10 +43,11 @@ apps/web/
     │   ├── games.ts           # pool/session/choice/checkTranslate
     │   └── tts.ts             # Web Speech API (BCP-47)
     ├── store/useCourseStore.ts   # zustand — state toàn cục + phối hợp IDB
-    ├── components/            # ui.tsx (design system), Layout.tsx
-    └── features/              # picker/, home/ (HomeScreen + useLessons),
-                               # study/ (LessonStudyScreen — trang học bài),
-                               # vocab/, games/, stats/
+    ├── components/            # ui.tsx (design system), Layout.tsx (AppShell en)
+    └── features/              # picker/, home/ (HomeScreen — trang Bài học,
+                               #   useLessons), study/ (LessonStudyScreen —
+                               #   trang học bài), vocab/ (bảng từ + modal),
+                               #   games/, stats/, zh/ (ZhRoot — khóa Trung)
 ```
 
 ## 4. Nguyên tắc port
@@ -140,7 +141,8 @@ Bốn module riêng của khóa tiếng Trung (en không bị ảnh hưởng —
 
 ### Trang học bài (GĐ 4) — `features/study/LessonStudyScreen.tsx`
 
-- Bấm **"Học bài này →"** trên thẻ bài (HomeScreen `LessonPanel`) gọi
+- Bấm **"Học bài này →"** trên thẻ bài (HomeScreen — trang Bài học, thẻ
+  `lex-lesson-card`) gọi
   `store.startLessonStudy(lessonId)`: gộp từ bài vào kho (`pickLesson`, idempotent)
   rồi đặt session `study = { lessonId, words, idx, done }` — `App.tsx` thấy `study`
   thì render trang học bài full-screen (đè mọi tab, là PAGE chứ không phải tab).
@@ -222,3 +224,25 @@ npm run build             # dist/ + dist/legacy/
 ```
 
 CI (GitHub Actions) chạy: lint → typecheck → test:react → build (+ job API).
+
+---
+
+## Giao diện TIẾNG ANH "LEXICON" (commit `566c580`)
+
+Thiết kế lại 4 trang tiếng Anh theo file mẫu `lexicon-ui.jsx` (khóa zh
+giữ nguyên `ZhRoot` — xem `docs/DESIGN.md` mục "Giao diện TIẾNG ANH v5"):
+
+- **Shell en** (Layout.tsx): sidebar trái 210px desktop (brand serif "Lexicon",
+  4 tab Bài học/Từ vựng/Ôn tập/Thống kê, active viền teal 3px) → nav dưới khi
+  mobile. Giữ `.app-nav` + `button.nav-btn` (ràng buộc smoke test).
+- **HomeScreen** = trang Bài học: thẻ `lex-lesson-card` vòng tiến độ + thanh
+  tiến độ + nút Học bài/Tiếp tục/Ôn tập (bài xong → flashcard scoped bài).
+  `startLessonStudy(lessonId)` vẫn là đường học bài (LessonStudyScreen).
+- **VocabScreen** = bảng từ kẻ sọc (`lex-table`) + search/lọc bài; bấm hàng →
+  `WordDetail` modal (Anh-Anh/Anh-Việt/Ví dụ/đồng & trái nghĩa). `detailId`
+  từ App/Stats/games giờ render trong `lex-overlay` (modal, không còn trang
+  full-page).
+- **StatsScreen** = 4 thẻ số + biểu đồ 7 ngày (CSS, không recharts) + thanh
+  tiến độ từng bài.
+- Tokens en thay bằng palette lexicon ở `:root` → mọi component cũ tái-skin
+  tự động; class mới tiền tố `lex-*` không đụng `.zh-app`.

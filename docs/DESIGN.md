@@ -235,3 +235,72 @@ Dark mode giữ cấu trúc token (đêm mực), chỉ dịch hue cho hợp gi�
   nhưng không còn được route — bản zh mới tự dựng view riêng trong `ZhRoot`.
 - Smoke test e2e không đổi: nhận diện khóa Tiếng Anh qua shell cũ (v3) — zh
   là nhánh riêng, không ảnh hưởng.
+
+---
+
+# Giao diện TIẾNG ANH v5 "LEXICON" — 2025 (theo `lexicon-ui.jsx`)
+
+> Bản thiết kế lại trang học tiếng Anh theo file mẫu `lexicon-ui.jsx`
+> (tra từ điển hiện đại: mực navy + teal + kẻ linen). Khóa zh GIỮ NGUYÊN
+> giao diện v4 `chinese-app-ui.jsx` — hai khóa vẫn tách hoàn toàn.
+
+## Palette en (tokens trong `:root` — thay thế v3 "Từ điển giấy")
+
+| Token | Light | Dark "Đêm mực" |
+| --- | --- | --- |
+| `--bg` | `#f7f7f4` | `#10131c` |
+| `--surface` | `#ffffff` | `#171b27` |
+| `--surface-2` (zebra/active) | `#efefef` | `#1e2433` |
+| `--ink` | `#1e2a44` (navy) | `#ececea` |
+| `--ink-2 / --ink-3` | `#5a5540 / #8a836a` | `#b3b1a6 / #827f70` |
+| `--line / --line-strong` | `#d6ceb8 / #bdb49b` (linen) | `#2c3140 / #3b4152` |
+| `--brand` (teal) | `#256b67` | `#58a29d` |
+| `--amber` | `#c98a2e` | (giữ) |
+| `--rose` | `#b14a3c` | (giữ) |
+| `--sky / --purple` | `#3e7ca6 / #7a6b9e` | (giữ) |
+
+## Font en
+
+- **Work Sans** (body) — `@fontsource-variable/work-sans`, có subset Vietnamese.
+- **Fraunces** (từ vựng + tựa) — `@fontsource/fraunces` 500/600 + italic 500.
+- **IBM Plex Mono** (IPA, số, nhãn tag) — `@fontsource/ibm-plex-mono` 400/500.
+- Cả 3 đều bundle qua `main.tsx` (Vietnamese nằm trong unicode-range của file
+  static — không cần import subset riêng).
+
+## Shell en (AppShell — sidebar)
+
+- Desktop (≥760px): **sidebar trái 210px** `--nav-w`: brand serif "Lexicon ·
+  English" + 4 nút (Bài học 📖 / Từ vựng 🗂️ / Ôn tập 🧠 / Thống kê 📈), active
+  = viền teal 3px trái + nền `--surface-2`. Header sticky bên phải (brand
+  Fraunces + 🔥 streak + 🌙☀️ + ⚙️ + chip khóa).
+- Mobile (≤760px): sidebar chuyển thành **nav dưới** cố định (giữ class
+  `.app-nav` + `button.nav-btn` cho smoke test; `.nav-brand` ẩn).
+- Nội dung `--app-max: 1020px`, cột `--content-max: 860px`.
+
+## Các màn hình mới
+
+- **Bài học (Home)**: thẻ bài `lex-lesson-card` — vòng tiến độ `ll-ring`
+  (mono %), eyebrow "Bài N", title Fraunces, thanh `ll-bar` màu theo bài (5 màu
+  tuần tự), mono "learned/total từ · tag", nút Học bài/Tiếp tục/Ôn tập. Bấm →
+  `startLessonStudy(id)` (guided study) hoặc `startGame('flashcard', onlyIds)`
+  khi bài đã xong. Giữ text "Đã học hôm nay: X/Y" cho smoke test.
+- **Từ vựng (Vocab)**: `lex-toolbar` (search + select "Tất cả từ"/theo bài) +
+  **bảng kẻ sọc** `lex-table` (4 cột: Từ+IPA Fraunces/mono · Loại từ tag ·
+  Nghĩa · #Bài). Bấm hàng → **MODAL** `lex-overlay` + `lex-modal` (word 34px +
+  nút đọc, IPA, tag, các field Anh-Anh/Anh-Việt/Ví dụ, đồng/trái nghĩa tag,
+  nút Đóng tối). `detailId` từ App/Stats/games giờ render cùng overlay.
+- **Ôn tập (Games)**: giữ nguyên engine game + menu (Flashcard/Dịch nghĩa/
+  Đồng nghĩa/Trái nghĩa) — tự tái-skin theo token lexicon.
+- **Thống kê (Stats)**: 4 thẻ số (Từ đã học/Đã thuộc/Hôm nay/Bài xong) +
+  biểu đồ 7 ngày dạng cột CSS (`lex-week`) + danh sách thanh tiến độ từng bài
+  ("Kho từ vựng · tiến độ từng bài" — giữ text smoke).
+
+## Kỹ thuật
+
+- Tất cả class en mới tiền tố `lex-*` / `lt-*` / `ll-*` / `lw-*` / `lb-*` /
+  `lm-*` — không đụng class zh (`.zh-app` scoped riêng).
+- Tokens v3 bị thay bằng lexicon ở `:root` → toàn bộ component cũ (study,
+  games, chips, hero, badge…) tái-skin tự động, không cần sửa JSX.
+- Mobile bảng từ ≤600px: ẩn header bảng, hàng xếp dọc.
+- Fonts mới thêm dep: `@fontsource-variable/work-sans`, `@fontsource/fraunces`,
+  `@fontsource/ibm-plex-mono` (giữ nguyên inter + be-vietnam-pro + lora).
