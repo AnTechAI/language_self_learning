@@ -1,11 +1,12 @@
 /**
- * VocabScreen — "Từ vựng": chip bài học, tìm kiếm, lọc trạng thái, danh sách từ,
- * và màn chi tiết từ (WordDetail).
+ * VocabScreen — tab "Từ vựng" (Design en theo lexicon-ui.jsx).
+ * Thanh tìm kiếm + lọc bài học + BẢNG từ kẻ sọc (Từ/IPA · Loại từ · Nghĩa ·
+ * Bài). Bấm hàng → MODAL chi tiết từ (Anh-Anh/Anh-Việt/Ví dụ/Đồng & trái nghĩa).
  */
 import { useMemo, useState } from 'react';
-import { Button, Card, Chip, EmptyState, PosChips, Speak } from '../../components/ui';
-import { lessonById, lessonLearnedCount, type LessonMeta } from '../../data/lessons';
-import { pickSense, rootText } from '../../lib/format';
+import type { WordEntry } from '@english/shared';
+import { Speak } from '../../components/ui';
+import { lessonById, type LessonMeta } from '../../data/lessons';
 import { useCourseStore } from '../../store/useCourseStore';
 import { useLessons } from '../home/useLessons';
 
@@ -13,327 +14,204 @@ export function VocabScreen() {
   const store = useCourseStore();
   const course = store.course;
   const lessons = useLessons();
-
-  if (!course) return null;
-
-  return (
-    <>
-      <ChipsRow lessons={lessons} />
-      {store.vocabLessonId ? (
-        <LessonWords lessonId={store.vocabLessonId} />
-      ) : (
-        <AllWords lessons={lessons} />
-      )}
-    </>
-  );
-}
-
-function ChipsRow({ lessons }: { lessons: LessonMeta[] }) {
-  const store = useCourseStore();
-  const items = [
-    <Chip key="all" active={!store.vocabLessonId} onClick={() => store.setVocabLesson(null)}>
-      Tất cả từ ({store.entries.length})
-    </Chip>,
-    ...lessons.map((l) => (
-      <Chip
-        key={l.id}
-        active={store.vocabLessonId === l.id}
-        onClick={() => {
-          store.setVocabLesson(l.id);
-          void store.pickLesson(l.id);
-        }}
-      >
-        📘 {l.title}
-      </Chip>
-    )),
-  ];
-  return <div className="chip-row">{items}</div>;
-}
-
-/** Danh sách từ của 1 bài học (chỉ en) */
-function LessonWords({ lessonId }: { lessonId: string }) {
-  const store = useCourseStore();
-  const meta = lessonById(lessonId);
-  const lessonEntries = store.entries.filter((e) => e.lessonId === lessonId);
-  const learned = lessonLearnedCount(lessonId, store.entries);
-  if (!meta)
-    return (
-      <Card>
-        <EmptyState big="📘">Đang tải bài học…</EmptyState>
-      </Card>
-    );
-
-  return (
-    <Card>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 8,
-        }}
-      >
-        <div>
-          <h2 style={{ margin: 0, fontSize: 17 }}>{meta.title}</h2>
-          <small className="help">
-            🏷️ {meta.tag} · Đã học {learned}/{lessonEntries.length || meta.count} từ
-          </small>
-        </div>
-        {lessonEntries.length < meta.count ? (
-          <Button
-            size="sm"
-            onClick={async () => {
-              await store.pickLesson(lessonId);
-            }}
-          >
-            Học bài này →
-          </Button>
-        ) : null}
-      </div>
-      <ul className="word-list">
-        {lessonEntries.map((e) => (
-          <WordRow key={e.id} id={e.id} />
-        ))}
-      </ul>
-      {!lessonEntries.length ? (
-        <EmptyState big="🌱">
-          <p>Bài chưa có trong kho — bấm "Học bài này" để tự thêm 20 từ.</p>
-          <Button
-            onClick={async () => {
-              await store.pickLesson(lessonId);
-            }}
-          >
-            Học bài này →
-          </Button>
-        </EmptyState>
-      ) : null}
-    </Card>
-  );
-}
-
-/** Toàn bộ từ + tìm kiếm + lọc trạng thái */
-function AllWords({ lessons }: { lessons: LessonMeta[] }) {
-  const store = useCourseStore();
-  const course = store.course;
   const [q, setQ] = useState('');
-  const [status, setStatus] = useState<'all' | 'new' | 'learning' | 'mastered'>('all');
+  const [filter, setFilter] = useState('all');
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const list = useMemo(() => {
     const query = q.trim().toLowerCase();
     return store.entries
-      .filter((e) => (status === 'all' ? true : e.learningStatus === status))
+      .filter((e) => (filter === 'all' ? true : e.lessonId === filter))
       .filter((e) =>
         query
           ? e.word.toLowerCase().includes(query) ||
-            (e.senses || []).some((s) => s.meaning?.vi?.toLowerCase().includes(query))
+            (e.senses || []).some(
+              (s) =>
+                s.meaning?.vi?.toLowerCase().includes(query) ||
+                s.meaning?.en?.toLowerCase().includes(query),
+            )
           : true,
       )
       .sort((a, b) => a.word.localeCompare(b.word));
-  }, [store.entries, q, status]);
-
-  const statuses: { id: 'all' | 'new' | 'learning' | 'mastered'; label: string }[] = [
-    { id: 'all', label: 'Tất cả' },
-    { id: 'new', label: '🟡 Mới' },
-    { id: 'learning', label: '🟢 Đang học' },
-    { id: 'mastered', label: '🔵 Đã thuộc' },
-  ];
+  }, [store.entries, q, filter]);
 
   if (!course) return null;
-  void lessons;
+
+  const openWord = (id: string) => setOpenId(id);
 
   return (
-    <Card>
-      <div className="search-bar">
-        <span style={{ opacity: 0.5 }}>🔍</span>
-        <input
-          placeholder={`Tìm từ ${course.wordFieldPh} hoặc nghĩa…`}
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          aria-label="Tìm từ"
-        />
-        {q ? (
-          <button className="search-clear" onClick={() => setQ('')} aria-label="Xóa tìm kiếm">
-            ✕
-          </button>
-        ) : null}
+    <div className="lex-page">
+      <div className="lex-page-head">
+        <h2 className="lex-title">Từ vựng</h2>
+        <span className="lex-today">🗂️ {store.entries.length} từ trong kho</span>
       </div>
-      <div className="chip-row" style={{ marginTop: 10 }}>
-        {statuses.map((s) => (
-          <Chip key={s.id} active={status === s.id} onClick={() => setStatus(s.id)}>
-            {s.label}
-          </Chip>
-        ))}
-      </div>
-      <ul className="word-list">
-        {list.map((e) => (
-          <WordRow key={e.id} id={e.id} />
-        ))}
-      </ul>
-      {!list.length ? <EmptyState big="🔍">Không tìm thấy từ phù hợp</EmptyState> : null}
-    </Card>
-  );
-}
 
-function WordRow({ id }: { id: string }) {
-  const entry = useCourseStore((s) => s.entries.find((e) => e.id === id));
-  const openDetail = useCourseStore((s) => s.openDetail);
-  const course = useCourseStore((s) => s.course);
-  if (!entry || !course) return null;
-  const m = entry.senses?.[0]?.meaning;
-  return (
-    <li className="word-item" onClick={() => openDetail(id)}>
-      <span className={`status-dot ${entry.learningStatus}`} />
-      <div style={{ flex: 1 }}>
-        <div className="w">{entry.word}</div>
-        <div className="meta">
-          <PosChips entry={entry} />
-          {m?.[course.target.code] ? ` · ${m[course.target.code]}` : ''}
-        </div>
-      </div>
-      <span className="chev">›</span>
-    </li>
-  );
-}
-
-/** Chi tiết từ — core info luôn hiện, thông tin phụ qua nút mở rộng */
-export function WordDetail({ id }: { id: string }) {
-  const store = useCourseStore();
-  const entry = store.entries.find((e) => e.id === id);
-  const course = store.course;
-  const [open, setOpen] = useState<Record<string, boolean>>({});
-
-  if (!entry || !course)
-    return (
-      <Card>
-        <EmptyState big="🤔">Không tìm thấy từ</EmptyState>
-      </Card>
-    );
-
-  const toggle = (k: string) => setOpen((o) => ({ ...o, [k]: !o[k] }));
-  const s0 = pickSense(entry);
-  const meta = entry.lessonId ? lessonById(entry.lessonId) : undefined;
-
-  return (
-    <>
-      <Card className="detail-hero">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Button variant="ghost" size="sm" onClick={() => store.closeDetail()}>
-            ← Quay lại
-          </Button>
-          <div className="spacer" style={{ flex: 1 }} />
-          <span className={`status-dot ${entry.learningStatus}`} />
-        </div>
-        <div style={{ textAlign: 'center', margin: '12px 0 4px' }}>
-          <div
-            className="detail-word"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}
+      <div className="lex-toolbar">
+        <div className="lex-search">
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
           >
-            {entry.word}
-            <Speak text={entry.word} lang={course.source.code} />
-          </div>
-          {s0?.pronunciation ? (
-            <div className="ipa" style={{ color: 'var(--ink-3)' }}>
-              {s0.pronunciation}
-            </div>
-          ) : null}
-          <div style={{ marginTop: 6 }}>
-            <PosChips entry={entry} />
-          </div>
+            <circle cx="11" cy="11" r="7" />
+            <path d="M20 20l-3.5-3.5" />
+          </svg>
+          <input
+            placeholder="Tìm từ hoặc nghĩa..."
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            aria-label="Tìm từ"
+          />
         </div>
-      </Card>
+        <select className="lex-select" value={filter} onChange={(e) => setFilter(e.target.value)}>
+          <option value="all">Tất cả từ</option>
+          {lessons.map((l) => (
+            <option key={l.id} value={l.id}>
+              Bài {lessonNum(l.id)}: {l.title}
+            </option>
+          ))}
+        </select>
+      </div>
 
-      {/* Các nghĩa (luôn hiện) */}
-      {(entry.senses || []).map((s, i) => {
-        const m = s.meaning || {};
-        return (
-          <Card key={i}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-              {s.partOfSpeech ? <span className="pos-chip">{s.partOfSpeech}</span> : null}
-              {s.pronunciation ? (
-                <span className="ipa" style={{ color: 'var(--ink-3)', fontSize: 13 }}>
-                  {s.pronunciation}
-                </span>
-              ) : null}
-              {m[course.source.code] &&
-              m[course.target.code] &&
-              m[course.source.code] !== m[course.target.code] ? (
-                <Speak
-                  text={m[course.target.code] || ''}
-                  lang={course.target.code}
-                  title="Nghe nghĩa"
-                />
-              ) : null}
-            </div>
-            <div style={{ fontWeight: 700 }}>{m[course.target.code] || ''}</div>
-            {m[course.source.code] ? (
-              <div style={{ color: 'var(--ink-3)', fontSize: 13 }}>{m[course.source.code]}</div>
-            ) : null}
-            {s.examples?.[0] ? (
-              <div
-                style={{ color: 'var(--ink-3)', fontStyle: 'italic', fontSize: 13, marginTop: 6 }}
-              >
-                ❝ {s.examples[0]}
-              </div>
-            ) : null}
-          </Card>
-        );
-      })}
-
-      {/* Thông tin phụ qua nút mở rộng */}
-      <Card>
-        <div className="row">
-          {entry.synonyms?.length ? (
-            <Button variant="ghost" size="sm" onClick={() => toggle('syn')}>
-              🔁 Đồng nghĩa ({entry.synonyms.length})
-            </Button>
-          ) : null}
-          {entry.antonyms?.length ? (
-            <Button variant="ghost" size="sm" onClick={() => toggle('ant')}>
-              ↔️ Trái nghĩa ({entry.antonyms.length})
-            </Button>
-          ) : null}
-          {entry.tags?.length ? (
-            <Button variant="ghost" size="sm" onClick={() => toggle('tag')}>
-              🏷️ Chủ đề ({entry.tags.length})
-            </Button>
-          ) : null}
-          {entry.wordRoot ? (
-            <Button variant="ghost" size="sm" onClick={() => toggle('root')}>
-              🌿 Gốc từ
-            </Button>
-          ) : null}
-          {meta ? (
-            <Button variant="ghost" size="sm" onClick={() => toggle('lesson')}>
-              📘 Bài học
-            </Button>
-          ) : null}
+      <div className="lex-table">
+        <div className="lt-head">
+          <span>Từ</span>
+          <span>Loại từ</span>
+          <span>Nghĩa</span>
+          <span>Bài</span>
         </div>
-        {open.syn ? <ChipList items={entry.synonyms || []} /> : null}
-        {open.ant ? <ChipList items={entry.antonyms || []} /> : null}
-        {open.tag ? <ChipList items={entry.tags || []} /> : null}
-        {open.root && entry.wordRoot ? (
-          <div style={{ marginTop: 10, color: 'var(--ink-2)', fontSize: 14 }}>
-            🌿 {rootText(entry.wordRoot)}
+        {list.map((e) => (
+          <div key={e.id} className="lt-row" onClick={() => openWord(e.id)}>
+            <div>
+              <div className="lt-word">{e.word}</div>
+              <div className="lt-ipa">{e.senses?.[0]?.pronunciation || ''}</div>
+            </div>
+            <span>
+              {e.senses?.[0]?.partOfSpeech ? <Tag>{e.senses[0].partOfSpeech}</Tag> : null}
+            </span>
+            <span className="lt-mean">
+              {e.senses?.[0]?.meaning?.[course.target.code] || e.senses?.[0]?.meaning?.vi || ''}
+            </span>
+            <span className="lt-lesson">{e.lessonId ? `#${lessonNum(e.lessonId)}` : ''}</span>
           </div>
-        ) : null}
-        {open.lesson && meta ? (
-          <div style={{ marginTop: 10, fontSize: 13.5, color: 'var(--ink-2)' }}>
-            📘 <b>{meta.title}</b> — chủ đề <b>{meta.tag}</b> ({meta.count} từ/bài)
-          </div>
-        ) : null}
-      </Card>
-    </>
-  );
-}
+        ))}
+        {list.length === 0 ? <p className="lex-empty">Không tìm thấy từ phù hợp.</p> : null}
+      </div>
 
-function ChipList({ items }: { items: string[] }) {
-  return (
-    <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-      {items.map((s) => (
-        <span key={s} className="chip" style={{ cursor: 'default' }}>
-          {s}
-        </span>
-      ))}
+      {openId ? (
+        <div className="lex-overlay" onClick={() => setOpenId(null)}>
+          <WordDetail id={openId} onClose={() => setOpenId(null)} />
+        </div>
+      ) : null}
     </div>
   );
 }
+
+function lessonNum(id: string): number {
+  const m = String(id || '').match(/(\d+)\s*$/);
+  return m ? Number(m[1]) : 0;
+}
+
+export function Tag({
+  children,
+  tone = 'teal',
+}: {
+  children: React.ReactNode;
+  tone?: 'teal' | 'amber' | 'line';
+}) {
+  const cls = `lex-tag ${tone}`;
+  return <span className={cls}>{children}</span>;
+}
+
+/** Chi tiết từ — modal card theo lexicon-ui.jsx (dùng chung cho detailId) */
+export function WordDetail({ id, onClose }: { id: string; onClose?: () => void }) {
+  const store = useCourseStore();
+  const entry: WordEntry | undefined = store.entries.find((e) => e.id === id);
+  const course = store.course;
+  if (!entry || !course) return null;
+
+  const s0 = entry.senses?.[0];
+  const m = s0?.meaning || {};
+  const meta = entry.lessonId ? lessonById(entry.lessonId) : undefined;
+  const syn = entry.synonyms || [];
+  const ant = entry.antonyms || [];
+
+  return (
+    <div className="lex-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="lm-head">
+        <span className="lm-word">{entry.word}</span>
+        <Speak text={entry.word} lang={course.source.code} />
+      </div>
+      <div className="lm-meta">
+        {s0?.pronunciation ? <span className="lm-ipa">{s0.pronunciation}</span> : null}
+        {s0?.partOfSpeech ? <Tag>{s0.partOfSpeech}</Tag> : null}
+        {meta ? <Tag tone="line">Bài {lessonNum(meta.id)}</Tag> : null}
+      </div>
+
+      <Field label="Anh - Anh">{m.en || '—'}</Field>
+      <Field label="Anh - Việt">{m.vi || '—'}</Field>
+      {s0?.examples?.[0] ? (
+        <Field label="Ví dụ">
+          <em>"{s0.examples[0]}"</em>
+        </Field>
+      ) : null}
+
+      {(entry.senses?.length ?? 0) > 1 ? (
+        <Field label="Nghĩa khác">
+          {entry.senses!.slice(1).map((s, i) => (
+            <div key={i}>
+              {s.partOfSpeech ? <Tag tone="line">{s.partOfSpeech}</Tag> : null}{' '}
+              {s.meaning?.vi || s.meaning?.en || ''}
+            </div>
+          ))}
+        </Field>
+      ) : null}
+
+      <div className="lm-syn-row">
+        <div>
+          <div className="lex-field-label">Đồng nghĩa</div>
+          <div className="lex-tag-row">
+            {syn.length ? (
+              syn.map((s) => <Tag key={s}>{s}</Tag>)
+            ) : (
+              <span className="lex-hint">—</span>
+            )}
+          </div>
+        </div>
+        <div>
+          <div className="lex-field-label">Trái nghĩa</div>
+          <div className="lex-tag-row">
+            {ant.length ? (
+              ant.map((s) => (
+                <Tag key={s} tone="amber">
+                  {s}
+                </Tag>
+              ))
+            ) : (
+              <span className="lex-hint">—</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <button className="lm-close" onClick={() => onClose?.()}>
+        Đóng
+      </button>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="lex-field">
+      <div className="lex-field-label">{label}</div>
+      <div className="lex-field-body">{children}</div>
+    </div>
+  );
+}
+
+export type { LessonMeta };

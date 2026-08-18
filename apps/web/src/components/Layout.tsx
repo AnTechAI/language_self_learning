@@ -9,10 +9,10 @@ import { todayStr } from '../lib/format';
 import { useCourseStore, type Tab } from '../store/useCourseStore';
 
 const TABS: { id: Tab; ico: string; label: string }[] = [
-  { id: 'home', ico: '🏠', label: 'Hôm nay' },
-  { id: 'vocab', ico: '📚', label: 'Từ vựng' },
-  { id: 'games', ico: '🎮', label: 'Ôn tập' },
-  { id: 'stats', ico: '📊', label: 'Thống kê' },
+  { id: 'home', ico: '📖', label: 'Bài học' },
+  { id: 'vocab', ico: '🗂️', label: 'Từ vựng' },
+  { id: 'games', ico: '🧠', label: 'Ôn tập' },
+  { id: 'stats', ico: '📈', label: 'Thống kê' },
 ];
 
 /** Tab riêng của khóa TIẾNG TRUNG (ngữ pháp theo cấp) */
@@ -48,54 +48,18 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="app">
-      <header className="app-header">
-        <button
-          className="brand"
-          style={{ border: 0, background: 'transparent' }}
-          onClick={() => void exitCourse()}
-          title="Về màn hình chọn khóa"
-        >
-          {course?.icon || '🎓'} <span>English Learning</span>
-        </button>
-        <div className="spacer" />
-        {streak > 0 && course?.seed !== 'zh' ? (
-          <span className="stat" title="Số ngày học liên tiếp">
-            🔥 <b>{streak}</b>
-          </span>
-        ) : null}
-        <button
-          className="chip icon-chip"
-          style={{ fontWeight: 700 }}
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          title={theme === 'dark' ? 'Chuyển giao diện sáng' : 'Chuyển giao diện tối'}
-          aria-label="Đổi giao diện sáng/tối"
-        >
-          {theme === 'dark' ? '☀️' : '🌙'}
-        </button>
-        <button
-          className="chip icon-chip"
-          style={{ fontWeight: 700 }}
-          onClick={() => setShowAccount(true)}
-          title="Tài khoản & đồng bộ"
-          aria-label="Tài khoản & đồng bộ"
-        >
-          ⚙️
-        </button>
-        {course ? (
-          <button
-            className="chip"
-            style={{ fontWeight: 700 }}
-            onClick={() => void exitCourse()}
-            title="Đổi khóa học"
-          >
-            {course.icon} {course.name} ⇄
-          </button>
-        ) : null}
-      </header>
-      <main className="app-main">{children}</main>
-      {showAccount ? <AccountModal onClose={() => setShowAccount(false)} /> : null}
       {course ? (
-        <nav className="app-nav">
+        <nav className="app-nav" aria-label="Điều hướng chính">
+          <button
+            className="nav-brand"
+            onClick={() => void exitCourse()}
+            title="Về màn hình chọn khóa"
+          >
+            <span>
+              {course?.icon || '🎓'} Lexicon
+              <small>English</small>
+            </span>
+          </button>
           {(course?.seed === 'zh' ? ZH_TABS : TABS).map((t) => (
             <button
               key={t.id}
@@ -108,6 +72,54 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
       ) : null}
+      <div className="rail-main">
+        <header className="app-header">
+          <button
+            className="brand"
+            style={{ border: 0, background: 'transparent' }}
+            onClick={() => void exitCourse()}
+            title="Về màn hình chọn khóa"
+          >
+            {course?.icon || '🎓'} <span>English Learning</span>
+          </button>
+          <div className="spacer" />
+          {streak > 0 && course?.seed !== 'zh' ? (
+            <span className="stat" title="Số ngày học liên tiếp">
+              🔥 <b>{streak}</b>
+            </span>
+          ) : null}
+          <button
+            className="chip icon-chip"
+            style={{ fontWeight: 700 }}
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            title={theme === 'dark' ? 'Chuyển giao diện sáng' : 'Chuyển giao diện tối'}
+            aria-label="Đổi giao diện sáng/tối"
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
+          <button
+            className="chip icon-chip"
+            style={{ fontWeight: 700 }}
+            onClick={() => setShowAccount(true)}
+            title="Tài khoản & đồng bộ"
+            aria-label="Tài khoản & đồng bộ"
+          >
+            ⚙️
+          </button>
+          {course ? (
+            <button
+              className="chip"
+              style={{ fontWeight: 700 }}
+              onClick={() => void exitCourse()}
+              title="Đổi khóa học"
+            >
+              {course.icon} {course.name} ⇄
+            </button>
+          ) : null}
+        </header>
+        <main className="app-main">{children}</main>
+      </div>
+      {showAccount ? <AccountModal onClose={() => setShowAccount(false)} /> : null}
     </div>
   );
 }

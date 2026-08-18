@@ -21,6 +21,7 @@ export default function App() {
   const study = useCourseStore((s) => s.study);
   const detailId = useCourseStore((s) => s.detailId);
   const toast = useCourseStore((s) => s.toast);
+  const closeDetail = useCourseStore((s) => s.closeDetail);
 
   useEffect(() => {
     if (!booted) void boot();
@@ -50,8 +51,8 @@ export default function App() {
   if (detailId)
     return (
       <>
-        <div className="detail-page">
-          <WordDetail id={detailId} />
+        <div className="lex-overlay" onClick={() => closeDetail()}>
+          <WordDetail id={detailId} onClose={() => closeDetail()} />
         </div>
         <Toast msg={toast} />
       </>
