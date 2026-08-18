@@ -127,7 +127,21 @@ export function Tag({
   return <span className={cls}>{children}</span>;
 }
 
-/** Chi tiết từ — modal card theo lexicon-ui.jsx (dùng chung cho detailId) */
+/** Highlight từ khóa (bỏ qua hoa/thường) trong câu ví dụ */
+function HighlightEn({ text, word }: { text: string; word: string }) {
+  const lower = text.toLowerCase();
+  const idx = word ? lower.indexOf(word.toLowerCase()) : -1;
+  if (idx < 0) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark>{text.slice(idx, idx + word.length)}</mark>
+      {text.slice(idx + word.length)}
+    </>
+  );
+}
+
+/** Chi tiết từ — modal gọn 1 trang (không cuộn) + highlight theo lexicon */
 export function WordDetail({ id, onClose }: { id: string; onClose?: () => void }) {
   const store = useCourseStore();
   const entry: WordEntry | undefined = store.entries.find((e) => e.id === id);
@@ -139,36 +153,53 @@ export function WordDetail({ id, onClose }: { id: string; onClose?: () => void }
   const meta = entry.lessonId ? lessonById(entry.lessonId) : undefined;
   const syn = entry.synonyms || [];
   const ant = entry.antonyms || [];
+  const senses = entry.senses || [];
 
   return (
-    <div className="lex-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="lex-modal lm-compact" onClick={(e) => e.stopPropagation()}>
       <div className="lm-head">
         <span className="lm-word">{entry.word}</span>
         <Speak text={entry.word} lang={course.source.code} />
-      </div>
-      <div className="lm-meta">
-        {s0?.pronunciation ? <span className="lm-ipa">{s0.pronunciation}</span> : null}
-        {s0?.partOfSpeech ? <Tag>{s0.partOfSpeech}</Tag> : null}
+        <div className="lm-flex" />
         {meta ? <Tag tone="line">Bài {lessonNum(meta.id)}</Tag> : null}
       </div>
 
-      <Field label="Anh - Anh">{m.en || '—'}</Field>
-      <Field label="Anh - Việt">{m.vi || '—'}</Field>
+      <div className="lm-meta">
+        {s0?.pronunciation ? <span className="lm-ipa">{s0.pronunciation}</span> : null}
+        <PosChip pos={s0?.partOfSpeech || ''} />
+        {entry.tags?.[0] ? <Tag tone="line">{entry.tags[0]}</Tag> : null}
+      </div>
+
+      <div className="lm-grid">
+        <Field label="Anh - Anh" accent="teal">
+          {m.en || '—'}
+        </Field>
+        <Field label="Anh - Việt" accent="amber">
+          {m.vi || '—'}
+        </Field>
+      </div>
+
       {s0?.examples?.[0] ? (
-        <Field label="Ví dụ">
-          <em>"{s0.examples[0]}"</em>
+        <Field label="Ví dụ" accent="rose">
+          <em>
+            "<HighlightEn text={s0.examples[0]} word={entry.word} />"
+          </em>
         </Field>
       ) : null}
 
-      {(entry.senses?.length ?? 0) > 1 ? (
-        <Field label="Nghĩa khác">
-          {entry.senses!.slice(1).map((s, i) => (
-            <div key={i}>
-              {s.partOfSpeech ? <Tag tone="line">{s.partOfSpeech}</Tag> : null}{' '}
-              {s.meaning?.vi || s.meaning?.en || ''}
+      {senses.length > 1 ? (
+        <div className="lm-senses">
+          <div className="lex-field-label">Nghĩa khác · {senses.length - 1}</div>
+          {senses.slice(1).map((s, i) => (
+            <div className="lm-sense" key={i}>
+              <PosChip pos={s.partOfSpeech} />
+              <div className="lm-sense-txt">
+                <span className="lm-sense-en">{s.meaning?.en || ''}</span>
+                <span className="lm-sense-vi">{s.meaning?.vi || ''}</span>
+              </div>
             </div>
           ))}
-        </Field>
+        </div>
       ) : null}
 
       <div className="lm-syn-row">
@@ -205,9 +236,26 @@ export function WordDetail({ id, onClose }: { id: string; onClose?: () => void }
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+/** Chip từ loại tô màu theo loại (giống hệ màu zh) */
+function PosChip({ pos }: { pos: string }) {
   return (
-    <div className="lex-field">
+    <span className="lex-pos-chip" data-pos={String(pos || '').toLowerCase()}>
+      {pos || '?'}
+    </span>
+  );
+}
+
+function Field({
+  label,
+  accent = 'teal',
+  children,
+}: {
+  label: string;
+  accent?: 'teal' | 'amber' | 'rose';
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={`lex-field lf-${accent}`}>
       <div className="lex-field-label">{label}</div>
       <div className="lex-field-body">{children}</div>
     </div>
