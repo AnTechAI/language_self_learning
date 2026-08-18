@@ -10,7 +10,7 @@
  *      schema docs/chinese_design.md §3: id, simplified, traditional, pinyin,
  *      pinyin_numeric, hsk_level, pos, meaning_en, meaning_vi, radical,
  *      classifier, frequency_rank, strokes (số nét mỗi chữ), senses[],
- *      example_sentences[] (rỗng — bước sau).
+ *      example_sentences[] (từ data/raw/zh-examples.jsonl — fetch-zh-examples.js).
  *   2. apps/web/public/legacy/js/zh-dict/zh-strokes.json — {char: {s:[path], m:[median]}}
  *      dữ liệu thứ tự nét cho Luyện viết (Hanzi Writer) — chỉ các chữ của HSK.
  *
@@ -23,6 +23,7 @@ const readline = require('readline');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const SRC = path.join(ROOT, 'data', 'raw', 'hsk30-dictionary.enriched.jsonl');
+const SRC_EX = path.join(ROOT, 'data', 'raw', 'zh-examples.jsonl');
 const OUT_DIR = path.join(ROOT, 'apps', 'web', 'public', 'legacy', 'js', 'zh-dict');
 const HANZI_WRITER_DATA = path.join(ROOT, 'node_modules', 'hanzi-writer-data');
 const OUT_HSK = path.join(OUT_DIR, 'hsk.json');
@@ -83,6 +84,18 @@ async function main() {
   fs.writeFileSync(OUT_STROKES, JSON.stringify(strokes), 'utf-8');
   console.log(`   ${Object.keys(strokes).length} chữ có nét (${miss} chữ không có — để trống).`);
 
+  // ---- ví dụ câu (fetch-zh-examples.js) ----
+  const exByWord = new Map();
+  if (fs.existsSync(SRC_EX)) {
+    for (const line of fs.readFileSync(SRC_EX, 'utf-8').split('\n')) {
+      if (!line.trim()) continue;
+      try {
+        const o = JSON.parse(line);
+        if (o && o.word) exByWord.set(o.word, o.examples || []);
+      } catch { /* bỏ qua */ }
+    }
+  }
+
   // ---- hsk.json theo schema thiết kế ----
   const words = [];
   for (const [w, { meta, senses }] of byWord) {
@@ -102,7 +115,12 @@ async function main() {
       frequency_rank: typeof meta.freq === 'number' ? meta.freq : 0,
       strokes: [...w].map((c) => ({ c, n: strokes[c] ? strokes[c].s.length : 0 })),
       senses: senses.filter((s) => s.en || s.vi),
-      example_sentences: [],
+      example_sentences: (exByWord.get(w) || []).map((e) => ({
+        zh: String(e.zh || ''),
+        pinyin: String(e.pinyin || '').trim(),
+        vi: String(e.vi || ''),
+        en: String(e.en || ''),
+      })),
     });
   }
   words.sort((a, b) => (a.hsk_level - b.hsk_level) || (b.frequency_rank - a.frequency_rank));

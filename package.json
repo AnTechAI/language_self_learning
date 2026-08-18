@@ -37,6 +37,7 @@
     "eslint-plugin-react-refresh": "^0.5.4",
     "hanzi-writer": "^3.7.3",
     "hanzi-writer-data": "^2.0.1",
+    "pinyin-pro": "^3.29.2",
     "prettier": "^3.9.6",
     "typescript-eslint": "^8.67.0"
   }

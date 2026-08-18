@@ -555,6 +555,19 @@ function LessonPanel({
   );
 }
 
+/** Highlight từ khóa (lần xuất hiện đầu tiên) trong câu ví dụ */
+function HighlightWord({ text, word }: { text: string; word: string }) {
+  const idx = word ? text.indexOf(word) : -1;
+  if (idx < 0) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark>{word}</mark>
+      {text.slice(idx + word.length)}
+    </>
+  );
+}
+
 /** Chi tiết 1 từ/chữ — y theo mẫu */
 function WordDetailPanel({
   w,
@@ -582,6 +595,22 @@ function WordDetailPanel({
   const nStrokes = w.strokes?.[0]?.n ?? 0;
   const charData = strokes?.[w.simplified];
   const ref = useRef<HTMLDivElement>(null);
+
+  // Từ loại: ưu tiên senses[], fallback field pos
+  const senses =
+    w.senses && w.senses.length
+      ? w.senses
+      : [{ pos: w.pos || '?', en: w.meaning_en, vi: w.meaning_vi }];
+
+  // Pinyin tô màu theo thanh điệu (âm tiết → tông màu chuẩn)
+  const pySyllables = useMemo(() => {
+    const marked = w.pinyin.split(/\s+/).filter(Boolean);
+    const nums = w.pinyin_numeric.split(/\s+/).filter(Boolean);
+    return marked.map((syl, i) => ({
+      syl,
+      tone: Number((nums[i] || '').match(/\d$/)?.[0] || 0),
+    }));
+  }, [w.pinyin, w.pinyin_numeric]);
 
   // Đổi từ → cuộn pane chi tiết về đầu
   useEffect(() => {
@@ -611,7 +640,14 @@ function WordDetailPanel({
           <div>
             <div className="zh-hero-py-row">
               <ToneCurve tone={tone} active />
-              <span className="zh-hero-py">{w.pinyin}</span>
+              <span className="zh-hero-py">
+                {pySyllables.map((s, i) => (
+                  <span key={i} className="tl" data-tone={s.tone}>
+                    {s.syl}
+                    {i < pySyllables.length - 1 ? ' ' : ''}
+                  </span>
+                ))}
+              </span>
               <button
                 className="zh-audio"
                 title="Nghe phát âm (TTS)"
@@ -643,14 +679,35 @@ function WordDetailPanel({
         <SealBadge level={w.hsk_level} />
       </div>
 
-      <div className="zh-sect-label">Bộ thủ</div>
-      <div className="zh-radical-row">
-        {w.radical ? <div className="zh-radical-chip">{w.radical}</div> : null}
-        {w.classifier ? <span className="zh-tag">{w.traditional ? '量词' : w.pos}</span> : null}
+      <div className="zh-meta-row">
+        <span className="zh-tag seal">HSK {w.hsk_level}</span>
         {w.traditional && w.traditional !== w.simplified ? (
           <span className="zh-tag">phồn thể {w.traditional}</span>
         ) : null}
+        {w.classifier ? <span className="zh-tag">lượng từ {w.classifier}</span> : null}
         {w.frequency_rank ? <span className="zh-tag">tần suất #{w.frequency_rank}</span> : null}
+      </div>
+
+      <div className="zh-sect-label">Từ loại</div>
+      <div className="zh-senses">
+        {senses.map((s, i) => (
+          <div className="zh-sense-row" key={i}>
+            <span className="zh-pos-chip" data-pos={String(s.pos || '').toLowerCase()}>
+              {s.pos || '?'}
+            </span>
+            <div className="zh-sense-body">
+              <div className="zh-sense-en">{s.en || '—'}</div>
+              <div className="zh-sense-vi">{s.vi || '—'}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="zh-sect-label">Bộ thủ</div>
+      <div className="zh-radical-row">
+        {w.radical ? <div className="zh-radical-chip">{w.radical}</div> : null}
+        <span className="zh-tag">{nStrokes || '?'} nét</span>
+        <span className="zh-tag">{w.simplified.length} chữ</span>
       </div>
 
       <div className="zh-sect-label">Thứ tự nét · {nStrokes || '?'} nét</div>
@@ -661,11 +718,23 @@ function WordDetailPanel({
         </p>
       ) : null}
 
-      <div className="zh-sect-label">Ví dụ</div>
-      <div className="zh-example">
-        <p style={{ margin: 0, fontSize: 13.5, color: 'var(--ink-soft)' }}>
-          Ví dụ câu đang được bổ sung cho HSK 3.0.
-        </p>
+      <div className="zh-sect-label">Ví dụ · {w.example_sentences?.length || 0} câu</div>
+      <div className="zh-examples">
+        {(w.example_sentences || []).slice(0, 3).map((ex, i) => (
+          <div className="zh-ex-card" key={i}>
+            <div className="zh-ex-zh">
+              <HighlightWord text={ex.zh} word={w.simplified} />
+            </div>
+            <div className="zh-ex-py">{ex.pinyin}</div>
+            <div className="zh-ex-vi">{ex.vi || ex.en}</div>
+            {ex.vi && ex.en ? <div className="zh-ex-en">{ex.en}</div> : null}
+          </div>
+        ))}
+        {(w.example_sentences || []).length === 0 ? (
+          <p className="zh-hint" style={{ fontSize: 13 }}>
+            Chưa có ví dụ cho từ này.
+          </p>
+        ) : null}
       </div>
 
       <div className="zh-actions">

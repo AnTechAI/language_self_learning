@@ -2577,11 +2577,206 @@ select.input {
   gap: 10px;
   font-weight: 700;
 }
+.zh-sect-label::before {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  background: var(--seal);
+  transform: rotate(10deg);
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(184, 51, 43, 0.35);
+}
 .zh-sect-label::after {
   content: '';
   flex: 1;
   height: 1px;
   background: var(--line);
+}
+
+/* ---- Hero: chữ Hán marker-highlight ---- */
+.zh-hero-hanzi {
+  display: inline-block;
+  position: relative;
+  z-index: 0;
+}
+.zh-hero-hanzi::before {
+  content: '';
+  position: absolute;
+  inset: -8px -14px;
+  z-index: -1;
+  border-radius: 20px;
+  background: linear-gradient(
+    120deg,
+    var(--seal-soft),
+    color-mix(in srgb, var(--jade-soft) 70%, var(--seal-soft))
+  );
+  transform: rotate(-1.6deg);
+  box-shadow: 0 6px 20px rgba(184, 51, 43, 0.12);
+}
+
+/* ---- Pinyin tô màu theo thanh điệu ---- */
+.zh-hero-py .tl {
+  font-weight: 600;
+}
+.zh-hero-py .tl[data-tone='1'] {
+  color: #d6483f;
+}
+.zh-hero-py .tl[data-tone='2'] {
+  color: #d97b1f;
+}
+.zh-hero-py .tl[data-tone='3'] {
+  color: #2e9e5b;
+}
+.zh-hero-py .tl[data-tone='4'] {
+  color: #3e7cb1;
+}
+.zh-hero-py .tl[data-tone='5'],
+.zh-hero-py .tl[data-tone='0'] {
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+/* ---- Hàng chip meta ---- */
+.zh-meta-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 18px 0 4px;
+}
+.zh-tag.seal {
+  border-color: color-mix(in srgb, var(--seal) 45%, transparent);
+  color: var(--seal);
+  background: var(--seal-soft);
+  font-weight: 700;
+}
+
+/* ---- Từ loại ---- */
+.zh-senses {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.zh-sense-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--bg-soft);
+  transition: border-color 0.14s ease;
+}
+.zh-sense-row:hover {
+  border-color: var(--line-strong);
+}
+.zh-sense-body {
+  flex: 1;
+  min-width: 0;
+}
+.zh-sense-en {
+  font-size: 13.5px;
+  color: var(--ink);
+  font-weight: 500;
+}
+.zh-sense-vi {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+.zh-pos-chip {
+  flex-shrink: 0;
+  min-width: 64px;
+  text-align: center;
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  font-family: var(--font);
+  background: var(--ink);
+  color: #fff;
+  border: 1px solid transparent;
+  box-shadow: 0 1px 3px rgba(28, 27, 25, 0.18);
+}
+.zh-pos-chip[data-pos*='verb'] {
+  background: var(--jade);
+}
+.zh-pos-chip[data-pos*='noun'] {
+  background: #b0852f;
+}
+.zh-pos-chip[data-pos*='adj'] {
+  background: #7a6b9e;
+}
+.zh-pos-chip[data-pos*='adv'] {
+  background: #3e7ca6;
+}
+.zh-pos-chip[data-pos*='measure'] {
+  background: #b14a3c;
+}
+.zh-pos-chip[data-pos*='pron'] {
+  background: #2e9e5b;
+}
+.zh-pos-chip[data-pos*='prep'],
+.zh-pos-chip[data-pos*='conj'],
+.zh-pos-chip[data-pos*='part'],
+.zh-pos-chip[data-pos*='aux'] {
+  background: #5a5540;
+}
+.zh-pos-chip[data-pos*='num'] {
+  background: #b14a3c;
+}
+.zh-pos-chip[data-pos*='time'] {
+  background: #3e7ca6;
+}
+
+/* ---- Ví dụ ---- */
+.zh-examples {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.zh-ex-card {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--seal);
+  border-radius: 10px;
+  background: var(--bg-soft);
+  padding: 12px 14px;
+  transition: box-shadow 0.14s ease, transform 0.1s ease;
+}
+.zh-ex-card:hover {
+  box-shadow: 0 8px 22px rgba(28, 27, 25, 0.08);
+  transform: translateY(-1px);
+}
+.zh-ex-zh {
+  font-family: var(--font-hanzi);
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--ink);
+}
+.zh-ex-zh mark {
+  background: color-mix(in srgb, var(--seal) 16%, transparent);
+  color: var(--seal);
+  border-radius: 4px;
+  padding: 0 2px;
+  font-weight: 700;
+}
+.zh-ex-py {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-top: 4px;
+}
+.zh-ex-vi {
+  font-size: 14px;
+  color: var(--jade);
+  font-weight: 600;
+  margin-top: 7px;
+}
+.zh-ex-en {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+  font-style: italic;
 }
 .zh-radical-row {
   display: flex;

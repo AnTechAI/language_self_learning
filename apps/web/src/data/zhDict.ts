@@ -22,6 +22,8 @@ export interface ZhExample {
   zh: string;
   pinyin: string;
   vi: string;
+  /** bản dịch tiếng Anh (từ Youdao) — hiển thị khi chưa có vi */
+  en?: string;
 }
 export interface ZhWord {
   id: string;

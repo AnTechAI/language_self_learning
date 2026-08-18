@@ -253,7 +253,8 @@ node data/scripts/build-hsk30.js
 - Gom nghĩa theo từ → **`zh-dict/hsk.json`** (schema `docs/chinese_design.md` §3):
   `id hsk30_XXXXXX`, simplified/traditional/pinyin/pinyin_numeric/hsk_level/pos/
   meaning_en/meaning_vi/radical/classifier/frequency_rank/strokes (số nét từng chữ,
-  lấy `hanzi-writer-data`)/senses[]/example_sentences[] (rỗng — v2). 2,9 MB.
+  lấy `hanzi-writer-data`)/senses[]/example_sentences[] (từ `fetch-zh-examples.js` —
+  5.363/5.363 từ có ví dụ, 10.722 câu). 5,6 MB.
 - Trích nét + đường vẽ từ `node_modules/hanzi-writer-data/{char}.json`
   (**1799 chữ duy nhất của HSK**) → **`zh-dict/zh-strokes.json`** `{chữ:{s:[SVG],m:[medians]}}` —
   đủ 100% chữ (4,4 MB), dùng cho Luyện viết (Hanzi Writer).
@@ -292,3 +293,20 @@ tiêu đề `HSK {cấp} · Bài {k}` (level từ `--order level`), mỗi bài 2
   chi tiết từ + bookmark). Tab 'Ngữ pháp' theo cấp. Ôn tập: Ôn hôm nay (SRS),
   Luyện viết (Hanzi Writer — xem nét/vẽ theo), Thanh điệu (TTS + chọn thanh).
   Không hiện streak 🔥 ở khóa zh (thiết kế).
+
+### `fetch-zh-examples.js` — ví dụ câu cho toàn bộ từ điển HSK 3.0
+
+```bash
+node data/scripts/fetch-zh-examples.js            # full 5.363 từ (resumable)
+node data/scripts/fetch-zh-examples.js --max 300  # prototype 300 từ
+```
+
+- Đọc `zh-dict/hsk.json` (5.363 từ cuối) → với mỗi từ gọi
+  `dict.youdao.com/jsonapi` lấy **câu song ngữ** (`blng_sents_part`,
+  fallback `media_sents_part`) tối đa 2 câu/cách ghi `data/raw/zh-examples.jsonl`.
+- Phiên âm cả câu bằng **pinyin-pro** (devDep, offline); dịch sang tiếng Việt
+  bằng **Google Translate** (`sl=auto&tl=vi`, retry/backoff 429).
+- **Resumable**: bỏ qua từ đã có trong file output → chạy lại an toàn.
+- `build-hsk30.js` đọc `zh-examples.jsonl` điền vào `example_sentences[]`
+  (`{zh, pinyin, vi, en}`). Kết quả: **5.358/5.363 từ tự động (10.712 câu)** +
+  5 từ hiếm (的, 学生, 小姐, 总理, 面条儿) bổ sung thủ công = **100% có ví dụ**.
