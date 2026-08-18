@@ -418,6 +418,14 @@ function DictView({
   onLearn: (items: ZhWord[]) => void;
   onWrite: (items: ZhWord[]) => void;
 }) {
+  // Vị trí từ đang xem trong bài → nút "Từ tiếp theo / Từ trước"
+  const idx = item && selLesson ? selLesson.items.findIndex((w) => w.id === item.id) : -1;
+  const prev = item && selLesson && idx > 0 ? () => setItem(selLesson.items[idx - 1]) : null;
+  const next =
+    item && selLesson && idx >= 0 && idx < selLesson.items.length - 1
+      ? () => setItem(selLesson.items[idx + 1])
+      : null;
+
   return (
     <div className="zh-body">
       {/* Pane trái — danh sách BÀI HỌC */}
@@ -466,10 +474,13 @@ function DictView({
         {item ? (
           <WordDetailPanel
             w={item}
+            counter={selLesson && idx >= 0 ? `Từ ${idx + 1}/${selLesson.items.length}` : undefined}
             inKho={inKho.has(item.simplified)}
             strokes={strokes}
             onBookmark={() => void useCourseStore.getState().bookmarkZhWord(item)}
             onBack={() => setItem(null)}
+            onPrev={prev}
+            onNext={next}
             onWrite={() => onWrite([item])}
           />
         ) : selLesson && words ? (
@@ -547,29 +558,52 @@ function LessonPanel({
 /** Chi tiết 1 từ/chữ — y theo mẫu */
 function WordDetailPanel({
   w,
+  counter,
   inKho,
   strokes,
   onBookmark,
   onBack,
+  onPrev,
+  onNext,
   onWrite,
 }: {
   w: ZhWord;
+  counter?: string;
   inKho: boolean;
   strokes: ZhStrokesData | null;
   onBookmark: () => void;
   onBack: () => void;
+  onPrev: (() => void) | null;
+  onNext: (() => void) | null;
   onWrite: () => void;
 }) {
   const t = charTones(w.simplified, w.pinyin_numeric);
   const tone = t[0]?.tone ?? 0;
   const nStrokes = w.strokes?.[0]?.n ?? 0;
   const charData = strokes?.[w.simplified];
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Đổi từ → cuộn pane chi tiết về đầu
+  useEffect(() => {
+    const el = ref.current?.closest('.zh-detail');
+    if (el) el.scrollTop = 0;
+  }, [w]);
 
   return (
-    <div className="zh-word-detail">
+    <div className="zh-word-detail" ref={ref}>
       <button className="zh-back" onClick={onBack}>
         ← Về bài học
       </button>
+
+      <div className="zh-word-nav">
+        <button className="zh-btn-ghost" onClick={() => onPrev?.()} disabled={!onPrev}>
+          ← Từ trước
+        </button>
+        <span className="zh-word-counter">{counter}</span>
+        <button className="zh-btn-primary" onClick={() => onNext?.()} disabled={!onNext}>
+          Từ tiếp theo →
+        </button>
+      </div>
 
       <div className="zh-hero">
         <div className="zh-hero-left">

@@ -2668,7 +2668,7 @@ select.input {
   background: #9c2a24;
 }
 .zh-btn-primary:disabled {
-  opacity: 0.55;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 .zh-btn-ghost {
@@ -2680,6 +2680,33 @@ select.input {
 .zh-btn-ghost:hover {
   border-color: var(--ink-soft);
   background: var(--bg-soft);
+}
+.zh-btn-ghost:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ---- Dòng điều hướng từ trong bài học ---- */
+.zh-word-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.zh-word-nav .zh-btn-ghost,
+.zh-word-nav .zh-btn-primary {
+  padding: 7px 13px;
+  font-size: 12.5px;
+}
+.zh-word-counter {
+  flex: 1;
+  text-align: center;
+  font-family: var(--font-hanzi);
+  font-size: 12px;
+  color: var(--ink-soft);
+  white-space: nowrap;
 }
 
 /* ---- Lesson panel + grid từ ---- */
